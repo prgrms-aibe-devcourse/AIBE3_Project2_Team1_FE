@@ -1,0 +1,24 @@
+reviewer: 'code-review-bot'
+language: 'ko-KR'
+frameworks:
+  - 'React'
+  - 'TypeScript'
+rules:
+  - name: 'React Best Practices'
+  - name: 'Avoid Prop Drilling'
+  - name: 'Use Functional Components'
+  - name: 'Keep Components Small'
+  - name: 'Avoid Inline Styles'
+style: 'concise'
+ignore:
+  - path: 'src/mocks/'
+  - path: 'node_modules/'
+  - path: '**/*.test.tsx'
+reviews:
+  review_status: true
+  profile: 'chill'
+  auto_review:
+    enabled: true
+    drafts: false
+chat:
+  auto_reply: true
