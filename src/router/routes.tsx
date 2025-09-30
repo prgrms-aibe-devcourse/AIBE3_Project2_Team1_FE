@@ -1,5 +1,7 @@
-import ProposalPage from '../pages/proposal'; // ✅ 추가
+import ProposalPage from '../pages/Proposal';
+import Home from '../pages/Home';
 
 export const routes = [
-  { path: '/proposal', element: <ProposalPage /> }, // ✅ 추가
+  { path: '/', element: <Home /> },
+  { path: '/proposal', element: <ProposalPage /> },
 ];
