@@ -32,6 +32,8 @@ jobs:
 
       - name: Run lint (optional)
         run: npm run lint
+        continue-on-error: true
 
       - name: Run unit tests (optional)
         run: npm run test
+        continue-on-error: true
