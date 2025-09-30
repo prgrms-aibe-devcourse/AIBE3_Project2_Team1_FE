@@ -32,7 +32,7 @@ const Footer = () => {
       </div>
 
       <div className="text-center text-xs text-gray-400 py-4 border-t">
-        © 2024 Pickple. All rights reserved.
+        © {new Date().getFullYear()} Pickple. All rights reserved.
       </div>
     </footer>
   );
