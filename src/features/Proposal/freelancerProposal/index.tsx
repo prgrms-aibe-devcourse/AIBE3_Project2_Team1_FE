@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import MatchingModal from '../MatchingModal';
 
-const ProposalMatchPage: React.FC = () => {
+const FreelancerProposalMatchPage: React.FC = () => {
   const [amount, setAmount] = useState<number | ''>('');
   const [message, setMessage] = useState<string>('');
   const [showModal, setShowModal] = useState(false);
@@ -9,7 +9,6 @@ const ProposalMatchPage: React.FC = () => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     // TODO: API 요청 처리
-    console.log('제안 금액:', amount, '보내는 말:', message);
     setShowModal(true); // 제출 시 모달 열기
   };
 
@@ -67,4 +66,4 @@ const ProposalMatchPage: React.FC = () => {
   );
 };
 
-export default ProposalMatchPage;
+export default FreelancerProposalMatchPage;
