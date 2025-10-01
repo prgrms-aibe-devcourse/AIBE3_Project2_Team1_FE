@@ -1,7 +1,8 @@
-// src/features/milestone/OverviewView.tsx
 import { useState } from 'react';
+import TabNavigation from './components/TabNavigation';
 
 export default function OverviewView() {
+  const [activeTab, setActiveTab] = useState('overview');
   const [editMode, setEditMode] = useState(false);
   const [description, setDescription] = useState('프로젝트의 상세 내용을 적습니다.');
 
@@ -13,6 +14,8 @@ export default function OverviewView() {
           <h1 className="text-2xl font-bold text-gray-900">전국 출장 음식사진 전문</h1>
         </div>
       </div>
+      {/* 탭 네비게이션 */}
+      <TabNavigation activeTab={activeTab} onTabChange={setActiveTab} />
 
       {/* 컨텐츠 */}
       <div className="max-w-7xl mx-auto px-4 py-8">
