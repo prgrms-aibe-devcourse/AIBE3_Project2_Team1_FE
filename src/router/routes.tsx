@@ -5,7 +5,7 @@ import ReviewWritePage from '@/features/review/ReviewWritePage';
 
 export const routes = [
   { path: '/', element: <Home /> },
-  { path: '/client-proposal', element: <ClientProposalPage /> }, //클라이언트에게 보내는 제안서 페이지
-  { path: '/freelancer-proposal', element: <FreelancerProposalPage /> }, //프리랜서에게 보내는 제안서 페이지
+  { path: '/client-proposal', element: <ClientProposalPage /> },
+  { path: '/freelancer-proposal', element: <FreelancerProposalPage /> },
   { path: '/review/write', element: <ReviewWritePage /> },
 ];
