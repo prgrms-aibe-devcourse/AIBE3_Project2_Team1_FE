@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import StarRating from '@/components/StarRating';
 
 const ReviewWritePage = () => {
   const [rating, setRating] = useState(0);
@@ -24,24 +25,13 @@ const ReviewWritePage = () => {
       <div className="space-y-6">
         <div>
           <h3 className="font-semibold mb-2">리뷰</h3>
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center space-x-4">
             <span className="text-sm font-medium">평점</span>
-            <div className="flex items-center">
-              {[0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5].map((value) => (
-                <button
-                  key={value}
-                  onClick={() => setRating(value)}
-                  className={`text-2xl px-0.5 ${
-                    rating >= value ? 'text-yellow-400' : 'text-gray-300'
-                  }`}
-                >
-                  ★
-                </button>
-              ))}
-            </div>
-            <span className="text-sm font-medium text-gray-700 ml-1">{rating.toFixed(1)}</span>
+            <StarRating value={rating} onChange={setRating} size={28} />
+            <span className="text-sm text-gray-700 font-medium">{rating.toFixed(1)}</span>
           </div>
         </div>
+
         <div>
           <h3 className="font-semibold mb-2">후기 남기기</h3>
           <button
