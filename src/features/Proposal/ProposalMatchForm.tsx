@@ -5,7 +5,7 @@ import MatchingModal from './MatchingModal';
 interface ProposalMatchFormProps {
   targetType: 'client' | 'freelancer';
   targetName: string;
-  includePortfolio?: boolean;
+  //includePortfolio?: boolean;
 }
 
 const ProposalMatchForm: React.FC<ProposalMatchFormProps> = ({ targetType, targetName }) => {
@@ -21,8 +21,25 @@ const ProposalMatchForm: React.FC<ProposalMatchFormProps> = ({ targetType, targe
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!amount || amount <= 0) {
+      alert('제안 금액을 입력해주세요.');
+      return;
+    }
+    if (!message.trim()) {
+      alert('메시지를 입력해주세요.');
+      return;
+    }
+
     // TODO: API 요청 처리
-    setShowModal(true); // 제출 시 모달 열기
+    // try {
+    //   await submitProposal({ targetType, targetName, amount, message });
+    //   setShowModal(true);
+    // } catch (error) {
+    //   console.error('제안 제출 실패:', error);
+    //   alert('제안 제출에 실패했습니다.');
+    // }
+
+    setShowModal(true); // 임시: API 구현 전까지 모달 표시
   };
   return (
     <div className="max-w-md mx-auto mt-12 p-8 bg-white rounded-xl shadow-md">
