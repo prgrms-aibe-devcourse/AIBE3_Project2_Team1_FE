@@ -1,5 +1,6 @@
 import { useState, useRef } from 'react';
 import TabNavigation from './components/TabNavigation';
+import KanbanView from './views/KanbanView.tsx';
 
 interface Member {
   id: string;
@@ -170,11 +171,7 @@ export default function OverviewView() {
           </div>
         )}
 
-        {activeTab === 'kanban' && (
-          <div className="bg-white rounded-lg border border-gray-200 p-8 text-center">
-            <p className="text-gray-500">칸반 보드 (준비 중)</p>
-          </div>
-        )}
+        {activeTab === 'kanban' && <KanbanView />}
 
         {activeTab === 'calendar' && (
           <div className="bg-white rounded-lg border border-gray-200 p-8 text-center">
