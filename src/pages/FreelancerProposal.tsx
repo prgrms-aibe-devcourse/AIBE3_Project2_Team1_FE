@@ -1,4 +1,4 @@
-import FreelancerProposalPage from '@/features/freelancerProposal';
+import FreelancerProposalPage from '../features/Proposal/freelancerProposal';
 
 const FreelancerProposal = () => {
   return <FreelancerProposalPage />;

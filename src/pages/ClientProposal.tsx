@@ -1,4 +1,4 @@
-import ClientProposalPage from '@/features/clientProposal';
+import ClientProposalPage from '../features/Proposal/clientProposal';
 
 const ClientProposal = () => {
   return <ClientProposalPage />;

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 
-const PortfolioUpload: React.FC = () => {
+const PortfolioUpload = () => {
   const [fileName, setFileName] = useState<string | null>(null);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
