@@ -1,4 +1,5 @@
 import type { FC, MouseEvent } from 'react';
+import { useId } from 'react';
 
 interface StarRatingProps {
   value: number;
@@ -8,6 +9,8 @@ interface StarRatingProps {
 }
 
 const StarRating: FC<StarRatingProps> = ({ value, onChange, max = 5, size = 28 }) => {
+  const gradientId = useId();
+
   const handleClick = (e: MouseEvent<HTMLButtonElement>, index: number) => {
     const rect = e.currentTarget.getBoundingClientRect();
     const x = e.clientX - rect.left;
@@ -26,6 +29,8 @@ const StarRating: FC<StarRatingProps> = ({ value, onChange, max = 5, size = 28 }
         return (
           <button
             key={index}
+            type="button"
+            aria-label={`${index}점 선택`}
             onClick={(e) => handleClick(e, index)}
             className="p-0.5"
             style={{ width: size, height: size }}
@@ -34,11 +39,11 @@ const StarRating: FC<StarRatingProps> = ({ value, onChange, max = 5, size = 28 }
               viewBox="0 0 24 24"
               width={size}
               height={size}
-              fill={isFull ? '#facc15' : isHalf ? 'url(#halfGrad)' : '#e5e7eb'}
+              fill={isFull ? '#facc15' : isHalf ? `url(#${gradientId})` : '#e5e7eb'}
             >
               {isHalf && (
                 <defs>
-                  <linearGradient id="halfGrad">
+                  <linearGradient id={gradientId}>
                     <stop offset="50%" stopColor="#facc15" />
                     <stop offset="50%" stopColor="#e5e7eb" />
                   </linearGradient>
