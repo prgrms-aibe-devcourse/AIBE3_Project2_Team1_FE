@@ -1,6 +1,6 @@
 import Home from '../pages/Home';
 import ProposalPage from '../pages/proposal';
-import ProfilePage from '@/features/profile/profilePage';
+import ProfilePage from '../pages/profile';
 
 export const routes = [
   { path: '/', element: <Home /> },
