@@ -67,36 +67,28 @@ interface CategoryGroup {
   categories: Category[];
 }
 
+const commonCategories: Category[] = [
+  { id: 'all', name: '전체' },
+  { id: 'video', name: '영상/사진/음향' },
+  { id: 'write', name: '문서/글쓰기' },
+  { id: 'it', name: 'IT/프로그래밍' },
+  { id: 'marketing', name: '마케팅' },
+  { id: 'hobby', name: '취미 레슨' },
+  { id: 'tax', name: '세무/법무/노무' },
+  { id: 'startup', name: '창업/사업' },
+  { id: 'translate', name: '번역/통역' },
+];
+
 const categoryGroups: CategoryGroup[] = [
   {
     groupId: 'client',
     groupName: '클라이언트',
-    categories: [
-      { id: 'all', name: '전체' },
-      { id: 'video', name: '영상/사진/음향' },
-      { id: 'write', name: '문서/글쓰기' },
-      { id: 'it', name: 'IT/프로그래밍' },
-      { id: 'marketing', name: '마케팅' },
-      { id: 'hobby', name: '취미 레슨' },
-      { id: 'tax', name: '세무/법무/노무' },
-      { id: 'startup', name: '창업/사업' },
-      { id: 'translate', name: '번역/통역' },
-    ],
+    categories: commonCategories,
   },
   {
     groupId: 'freelancer',
     groupName: '프리랜서',
-    categories: [
-      { id: 'all', name: '전체' },
-      { id: 'video', name: '영상/사진/음향' },
-      { id: 'write', name: '문서/글쓰기' },
-      { id: 'it', name: 'IT/프로그래밍' },
-      { id: 'marketing', name: '마케팅' },
-      { id: 'hobby', name: '취미 레슨' },
-      { id: 'tax', name: '세무/법무/노무' },
-      { id: 'startup', name: '창업/사업' },
-      { id: 'translate', name: '번역/통역' },
-    ],
+    categories: commonCategories,
   },
 ];
 
