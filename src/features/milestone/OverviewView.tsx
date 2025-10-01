@@ -1,10 +1,62 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import TabNavigation from './components/TabNavigation';
+
+interface Member {
+  id: string;
+  name: string;
+  role: string;
+  avatar: string | null;
+}
 
 export default function OverviewView() {
   const [activeTab, setActiveTab] = useState('overview');
   const [editMode, setEditMode] = useState(false);
   const [description, setDescription] = useState('프로젝트의 상세 내용을 적습니다.');
+  const [members, setMembers] = useState<Member[]>([
+    { id: '1', name: '팀원 1', role: 'PM', avatar: null },
+  ]);
+  const fileInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
+
+  const addMember = () => {
+    const newMember: Member = {
+      id: Date.now().toString(),
+      name: `팀원 ${members.length + 1}`,
+      role: '',
+      avatar: null,
+    };
+    setMembers([...members, newMember]);
+  };
+  const deleteMember = (memberId: string) => {
+    setMembers(members.filter((m) => m.id !== memberId));
+  };
+
+  const handleAvatarChange = (memberId: string, e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      setMembers(
+        members.map((m) => (m.id === memberId ? { ...m, avatar: reader.result as string } : m))
+      );
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const updateMember = (memberId: string, field: keyof Member, value: string) => {
+    setMembers(members.map((m) => (m.id === memberId ? { ...m, [field]: value } : m)));
+  };
+  const saveDescription = () => {
+    // TODO: API 연동 시 저장 로직 추가
+    console.log('저장:', description);
+    setEditMode(false);
+  };
+
+  const saveMembers = () => {
+    // TODO: API 연동 시 저장 로직 추가
+    console.log('팀원 저장:', members);
+    alert('팀원 정보가 저장되었습니다.');
+  };
 
   return (
     <>
@@ -19,42 +71,122 @@ export default function OverviewView() {
 
       {/* 컨텐츠 */}
       <div className="max-w-7xl mx-auto px-4 py-8">
-        <div className="space-y-8">
-          <section className="bg-white rounded-lg border border-gray-200 p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-bold text-gray-900">프로젝트 디테일</h2>
-              <button
-                onClick={() => setEditMode(!editMode)}
-                className="px-4 py-2 bg-teal-500 text-white rounded-md hover:bg-teal-600"
-              >
-                {editMode ? '저장' : '수정'}
-              </button>
-            </div>
-            {editMode ? (
-              <textarea
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                className="w-full h-32 px-3 py-2 border border-gray-200 rounded-md resize-none focus:outline-none focus:ring-2 focus:ring-teal-500"
-              />
-            ) : (
-              <p className="text-gray-600">{description}</p>
-            )}
-          </section>
-
-          <section className="bg-white rounded-lg border border-gray-200 p-6">
-            <h2 className="text-xl font-bold text-gray-900 mb-4">팀원</h2>
-            <div className="flex gap-4">
-              {[1, 2, 3, 4].map((i) => (
-                <div
-                  key={i}
-                  className="w-16 h-16 rounded-full border-2 border-gray-200 bg-gray-50 flex items-center justify-center cursor-pointer hover:bg-gray-100"
+        {activeTab === 'overview' && (
+          <div className="space-y-8">
+            <section className="bg-white rounded-lg border border-gray-200 p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-xl font-bold text-gray-900">프로젝트 디테일</h2>
+                <button
+                  onClick={editMode ? saveDescription : () => setEditMode(true)}
+                  className="px-4 py-2 bg-teal-500 text-white rounded-md hover:bg-teal-600 transition-colors"
                 >
-                  <span className="text-2xl text-gray-400">+</span>
+                  {editMode ? '저장' : '수정'}
+                </button>
+              </div>
+              {editMode ? (
+                <textarea
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  className="w-full h-32 px-3 py-2 border border-gray-200 rounded-md resize-none focus:outline-none focus:ring-2 focus:ring-teal-500"
+                />
+              ) : (
+                <p className="text-gray-600">{description}</p>
+              )}
+            </section>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-bold text-gray-900">팀원</h2>
+              <div className="flex gap-2">
+                <button
+                  onClick={saveMembers}
+                  className="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 transition-colors"
+                >
+                  저장
+                </button>
+                <button
+                  onClick={addMember}
+                  className="px-4 py-2 bg-teal-500 text-white rounded-md hover:bg-teal-600 transition-colors"
+                >
+                  + 팀원 추가
+                </button>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {members.map((member) => (
+                <div
+                  key={member.id}
+                  className="relative flex items-center gap-3 p-3 rounded-lg border border-gray-200"
+                >
+                  <button
+                    onClick={() => fileInputRefs.current[member.id]?.click()}
+                    className="w-16 h-16 rounded-full border-2 border-gray-200 bg-gray-50 overflow-hidden flex items-center justify-center cursor-pointer hover:bg-gray-100"
+                  >
+                    {member.avatar ? (
+                      <img
+                        src={member.avatar}
+                        alt={member.name}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <span className="text-2xl text-gray-400">+</span>
+                    )}
+                  </button>
+
+                  <div className="flex-1 min-w-0">
+                    <input
+                      value={member.name}
+                      onChange={(e) => updateMember(member.id, 'name', e.target.value)}
+                      className="w-full bg-transparent border-0 px-0 py-1 text-sm font-medium focus:outline-none"
+                      placeholder="이름"
+                    />
+                    <input
+                      value={member.role}
+                      onChange={(e) => updateMember(member.id, 'role', e.target.value)}
+                      className="w-full bg-transparent border-0 px-0 py-1 text-sm text-gray-600 focus:outline-none"
+                      placeholder="역할"
+                    />
+                  </div>
+
+                  <button
+                    onClick={() => deleteMember(member.id)}
+                    className="absolute top-2 right-2 w-6 h-6 flex items-center justify-center text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-full transition-colors"
+                    title="삭제"
+                  >
+                    ✕
+                  </button>
+
+                  <input
+                    ref={(el) => {
+                      fileInputRefs.current[member.id] = el;
+                    }}
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={(e) => handleAvatarChange(member.id, e)}
+                  />
                 </div>
               ))}
             </div>
-          </section>
-        </div>
+          </div>
+        )}
+
+        {activeTab === 'kanban' && (
+          <div className="bg-white rounded-lg border border-gray-200 p-8 text-center">
+            <p className="text-gray-500">칸반 보드 (준비 중)</p>
+          </div>
+        )}
+
+        {activeTab === 'calendar' && (
+          <div className="bg-white rounded-lg border border-gray-200 p-8 text-center">
+            <p className="text-gray-500">캘린더 (준비 중)</p>
+          </div>
+        )}
+
+        {activeTab === 'files' && (
+          <div className="bg-white rounded-lg border border-gray-200 p-8 text-center">
+            <p className="text-gray-500">파일 관리 (준비 중)</p>
+          </div>
+        )}
       </div>
     </>
   );
