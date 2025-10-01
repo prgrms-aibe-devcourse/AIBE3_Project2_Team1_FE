@@ -1,17 +1,23 @@
 import React, { useState } from 'react';
 import PortfolioUpload from './PortfolioUpload';
 import MatchingModal from './MatchingModal';
+import axios from 'axios';
 
 interface ProposalMatchFormProps {
   targetType: 'client' | 'freelancer';
   targetName: string;
-  //includePortfolio?: boolean;
+  projectId: number;
 }
 
-const ProposalMatchForm: React.FC<ProposalMatchFormProps> = ({ targetType, targetName }) => {
+const ProposalMatchForm: React.FC<ProposalMatchFormProps> = ({
+  targetType,
+  targetName,
+  projectId,
+}) => {
   // 공통 로직
   const [amount, setAmount] = useState<number | ''>('');
   const [message, setMessage] = useState<string>('');
+  const [files, setFiles] = useState<File[]>([]);
   const [showModal, setShowModal] = useState(false);
 
   const title =
@@ -19,7 +25,7 @@ const ProposalMatchForm: React.FC<ProposalMatchFormProps> = ({ targetType, targe
 
   const comment = targetType === 'client' ? '클라이언트에게 보내는 말' : '프리랜서에게 보내는 말';
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!amount || amount <= 0) {
       alert('제안 금액을 입력해주세요.');
@@ -30,16 +36,27 @@ const ProposalMatchForm: React.FC<ProposalMatchFormProps> = ({ targetType, targe
       return;
     }
 
-    // TODO: API 요청 처리
-    // try {
-    //   await submitProposal({ targetType, targetName, amount, message });
-    //   setShowModal(true);
-    // } catch (error) {
-    //   console.error('제안 제출 실패:', error);
-    //   alert('제안 제출에 실패했습니다.');
-    // }
+    try {
+      const formData = new FormData();
+      formData.append('projectId', projectId.toString());
+      formData.append('description', message);
+      formData.append('proposedAmount', amount.toString());
+      // 여러 개 파일 추가
+      files.forEach((file) => {
+        formData.append('portfolioFiles', file);
+        // key 이름을 서버 DTO랑 맞춰야 함
+      });
 
-    setShowModal(true); // 임시: API 구현 전까지 모달 표시
+      await axios.post('/api/proposals', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+      setShowModal(true);
+    } catch (error) {
+      console.error('업로드 실패:', error);
+      alert('업로드에 실패했습니다.');
+    }
+
+    // 임시: API 구현 전까지 모달 표시
   };
   return (
     <div className="max-w-md mx-auto mt-12 p-8 bg-white rounded-xl shadow-md">
@@ -77,7 +94,8 @@ const ProposalMatchForm: React.FC<ProposalMatchFormProps> = ({ targetType, targe
           />
         </div>
 
-        <PortfolioUpload />
+        {/* 파일 업로드 */}
+        <PortfolioUpload onFilesSelect={setFiles} />
 
         {/* 안내 문구 */}
         <p className="text-center text-gray-600">{targetName}님의 프로젝트와 매칭하시겠습니까?</p>

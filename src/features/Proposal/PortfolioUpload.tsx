@@ -1,11 +1,26 @@
 import React, { useState } from 'react';
 
-const PortfolioUpload = () => {
-  const [fileName, setFileName] = useState<string | null>(null);
+interface PortfolioUploadProps {
+  onFilesSelect: (files: File[]) => void;
+}
+const PortfolioUpload: React.FC<PortfolioUploadProps> = ({ onFilesSelect }) => {
+  const [fileNames, setFileNames] = useState<string[]>([]);
+  const [allFiles, setAllFiles] = useState<File[]>([]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files.length > 0) {
-      setFileName(e.target.files[0].name);
+    if (e.target.files) {
+      const newFiles = Array.from(e.target.files);
+
+      // 부모로 전체 파일 목록 전달
+      const updatedFiles = [...allFiles, ...newFiles];
+      setAllFiles(updatedFiles);
+      onFilesSelect(updatedFiles);
+
+      // 파일 이름도 누적
+      setFileNames((prev) => [...prev, ...newFiles.map((file) => file.name)]);
+
+      // 같은 파일 다시 선택 가능하도록 초기화
+      e.target.value = '';
     }
   };
 
@@ -25,7 +40,13 @@ const PortfolioUpload = () => {
         </label>
 
         {/* 파일명 출력 */}
-        {fileName && <span className="text-sm text-gray-600">{fileName}</span>}
+        {fileNames.length > 0 && (
+          <ul className="list-disc list-inside text-sm text-gray-600">
+            {fileNames.map((name, idx) => (
+              <li key={idx}>{name}</li>
+            ))}
+          </ul>
+        )}
       </div>
     </div>
   );
