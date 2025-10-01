@@ -1,7 +1,9 @@
 import Home from '../pages/Home';
-import ProposalPage from '../pages/Proposal';
+import ClientProposalPage from '../pages/ClientProposal';
+import FreelancerProposalPage from '../pages/FreelancerProposal';
 
 export const routes = [
   { path: '/', element: <Home /> },
-  { path: '/proposal', element: <ProposalPage /> },
+  { path: '/client-proposal', element: <ClientProposalPage /> }, //클라이언트에게 보내는 제안서 페이지
+  { path: '/freelancer-proposal', element: <FreelancerProposalPage /> }, //프리랜서에게 보내는 제안서 페이지
 ];
