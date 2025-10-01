@@ -8,10 +8,10 @@ const Header = () => {
           Pickple
         </Link>
         <nav className="flex items-center space-x-8 text-sm text-gray-700 font-medium">
-          <Link to="/freelancers" className="hover:text-rose-400">
+          <Link to="/projects/freelancer" className="hover:text-rose-400">
             프리랜서 찾기
           </Link>
-          <Link to="/projects" className="hover:text-rose-400">
+          <Link to="/projects/client" className="hover:text-rose-400">
             프로젝트 찾기
           </Link>
           <div className="flex items-center space-x-2">

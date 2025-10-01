@@ -1,54 +1,55 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import ProjectCard from './ProjectCard';
+import arrowImg from '../../assets/images/Expand Arrow.png';
 
 interface Card {
-  id: number;
+  project_id: number;
   title: string;
+  budget: number;
+  author: string;
   rating: number;
   reviews: number;
-  price: string;
-  author: string;
   groupId: string;
   categoryId: string;
 }
 
 const cards: Card[] = [
   {
-    id: 1,
+    project_id: 1,
     title: '영상 촬영 프로젝트',
     rating: 4.6,
     reviews: 1222,
-    price: '140,000원~',
+    budget: 140000,
     author: '스튜디오 포토칩',
     groupId: 'client',
     categoryId: 'video',
   },
   {
-    id: 2,
+    project_id: 2,
     title: '웹 개발 프리랜서',
     rating: 4.8,
     reviews: 540,
-    price: '300,000원~',
+    budget: 300000,
     author: '개발자 김철수',
     groupId: 'freelancer',
     categoryId: 'it',
   },
   {
-    id: 3,
+    project_id: 3,
     title: '문서 작성 의뢰',
     rating: 4.5,
     reviews: 320,
-    price: '50,000원~',
+    budget: 50000,
     author: '글쓰기 스튜디오',
     groupId: 'client',
     categoryId: 'write',
   },
   {
-    id: 4,
+    project_id: 4,
     title: '마케팅 컨설팅',
     rating: 4.7,
     reviews: 210,
-    price: '200,000원~',
+    budget: 200000,
     author: '마케팅 전문가',
     groupId: 'freelancer',
     categoryId: 'marketing',
@@ -99,36 +100,52 @@ const categoryGroups: CategoryGroup[] = [
   },
 ];
 
-export default function CategoryFilter() {
-  const [selectedGroup, setSelectedGroup] = useState<string>('project');
+export default function CategoryFilter({ initialGroup = 'client' }: { initialGroup?: string }) {
+  const [selectedGroup, setSelectedGroup] = useState<string>(initialGroup);
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
+  const [sortOption, setSortOption] = useState<string>('latest');
 
-  const filteredCards = cards.filter(
-    (card) =>
-      card.groupId === selectedGroup &&
-      (selectedCategory === 'all' || card.categoryId === selectedCategory)
-  );
+  // initialGroup이 변경될 때 상태 업데이트
+  useEffect(() => {
+    setSelectedGroup(initialGroup);
+    setSelectedCategory('all');
+  }, [initialGroup]);
+
+  const filteredCards = cards
+    .filter(
+      (card) =>
+        card.groupId === selectedGroup &&
+        (selectedCategory === 'all' || card.categoryId === selectedCategory)
+    )
+    .sort((a, b) => {
+      if (sortOption === 'latest') return b.project_id - a.project_id; // 최신순
+      if (sortOption === 'highBudget') return b.budget - a.budget; // 높은 금액순
+      if (sortOption === 'lowBudget') return a.budget - b.budget; // 낮은 금액순
+      return 0;
+    });
 
   return (
     <div className="w-full max-w-6xl mx-auto px-4 py-6">
-      {/* 그룹 버튼 */}
-      <div className="flex gap-4 mb-4">
-        {categoryGroups.map((group) => (
-          <button
-            key={group.groupId}
-            onClick={() => {
-              setSelectedGroup(group.groupId);
-              setSelectedCategory('all'); // 그룹 변경 시 카테고리 초기화
-            }}
-            className={`px-4 py-2 rounded-full font-medium ${
-              selectedGroup === group.groupId
-                ? 'bg-[#1ABC9C] text-[#F2F2F2]'
-                : 'bg-gray-100 text-[#2C2C2C] hover:bg-gray-200'
-            }`}
-          >
-            {group.groupName}
-          </button>
-        ))}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+        {/* 그룹 버튼 */}
+        <div className="flex gap-2 flex-wrap">
+          {categoryGroups.map((group) => (
+            <button
+              key={group.groupId}
+              onClick={() => {
+                setSelectedGroup(group.groupId);
+                setSelectedCategory('all'); // 그룹 변경 시 카테고리 초기화
+              }}
+              className={`px-4 py-2 rounded-full font-medium transition ${
+                selectedGroup === group.groupId
+                  ? 'bg-[#1ABC9C] text-white shadow-md'
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              }`}
+            >
+              {group.groupName}
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* 카테고리 버튼 */}
@@ -141,8 +158,8 @@ export default function CategoryFilter() {
               onClick={() => setSelectedCategory(category.id)}
               className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
                 selectedCategory === category.id
-                  ? 'bg-[#FF6B6B] text-[#F2F2F2]'
-                  : 'bg-gray-100 text-[#2C2C2C] hover:bg-gray-200'
+                  ? 'bg-[#FF6B6B] text-white shadow-md'
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
               }`}
             >
               {category.name}
@@ -150,15 +167,35 @@ export default function CategoryFilter() {
           ))}
       </div>
 
+      {/* 정렬 드롭다운 */}
+      <div className="flex justify-end mt-4">
+        <div className="relative inline-block text-left">
+          <select
+            value={sortOption}
+            onChange={(e) => setSortOption(e.target.value)}
+            className="appearance-none px-4 py-2 pr-10 border border-gray-300 rounded-[14px] bg-white text-gray-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-[#1ABC9C] cursor-pointer"
+          >
+            <option value="latest">최신순</option>
+            <option value="highBudget">높은 금액순</option>
+            <option value="lowBudget">낮은 금액순</option>
+          </select>
+          {/* 화살표 아이콘 */}
+          <div className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-gray-500">
+            <img src={arrowImg} alt="arrow" className="w-4 h-4" />
+          </div>
+        </div>
+      </div>
+
       {/* 카드 영역 */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mt-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 mt-6">
         {filteredCards.map((card) => (
           <ProjectCard
-            key={card.id}
+            key={card.project_id}
+            project_id={card.project_id}
             title={card.title}
             rating={card.rating}
             reviews={card.reviews}
-            price={card.price}
+            budget={card.budget}
             author={card.author}
           />
         ))}

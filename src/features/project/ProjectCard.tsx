@@ -1,14 +1,15 @@
 import starImg from '../../assets/images/fluent-color_star-16.png';
 
 interface ProjectCardProps {
+  project_id: number;
   title: string;
+  budget: number;
+  author: string;
   rating: number;
   reviews: number;
-  price: string;
-  author: string;
 }
 
-export default function ProjectCard({ title, rating, reviews, price, author }: ProjectCardProps) {
+export default function ProjectCard({ title, rating, reviews, budget, author }: ProjectCardProps) {
   return (
     <div className="h-[340px] w-[320px] rounded hover:bg-[#f2f2f2] hover:rounded-[20px] flex flex-col justify-center items-center p-2">
       <div>
@@ -20,7 +21,7 @@ export default function ProjectCard({ title, rating, reviews, price, author }: P
             {rating.toFixed(1)} ({reviews.toLocaleString()})
           </div>
         </div>
-        <div>{price}</div>
+        <div>{budget}원~</div>
         <div className="text-[#666666]">| {author}</div>
       </div>
     </div>

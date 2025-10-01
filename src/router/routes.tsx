@@ -5,5 +5,5 @@ import ProjectList from '../pages/ProjectList';
 export const routes = [
   { path: '/', element: <Home /> },
   { path: '/proposal', element: <ProposalPage /> },
-  { path: '/ProjectList', element: <ProjectList /> },
+  { path: '/projects/:groupId', element: <ProjectList /> },
 ];
