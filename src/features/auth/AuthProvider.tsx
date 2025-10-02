@@ -1,19 +1,19 @@
-import { AuthContext, type User } from '@/features/auth/AuthContext';
+import { AuthContext } from '@/features/auth/AuthContext';
+import { type User } from '@/services/user';
 import { type ReactNode, useEffect, useState } from 'react';
 
-export const AuthProvider = ({ children }: { children: ReactNode }) => {
+interface AuthProviderProps {
+  children: ReactNode;
+}
+
+export const AuthProvider = ({ children }: AuthProviderProps) => {
   const [user, setUser] = useState<User | null>(null);
 
   useEffect(() => {
+    const storedUser = localStorage.getItem('user');
     const token = localStorage.getItem('accessToken');
-    const userData = localStorage.getItem('user');
-
-    if (token && userData) {
-      try {
-        setUser(JSON.parse(userData));
-      } catch {
-        console.error('유저 데이터 파싱 실패');
-      }
+    if (storedUser && token) {
+      setUser(JSON.parse(storedUser) as User);
     }
   }, []);
 

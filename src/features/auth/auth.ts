@@ -1,5 +1,4 @@
 import axiosInstance from '@/services/axios';
-import axios from 'axios';
 
 export interface UserLoginResponseDto {
   resultCode: string;
@@ -24,5 +23,5 @@ export const login = async (credentials: {
 };
 
 export const logout = async (): Promise<void> => {
-  await axios.delete('/auth/logout');
+  await axiosInstance.delete('/auth/logout');
 };

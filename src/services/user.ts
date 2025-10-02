@@ -6,6 +6,11 @@ import type {
 } from '@/features/user/user';
 import axiosInstance from '@/services/axios';
 
+export type User = {
+  nickname?: string;
+  [key: string]: unknown;
+};
+
 // 회원가입
 export const signUp = async (data: UserRegisterRequestDto): Promise<UserDto> => {
   const res = await axiosInstance.post('/users/signup', data);
