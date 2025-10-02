@@ -333,7 +333,7 @@ export default function NotificationsPage() {
                     style={{ backgroundColor: '#E0F5F1' }}
                   >
                     <span className="font-semibold" style={{ color: '#1ABC9C' }}>
-                      {selectedRequest.senderName[0]}
+                      {selectedRequest.senderName[0] || '?'}
                     </span>
                   </div>
                   <div>
