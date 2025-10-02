@@ -1,6 +1,8 @@
 import LoginPage from '@/features/auth/LoginPage';
+import ProfilePage from '@/features/profile';
 import ReviewWritePage from '@/features/review/ReviewWritePage';
 import SignUpPage from '@/features/user/SignUpPage';
+import OverviewPage from '@/pages/OverviewPage';
 import ClientProposalPage from '../pages/ClientProposal';
 import FreelancerProposalPage from '../pages/FreelancerProposal';
 import Home from '../pages/Home';
@@ -14,4 +16,6 @@ export const routes = [
   { path: '/projects/:groupId', element: <ProjectList /> },
   { path: '/login', element: <LoginPage /> },
   { path: '/signup', element: <SignUpPage /> },
+  { path: '/profile', element: <ProfilePage /> },
+  { path: '/overview', element: <OverviewPage /> },
 ];
