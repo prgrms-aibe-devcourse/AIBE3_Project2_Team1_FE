@@ -4,6 +4,7 @@ import FreelancerProposalPage from '../pages/FreelancerProposal';
 import ReviewWritePage from '@/features/review/ReviewWritePage';
 import ProjectList from '../pages/ProjectList';
 import OverviewPage from '@/pages/OverviewPage';
+import FreelancerNotifications from '@/features/message/FreelancerNotificationsPage.tsx';
 
 export const routes = [
   { path: '/', element: <Home /> },
@@ -12,4 +13,8 @@ export const routes = [
   { path: '/review/write', element: <ReviewWritePage /> },
   { path: '/projects/:groupId', element: <ProjectList /> },
   { path: '/overview', element: <OverviewPage /> },
+  {
+    path: '/messages/notifications',
+    element: <FreelancerNotifications />,
+  },
 ];
