@@ -1,9 +1,34 @@
 import { useState } from 'react';
 import StarRating from '@/components/StarRating';
+import { postReview } from '@/features/review/apis/api';
 
 const ReviewWritePage = () => {
   const [rating, setRating] = useState(0);
   const [content, setContent] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleSubmit = async () => {
+    if (!rating || !content) {
+      alert('평점과 후기를 모두 입력해주세요.');
+      return;
+    }
+
+    try {
+      setIsSubmitting(true);
+      const response = await postReview({
+        projectId: 1, // 실제 프로젝트 ID로 변경
+        rating,
+        comment: content,
+        images: [], // S3 업로드 후 URL 배열 넣기
+      });
+      alert(response.data || '리뷰 등록 완료');
+    } catch (error) {
+      console.error(error);
+      alert('리뷰 등록 중 오류가 발생했습니다.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   return (
     <div className="bg-white min-h-screen px-6 py-10 max-w-2xl mx-auto">
@@ -50,8 +75,12 @@ const ReviewWritePage = () => {
         </div>
 
         <div className="text-right">
-          <button className="bg-teal-500 text-white px-6 py-2 rounded-md font-semibold hover:bg-teal-600">
-            등록
+          <button
+            className="bg-teal-500 text-white px-6 py-2 rounded-md font-semibold hover:bg-teal-600 disabled:opacity-50"
+            disabled={isSubmitting}
+            onClick={handleSubmit}
+          >
+            {isSubmitting ? '등록 중...' : '등록'}
           </button>
         </div>
       </div>
