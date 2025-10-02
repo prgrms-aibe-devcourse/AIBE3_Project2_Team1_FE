@@ -13,6 +13,8 @@ export const axiosInstance = axios.create({
   },
 });
 
+export default axiosInstance;
+
 // 요청 인터셉터 설정 -> 로컬 스토리지에서 accessToken을 가져와 Authorization 헤더에 자동으로 추가
 axiosInstance.interceptors.request.use(
   (config) => {
