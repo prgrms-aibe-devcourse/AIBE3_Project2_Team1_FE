@@ -1,34 +1,39 @@
-type Mode = 'client' | 'freelancer';
+import type { ProfileCardProps } from '../types';
 
-export default function ProfileCard({ mode, setMode }: { mode: Mode; setMode: (m: Mode) => void }) {
+export default function ProfileCard({
+  mode,
+  setMode,
+  name,
+  email,
+  bio,
+  completedCount,
+  inProgressCount,
+}: ProfileCardProps) {
   return (
     <section className="max-w-4xl w-full mx-auto mt-6 p-6 bg-white rounded-lg border">
       <div className="flex items-center gap-6">
         <div className="w-20 h-20 rounded-full bg-gray-300" />
         <div className="flex-1">
           <div className="flex items-center gap-3">
-            <h2 className="text-lg font-semibold">홍길동</h2>
-            {/* 회원정보 수정 버튼 */}
-            <button className="px-3 py-1 flex items-center justify-center rounded-full bg-gray-200 text-gray-600 text-sm hover:bg-gray-300 whitespace-nowrap">
+            <h2 className="text-lg font-semibold">{name || '알수 없음'}</h2>
+            <button className="px-3 py-1 rounded-full bg-gray-200 text-gray-600 text-sm hover:bg-gray-300">
               회원정보 수정
             </button>
-            <button className="px-3 py-1 flex items-center justify-center rounded-full bg-gray-200 text-gray-600 text-sm hover:bg-gray-300 whitespace-nowrap">
+            <button className="px-3 py-1 rounded-full bg-gray-200 text-gray-600 text-sm hover:bg-gray-300">
               로그아웃
             </button>
           </div>
-          <p className="text-gray-500 text-sm">ddkk@ukuk.com</p>
-          <p className="mt-1 text-sm text-gray-600">열심히 하는 프리랜서가 되겠습니다!</p>
+          <p className="text-gray-500 text-sm">{email}</p>
+          <p className="mt-1 text-sm text-gray-600">{bio}</p>
           <div className="flex gap-4 mt-2 text-sm text-gray-500">
             <span>
-              완료한 의뢰 <b className="text-black">14건</b>
+              완료한 의뢰 <b className="text-black">{completedCount ?? 0}건</b>
             </span>
             <span>
-              진행 중인 의뢰 <b className="text-black">3건</b>
+              진행 중인 의뢰 <b className="text-black">{inProgressCount ?? 0}건</b>
             </span>
           </div>
         </div>
-
-        {/* 모드 */}
         <div className="flex gap-2">
           <button
             onClick={() => setMode('client')}

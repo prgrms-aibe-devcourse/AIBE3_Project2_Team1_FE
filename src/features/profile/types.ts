@@ -1,27 +1,13 @@
-export type TabKey = 'request' | 'in-progress' | 'completed' | 'freelancer' | 'review';
+export type Mode = 'client' | 'freelancer';
 
-export interface RequestItem {
-  id: number;
-  title: string;
-}
-
-export interface ProjectItem {
-  id: number;
-  image: string;
-  title: string;
-}
-
-export interface FreelancerItem {
-  id: number;
-  image: string;
-  name: string;
-  info: string;
-}
-
-export interface ReviewItem {
-  id: number;
-  image: string;
-  title: string;
+export interface ProfileCardProps {
+  mode: Mode;
+  setMode: (m: Mode) => void;
+  name?: string;
+  email?: string;
+  bio?: string;
+  completedCount?: number;
+  inProgressCount?: number;
 }
 
 export interface ProfileInfo {
@@ -30,4 +16,5 @@ export interface ProfileInfo {
   bio?: string;
   completedCount: number;
   inProgressCount: number;
+  mode: Mode;
 }
