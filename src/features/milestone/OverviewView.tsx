@@ -1,4 +1,5 @@
 import { useState, useRef } from 'react';
+import { Pencil, Check } from 'lucide-react';
 import TabNavigation from './components/TabNavigation';
 import KanbanView from './views/KanbanView.tsx';
 import CalendarView from './views/CalendarView';
@@ -15,6 +16,8 @@ export default function OverviewView() {
   const [activeTab, setActiveTab] = useState('overview');
   const [editMode, setEditMode] = useState(false);
   const [description, setDescription] = useState('프로젝트의 상세 내용을 적습니다.');
+  const [projectTitle, setProjectTitle] = useState('프로젝트 제목');
+  const [isTitleEditing, setIsTitleEditing] = useState(false);
   const [members, setMembers] = useState<Member[]>([
     { id: '1', name: '팀원 1', role: 'PM', avatar: null },
   ]);
@@ -60,13 +63,52 @@ export default function OverviewView() {
     console.log('팀원 저장:', members);
     alert('팀원 정보가 저장되었습니다.');
   };
+  const saveProjectTitle = () => {
+    console.log('프로젝트 제목 저장:', projectTitle);
+    setIsTitleEditing(false);
+  };
 
   return (
     <>
       {/* 프로젝트 제목 */}
       <div className="bg-white border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 py-4">
-          <h1 className="text-2xl font-bold text-gray-900">전국 출장 음식사진 전문</h1>
+          <div className="flex items-center gap-3">
+            {isTitleEditing ? (
+              <>
+                <input
+                  type="text"
+                  value={projectTitle}
+                  onChange={(e) => setProjectTitle(e.target.value)}
+                  className="text-2xl font-bold text-gray-900 border-b-2 border-teal-500 focus:outline-none flex-1"
+                  autoFocus
+                  onKeyPress={(e) => {
+                    if (e.key === 'Enter') {
+                      saveProjectTitle();
+                    }
+                  }}
+                />
+                <button
+                  onClick={saveProjectTitle}
+                  className="p-2 text-teal-600 hover:bg-teal-50 rounded-lg transition-colors"
+                  title="저장"
+                >
+                  <Check className="w-5 h-5" />
+                </button>
+              </>
+            ) : (
+              <>
+                <h1 className="text-2xl font-bold text-gray-900">{projectTitle}</h1>
+                <button
+                  onClick={() => setIsTitleEditing(true)}
+                  className="p-2 text-gray-500 hover:text-teal-600 hover:bg-teal-50 rounded-lg transition-colors"
+                  title="제목 수정"
+                >
+                  <Pencil className="w-5 h-5" />
+                </button>
+              </>
+            )}
+          </div>
         </div>
       </div>
       {/* 탭 네비게이션 */}
