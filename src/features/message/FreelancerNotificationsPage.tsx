@@ -43,13 +43,11 @@ function ReportModal({
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   if (!isOpen) return null;
-
   const handleSubmit = async () => {
     if (!reportReason) {
       alert('신고 사유를 선택해주세요.');
       return;
     }
-
     try {
       setIsSubmitting(true);
       await fetch('/api/reports', {
@@ -61,6 +59,7 @@ function ReportModal({
           detail: reportDetail,
         }),
       });
+
       alert('신고가 접수되었습니다. 검토 후 조치하겠습니다.');
       onClose();
     } catch (error) {
@@ -144,6 +143,7 @@ export default function NotificationsPage() {
       try {
         setLoading(true);
         const response = await fetch('/api/notifications');
+
         const data: ApiNotification[] = await response.json();
 
         const processedData: MatchingRequest[] = data.map((item) => ({
@@ -270,10 +270,17 @@ export default function NotificationsPage() {
           {currentRequests.map((request) => (
             <div
               key={request.id}
+              tabIndex={0}
               onClick={() => handleOpenRequest(request)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  handleOpenRequest(request);
+                }
+              }}
               className={`p-4 border-b border-gray-100 cursor-pointer hover:bg-gray-50 transition ${
                 !request.isRead ? 'bg-blue-50' : ''
-              }`}
+              } focus:outline-none focus:ring-2 focus:ring-teal-500`}
             >
               <div className="flex items-start gap-3">
                 <div
@@ -281,7 +288,7 @@ export default function NotificationsPage() {
                   style={{ backgroundColor: '#E0F5F1' }}
                 >
                   <span className="font-semibold text-lg" style={{ color: '#1ABC9C' }}>
-                    {request.senderName[0]}
+                    {request.senderName[0] || '?'}
                   </span>
                 </div>
                 <div className="flex-1 min-w-0">

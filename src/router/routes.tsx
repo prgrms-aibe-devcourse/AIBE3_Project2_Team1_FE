@@ -7,7 +7,7 @@ import FreelancerProposalPage from '../pages/FreelancerProposal';
 import Home from '../pages/Home';
 import ProjectList from '../pages/ProjectList';
 import OverviewPage from '@/pages/OverviewPage';
-import FreelancerNotifications from '@/features/message/FreelancerNotificationsPage.tsx';
+import FreelancerNotifications from '@/features/message/FreelancerNotificationsPage';
 
 export const routes = [
   { path: '/', element: <Home /> },
