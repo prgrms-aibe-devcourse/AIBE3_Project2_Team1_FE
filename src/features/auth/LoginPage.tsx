@@ -1,15 +1,18 @@
 import { AuthContext } from '@/features/auth/AuthContext';
 import { login } from '@/features/auth/auth';
+import { AxiosError } from 'axios';
 import { useContext, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 const LoginPage = () => {
   const [form, setForm] = useState({ email: '', password: '' });
+  const [errorMessage, setErrorMessage] = useState<string>('');
   const { setUser } = useContext(AuthContext);
   const navigate = useNavigate();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value });
+    setErrorMessage('');
   };
 
   const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -25,11 +28,14 @@ const LoginPage = () => {
 
       setUser(userData);
 
-      alert(`${userData.nickname || '사용자'}님, 로그인 성공!`);
       navigate('/');
-    } catch (err) {
+    } catch (error) {
+      const err = error as AxiosError<{ errorCode: number; message: string }>;
+
       console.error(err);
-      alert('로그인 실패');
+
+      const message = err.response?.data?.message || '로그인 실패';
+      setErrorMessage(message);
     }
   };
 
@@ -63,6 +69,8 @@ const LoginPage = () => {
           className="border p-2 w-full rounded"
         />
       </div>
+
+      {errorMessage && <p className="text-red-500 text-sm mb-4">{errorMessage}</p>}
 
       <button type="submit" className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
         로그인
