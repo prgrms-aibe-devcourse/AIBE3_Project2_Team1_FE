@@ -13,7 +13,14 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     const storedUser = localStorage.getItem('user');
     const token = localStorage.getItem('accessToken');
     if (storedUser && token) {
-      setUser(JSON.parse(storedUser) as User);
+      try {
+        setUser(JSON.parse(storedUser) as User);
+      } catch (error) {
+        console.error('저장된 사용자 정보 파싱 실패:', error);
+        // 손상된 데이터 정리
+        localStorage.removeItem('user');
+        localStorage.removeItem('accessToken');
+      }
     }
   }, []);
 

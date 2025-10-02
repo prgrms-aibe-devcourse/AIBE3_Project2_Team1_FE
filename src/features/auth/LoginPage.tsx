@@ -38,8 +38,11 @@ const LoginPage = () => {
       <h1 className="text-xl font-bold mb-4">로그인</h1>
 
       <div className="mb-4">
-        <label>Email</label>
+        <label htmlFor="email" className="block mb-1">
+          Email
+        </label>
         <input
+          id="email"
           name="email"
           type="email"
           value={form.email}
