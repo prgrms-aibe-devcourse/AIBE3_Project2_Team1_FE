@@ -20,11 +20,11 @@ const SignUpPage = () => {
     birthDate: '',
   });
 
-  const [errorMessage, setErrorMessage] = useState<string>(''); // 로그인처럼 errorMessage 저장
+  const [errorMessage, setErrorMessage] = useState<string>('');
 
   const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value });
-    setErrorMessage(''); // 입력 변경 시 에러 초기화
+    setErrorMessage('');
   };
 
   const handleSignUp = async (e: FormEvent) => {
@@ -59,7 +59,6 @@ const SignUpPage = () => {
 
       const err = error as AxiosError<{ errorCode?: number; message?: string }>;
 
-      // 서버 메시지를 errorMessage에 저장
       setErrorMessage(err.response?.data?.message || '회원가입 실패');
     }
   };
@@ -165,7 +164,6 @@ const SignUpPage = () => {
         />
       </div>
 
-      {/* 로그인처럼 errorMessage 출력 */}
       {errorMessage && <p className="text-red-500 text-sm mb-4">{errorMessage}</p>}
 
       <button type="submit" className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
