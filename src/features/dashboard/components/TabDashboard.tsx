@@ -1,7 +1,7 @@
 import type { DashboardTabKey } from '../types';
 
 import Done from '@/assets/Done.png';
-import Favorite from '@/assets/favorite.png';
+import Favorite from '@/assets/Favorite.png';
 import Historical from '@/assets/Historical.png';
 import Star from '@/assets/Star Half Empty.png';
 import View from '@/assets/View.png';

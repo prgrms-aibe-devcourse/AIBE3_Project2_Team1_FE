@@ -9,10 +9,7 @@ export default function DashboardPage() {
   const tabData: Record<DashboardTabKey, DashboardTabData> = {
     'in-progress': {
       tab: 'in-progress',
-      projects: [
-        { id: 1, image: '/sample1.jpg', title: '앱 개발 프로젝트' },
-        { id: 2, image: '/sample2.jpg', title: '웹사이트 제작' },
-      ],
+      projects: [],
     },
     request: {
       tab: 'request',
