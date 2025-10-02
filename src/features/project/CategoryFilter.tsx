@@ -92,16 +92,22 @@ const categoryGroups: CategoryGroup[] = [
   },
 ];
 
-export default function CategoryFilter({ initialGroup = 'client' }: { initialGroup?: string }) {
+export default function CategoryFilter({
+  initialGroup = 'client',
+  initialCategory = 'all',
+}: {
+  initialGroup?: string;
+  initialCategory?: string;
+}) {
   const [selectedGroup, setSelectedGroup] = useState<string>(initialGroup);
-  const [selectedCategory, setSelectedCategory] = useState<string>('all');
+  const [selectedCategory, setSelectedCategory] = useState<string>(initialCategory);
   const [sortOption, setSortOption] = useState<string>('latest');
 
-  // initialGroup이 변경될 때 상태 업데이트
+  // initialGroup/initialCategory가 변경될 때 상태 업데이트
   useEffect(() => {
     setSelectedGroup(initialGroup);
-    setSelectedCategory('all');
-  }, [initialGroup]);
+    setSelectedCategory(initialCategory);
+  }, [initialGroup, initialCategory]);
 
   const filteredCards = cards
     .filter(
@@ -189,6 +195,8 @@ export default function CategoryFilter({ initialGroup = 'client' }: { initialGro
             reviews={card.reviews}
             budget={card.budget}
             author={card.author}
+            groupId={card.groupId}
+            categoryId={card.categoryId}
           />
         ))}
         {filteredCards.length === 0 && (
