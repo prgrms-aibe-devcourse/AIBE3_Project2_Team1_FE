@@ -1,6 +1,7 @@
 import { login } from '@/features/auth/auth';
 import { AuthContext } from '@/features/auth/AuthContext';
 import { signUp, type User } from '@/services/user';
+import { AxiosError } from 'axios';
 import { type ChangeEvent, type FormEvent, useContext, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
@@ -19,8 +20,11 @@ const SignUpPage = () => {
     birthDate: '',
   });
 
+  const [errorMessage, setErrorMessage] = useState<string>(''); // 로그인처럼 errorMessage 저장
+
   const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value });
+    setErrorMessage(''); // 입력 변경 시 에러 초기화
   };
 
   const handleSignUp = async (e: FormEvent) => {
@@ -49,13 +53,14 @@ const SignUpPage = () => {
 
       setUser(loginResult.data.item as User);
 
-      alert('회원가입 및 로그인 성공!');
       navigate('/');
-    } catch (err: unknown) {
-      console.error(err);
-      alert(
-        (err as { response?: { data?: { msg?: string } } }).response?.data?.msg || '회원가입 실패'
-      );
+    } catch (error) {
+      console.error(error);
+
+      const err = error as AxiosError<{ errorCode?: number; message?: string }>;
+
+      // 서버 메시지를 errorMessage에 저장
+      setErrorMessage(err.response?.data?.message || '회원가입 실패');
     }
   };
 
@@ -74,6 +79,7 @@ const SignUpPage = () => {
       const nextInput = document.querySelector<HTMLInputElement>(`input[name="${nextField}"]`);
       nextInput?.focus();
     }
+    setErrorMessage('');
   };
 
   return (
@@ -115,7 +121,6 @@ const SignUpPage = () => {
         required
       />
 
-      {/* 전화번호 입력 */}
       <div className="flex space-x-2 mb-4">
         <input
           name="phoneNumber1"
@@ -148,7 +153,6 @@ const SignUpPage = () => {
         />
       </div>
 
-      {/* 생일 입력 */}
       <div className="mb-4">
         <label className="block mb-1 font-medium">생년월일</label>
         <input
@@ -161,7 +165,10 @@ const SignUpPage = () => {
         />
       </div>
 
-      <button type="submit" className="bg-blue-500 text-white px-4 py-2 rounded">
+      {/* 로그인처럼 errorMessage 출력 */}
+      {errorMessage && <p className="text-red-500 text-sm mb-4">{errorMessage}</p>}
+
+      <button type="submit" className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
         가입하기
       </button>
     </form>
