@@ -1,15 +1,18 @@
+import { useState } from 'react';
 import { useParams, useSearchParams, useNavigate } from 'react-router-dom';
 import ProjectInfo from '../features/project/ProjectInfo';
+import ServiceInfo from '../features/project/ServiceInfo';
+import ProjectReview from '../features/project/ProjectReview';
 
 export default function ProjectDetail() {
   const { projectId } = useParams<{ projectId: string }>();
   const [searchParams] = useSearchParams();
-  const type = searchParams.get('type'); // freelancer / client
-  const category = searchParams.get('category'); // 카테고리
+  const type = searchParams.get('type');
+  const category = searchParams.get('category');
+  const [activeTab, setActiveTab] = useState<'service' | 'review'>('service');
 
   const navigate = useNavigate();
 
-  // 카테고리 이름 매핑
   const categoryNames: { [key: string]: string } = {
     all: '전체',
     video: '영상/사진/음향',
@@ -22,40 +25,55 @@ export default function ProjectDetail() {
     translate: '번역/통역',
   };
 
-  // 카테고리 버튼 클릭 → 카테고리 목록으로 이동
   const handleCategoryClick = () => {
     const groupId = type === 'freelancer' ? 'freelancer' : 'client';
     const categoryId = category || 'all';
     navigate(`/projects/${groupId}?category=${categoryId}`);
   };
 
-  // 그룹 버튼 클릭 → 그룹별 목록으로 이동
   const handleGroupClick = () => {
     const groupId = type === 'freelancer' ? 'freelancer' : 'client';
     navigate(`/projects/${groupId}`);
   };
 
+  const project = {
+    project_id: Number(projectId) || 0,
+    title: '프로젝트 제목',
+    budget: 100000,
+    author: '작성자',
+    rating: 4.5,
+    reviews: 123,
+    groupId: type === 'freelancer' ? 'freelancer' : 'client',
+    categoryId: category || 'all',
+  };
+
+  const profile = {
+    profile_id: 1,
+    user_id: 1,
+    title: type === 'freelancer' ? '프리랜서 프로필' : '클라이언트 프로필',
+    description: '',
+    skills: ['JavaScript', 'React'],
+    hourly_rate: 50000,
+  };
+
+  const favorite = { favorite: 12 };
+
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* 카테고리 필터 영역 */}
+      {/* 카테고리 영역 */}
       <div className="w-full max-w-6xl mx-auto px-4 py-6">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
           <div className="flex gap-2 flex-wrap">
-            {/* 그룹 버튼 */}
             <button
               onClick={handleGroupClick}
-              className="px-2 font-semibold text-[24px] transition text-[#666666] hover:underline hover:decoration-[#666666]"
+              className="px-2 font-semibold text-[24px] text-[#666666] hover:underline hover:decoration-[#666666]"
             >
               {type === 'freelancer' ? '프리랜서' : '클라이언트'}
             </button>
-
-            {/* 구분자 */}
             <span className="mx-1 text-[28px] text-[#666666]">›</span>
-
-            {/* 카테고리 버튼 */}
             <button
               onClick={handleCategoryClick}
-              className="px-2 font-semibold text-[24px] transition text-[#666666] hover:underline hover:decoration-[#666666]"
+              className="px-2 font-semibold text-[24px] text-[#666666] hover:underline hover:decoration-[#666666]"
             >
               {categoryNames[category || 'all']}
             </button>
@@ -63,32 +81,32 @@ export default function ProjectDetail() {
         </div>
       </div>
 
-      {/* 상세 정보 영역 */}
-      {(() => {
-        const project = {
-          project_id: Number(projectId) || 0,
-          title: '프로젝트 제목',
-          budget: 100000,
-          author: '작성자',
-          rating: 4.5,
-          reviews: 123,
-          groupId: type === 'freelancer' ? 'freelancer' : 'client',
-          categoryId: category || 'all',
-        };
+      {/* 상세 정보 */}
+      <ProjectInfo project={project} profile={profile} favorite={favorite} />
 
-        const profile = {
-          profile_id: 1,
-          user_id: 1,
-          title: type === 'freelancer' ? '프리랜서 프로필' : '클라이언트 프로필',
-          description: '',
-          skills: ['JavaScript', 'React'],
-          hourly_rate: 50000,
-        };
+      {/* 탭 버튼 */}
+      <div className="flex gap-4 p-4 max-w-6xl mx-auto font-medium text-[20px]">
+        <button
+          className={` py-2 rounded ${activeTab === 'service' ? 'text-[#2c2c2c]' : 'text-[#666666]'}`}
+          onClick={() => setActiveTab('service')}
+        >
+          서비스 설명
+        </button>
+        <button
+          className={`px-4 py-2 rounded ${activeTab === 'review' ? 'text-[#2c2c2c]' : 'text-[#666666]'}`}
+          onClick={() => setActiveTab('review')}
+        >
+          리뷰
+        </button>
+      </div>
 
-        const favorite = { favorite: 12 };
+      <hr className="border-t border-gray-300  max-w-6xl mx-auto" />
 
-        return <ProjectInfo project={project} profile={profile} favorite={favorite} />;
-      })()}
+      {/* 하단 내용 */}
+      <div className="max-w-6xl mx-auto p-4">
+        {activeTab === 'service' && <ServiceInfo />}
+        {activeTab === 'review' && <ProjectReview />}
+      </div>
     </div>
   );
 }
