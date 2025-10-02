@@ -34,14 +34,8 @@ const LoginPage = () => {
 
       console.error(err);
 
-      const errorCode = err.response?.data?.errorCode;
       const message = err.response?.data?.message || '로그인 실패';
-
-      if (errorCode) {
-        setErrorMessage(message);
-      } else {
-        setErrorMessage('로그인 실패');
-      }
+      setErrorMessage(message);
     }
   };
 
