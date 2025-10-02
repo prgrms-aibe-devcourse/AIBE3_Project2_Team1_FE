@@ -2,6 +2,7 @@ import { useState, useRef } from 'react';
 import TabNavigation from './components/TabNavigation';
 import KanbanView from './views/KanbanView.tsx';
 import CalendarView from './views/CalendarView';
+import FilesView from '@/features/milestone/views/FilesView.tsx';
 
 interface Member {
   id: string;
@@ -176,11 +177,7 @@ export default function OverviewView() {
 
         {activeTab === 'calendar' && <CalendarView />}
 
-        {activeTab === 'files' && (
-          <div className="bg-white rounded-lg border border-gray-200 p-8 text-center">
-            <p className="text-gray-500">파일 관리 (준비 중)</p>
-          </div>
-        )}
+        {activeTab === 'files' && <FilesView />}
       </div>
     </>
   );
