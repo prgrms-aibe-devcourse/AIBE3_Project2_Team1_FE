@@ -1,7 +1,7 @@
-import Home from '../pages/Home';
+import ReviewWritePage from '@/features/review/ReviewWritePage';
 import ClientProposalPage from '../pages/ClientProposal';
 import FreelancerProposalPage from '../pages/FreelancerProposal';
-import ReviewWritePage from '@/features/review/ReviewWritePage';
+import Home from '../pages/Home';
 import ProjectList from '../pages/ProjectList';
 
 export const routes = [
