@@ -18,10 +18,10 @@ export const login = async (credentials: {
   email: string;
   password: string;
 }): Promise<UserLoginResponseDto> => {
-  const res = await axiosInstance.post('/auth/login/basic', credentials);
+  const res = await axiosInstance.post('/users/login', credentials);
   return res.data as UserLoginResponseDto;
 };
 
 export const logout = async (): Promise<void> => {
-  await axiosInstance.delete('/auth/logout');
+  await axiosInstance.delete('/users/logout');
 };
