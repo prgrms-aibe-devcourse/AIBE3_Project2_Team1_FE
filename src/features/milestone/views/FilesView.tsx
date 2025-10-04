@@ -137,10 +137,29 @@ export default function FilesView() {
   const clearSelection = () => setSelected(new Set());
   const selectAll = () => setSelected(new Set(filtered.map((f) => f.id)));
 
+  const filesRef = useRef<FileItem[]>([]);
+  useEffect(() => {
+    filesRef.current = files;
+  }, [files]);
+
   const onDelete = useCallback((ids: string | string[]) => {
-    const delIds = Array.isArray(ids) ? ids : [ids];
-    setFiles((prev) => prev.filter((p) => !delIds.includes(p.id)));
+    const delIds = new Set(Array.isArray(ids) ? ids : [ids]);
+    setFiles((prev) => {
+      // ← 괄호 수정
+      prev.forEach((file) => {
+        if (delIds.has(file.id)) {
+          URL.revokeObjectURL(file.url);
+        }
+      });
+      return prev.filter((file) => !delIds.has(file.id));
+    });
     setSelected(new Set());
+  }, []);
+  useEffect(() => {
+    // ← 괄호 수정
+    return () => {
+      filesRef.current.forEach((file) => URL.revokeObjectURL(file.url));
+    };
   }, []);
 
   const startRename = (f: FileItem) => {
