@@ -38,3 +38,17 @@ export const changePassword = async (data: UserPasswordChangeRequestDto): Promis
 export const deleteUser = async (): Promise<void> => {
   await axiosInstance.delete('/users');
 };
+
+export const getAdminAuthHeader = () => {
+  return localStorage.getItem('adminAuthHeader') || null;
+};
+
+export const setAdminAuthHeader = (username: string, password: string) => {
+  const basicAuth = 'Basic ' + btoa(`${username}:${password}`);
+  localStorage.setItem('adminAuthHeader', basicAuth);
+  return basicAuth;
+};
+
+export const clearAdminAuthHeader = () => {
+  localStorage.removeItem('adminAuthHeader');
+};
