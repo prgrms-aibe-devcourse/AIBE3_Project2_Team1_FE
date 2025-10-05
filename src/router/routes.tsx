@@ -8,6 +8,8 @@ import Home from '../pages/Home';
 import ProjectList from '../pages/ProjectList';
 import OverviewPage from '@/pages/OverviewPage';
 import FreelancerNotifications from '@/features/message/FreelancerNotificationsPage';
+import AdminLoginPage from '@/features/admin/pages/AdminLoginPage';
+import AdminDashboardPage from '@/features/admin/pages/AdminDashboardPage';
 
 export const routes = [
   { path: '/', element: <Home /> },
@@ -23,4 +25,6 @@ export const routes = [
     path: '/messages/notifications',
     element: <FreelancerNotifications />,
   },
+  { path: '/admin/login', element: <AdminLoginPage /> },
+  { path: '/admin/dashboard', element: <AdminDashboardPage /> },
 ];
