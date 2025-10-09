@@ -5,7 +5,7 @@ import ReviewWritePage from '@/features/review/ReviewWritePage';
 import ProjectList from '../pages/ProjectList';
 import ProfilePage from '@/features/profile';
 import OverviewPage from '@/pages/OverviewPage';
-
+import Matching from '@/pages/MatchingPage';
 export const routes = [
   { path: '/', element: <Home /> },
   { path: '/client-proposal', element: <ClientProposalPage /> },
@@ -14,4 +14,5 @@ export const routes = [
   { path: '/projects/:groupId', element: <ProjectList /> },
   { path: '/profile', element: <ProfilePage /> },
   { path: '/overview', element: <OverviewPage /> },
+  { path: '/matching', element: <Matching /> },
 ];
