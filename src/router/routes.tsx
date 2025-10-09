@@ -4,6 +4,7 @@ import FreelancerProposalPage from '../pages/FreelancerProposal';
 import ReviewWritePage from '@/features/review/ReviewWritePage';
 import ProjectList from '../pages/ProjectList';
 import ProjectDetail from '../pages/ProjectDetail';
+import ProjectWrite from '../pages/ProjectWrite';
 
 export const routes = [
   { path: '/', element: <Home /> },
@@ -13,4 +14,5 @@ export const routes = [
   { path: '/projects/:groupId', element: <ProjectList /> },
   { path: '/projects/:groupId/:categoryId', element: <ProjectList /> },
   { path: '/project/:projectId', element: <ProjectDetail /> },
+  { path: '/project/write', element: <ProjectWrite /> },
 ];
