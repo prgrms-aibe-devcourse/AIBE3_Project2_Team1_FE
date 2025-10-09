@@ -3,10 +3,11 @@ import ClientProposalPage from '../pages/ClientProposal';
 import FreelancerProposalPage from '../pages/FreelancerProposal';
 import ReviewWritePage from '@/features/review/ReviewWritePage';
 import ProjectList from '../pages/ProjectList';
-import ProfilePage from '@/features/profile';
+import ProfilePage from '@/features/profile/pages';
 import OverviewPage from '@/pages/OverviewPage';
 import Matching from '@/pages/MatchingPage';
 import MatchDetailPage from '@/features/dashboard/pages/MatchDetailPage';
+import MyPageEdit from '@/features/profile/pages/MyPageEdit';
 
 export const routes = [
   { path: '/', element: <Home /> },
@@ -18,4 +19,5 @@ export const routes = [
   { path: '/overview', element: <OverviewPage /> },
   { path: '/matching', element: <Matching /> },
   { path: '/match/:id', element: <MatchDetailPage /> },
+  { path: '/profile/edit', element: <MyPageEdit /> },
 ];
