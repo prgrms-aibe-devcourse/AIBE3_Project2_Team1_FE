@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import ProfileCard from './components/ProfileCard';
-import DashboardPage from '../dashboard';
+import DashboardPage from '../dashboard/pages';
 import type { Mode } from './types';
 
 export default function ProfilePage() {

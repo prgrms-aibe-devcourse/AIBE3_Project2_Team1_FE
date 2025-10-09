@@ -6,7 +6,7 @@ import ProjectList from '../pages/ProjectList';
 import ProfilePage from '@/features/profile';
 import OverviewPage from '@/pages/OverviewPage';
 import Matching from '@/pages/MatchingPage';
-import MatchDetailPage from '@/features/dashboard/MatchDetailPage';
+import MatchDetailPage from '@/features/dashboard/pages/MatchDetailPage';
 
 export const routes = [
   { path: '/', element: <Home /> },

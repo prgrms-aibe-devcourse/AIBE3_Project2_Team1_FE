@@ -13,14 +13,8 @@ export default function MatchDetailPage() {
   return (
     <div className="min-h-screen flex flex-col justify-between bg-white">
       {/* 헤더 */}
-      <header className="flex items-center justify-between px-8 py-4 shadow-sm">
-        <div className="w-20" />
+      <header className="flex items-center justify-center px-8 py-4 shadow-sm">
         <h1 className="text-rose-500 font-bold text-4xl">Pickple</h1>
-        <div className="flex gap-2 text-gray-600 text-sm">
-          <button className="hover:text-gray-800">로그인</button>
-          <span>|</span>
-          <button className="hover:text-gray-800">회원가입</button>
-        </div>
       </header>
 
       {/* 본문 */}
@@ -50,10 +44,10 @@ export default function MatchDetailPage() {
 
         {/* 버튼 영역 */}
         <div className="w-full max-w-2xl flex justify-end gap-4">
-          <button className="bg-gray-300 hover:bg-gray-400 text-gray-800 px-6 py-2 rounded-lg font-medium">
+          <button className="bg-gray-300 hover:bg-teal-500 text-gray-800 hover:text-white px-6 py-2 rounded-lg font-medium">
             매칭 수락
           </button>
-          <button className="bg-teal-500 hover:bg-teal-600 text-white px-6 py-2 rounded-lg font-medium">
+          <button className="bg-gray-300 hover:bg-teal-500 text-gray-800 hover:text-white px-6 py-2 rounded-lg font-medium">
             매칭 거절
           </button>
         </div>
