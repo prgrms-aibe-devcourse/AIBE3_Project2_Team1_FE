@@ -37,7 +37,13 @@ const LoginPage = () => {
   };
 
   const handleSocialLogin = (provider: string) => {
-    window.location.href = `http://localhost:8080/oauth2/authorization/${provider}`;
+    const allowedProviders = ['kakao', 'naver', 'google'];
+    if (!allowedProviders.includes(provider)) {
+      console.error('지원하지 않는 소셜 로그인 제공자입니다.');
+      return;
+    }
+    const baseUrl = 'http://localhost:8080';
+    window.location.href = `${baseUrl}/oauth2/authorization/${provider}`;
   };
 
   return (

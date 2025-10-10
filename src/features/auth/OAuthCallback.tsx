@@ -3,6 +3,7 @@ import { useAuth } from '@/features/auth/AuthContext';
 import { getCurrentUser } from '@/features/auth/auth';
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { toast } from 'react-toastify';
 
 const OAuthCallback = () => {
   const { setUser } = useAuth();
@@ -22,6 +23,7 @@ const OAuthCallback = () => {
         setUser(null);
         localStorage.removeItem('user');
         localStorage.removeItem('accessToken');
+        toast.error('로그인에 실패했습니다. 다시 시도해주세요.');
       } finally {
         setLoading(false);
         navigate('/');

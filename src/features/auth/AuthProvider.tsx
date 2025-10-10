@@ -18,7 +18,13 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
       if (storedUser && token) {
         try {
-          setUser(JSON.parse(storedUser) as User);
+          const parsedUser = JSON.parse(storedUser);
+          // 기본 유효성 검증
+          if (parsedUser && typeof parsedUser === 'object') {
+            setUser(parsedUser as User);
+          } else {
+            throw new Error('Invalid user data format');
+          }
         } catch (error) {
           console.error('저장된 사용자 정보 파싱 실패:', error);
           localStorage.removeItem('user');
