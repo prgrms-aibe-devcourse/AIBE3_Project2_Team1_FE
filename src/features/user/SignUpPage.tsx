@@ -8,11 +8,23 @@ import { useNavigate } from 'react-router-dom';
 import clientIcon from '@/assets/client.png';
 import freelancerIcon from '@/assets/freelancer.png';
 
+import type { Role } from '@/features/user/user';
+
 const SignUpPage = () => {
   const navigate = useNavigate();
   const { setUser } = useContext(AuthContext);
 
-  const [form, setForm] = useState({
+  const [form, setForm] = useState<{
+    email: string;
+    password: string;
+    nickname: string;
+    name: string;
+    phoneNumber1: string;
+    phoneNumber2: string;
+    phoneNumber3: string;
+    birthDate: string;
+    role: Role | '';
+  }>({
     email: '',
     password: '',
     nickname: '',
@@ -45,7 +57,7 @@ const SignUpPage = () => {
     }
   };
 
-  const handleRoleSelect = (role: 'CLIENT' | 'FREELANCER') => {
+  const handleRoleSelect = (role: Role) => {
     setForm({ ...form, role });
   };
 
@@ -207,10 +219,9 @@ const SignUpPage = () => {
             <button
               type="button"
               onClick={() => handleRoleSelect('CLIENT')}
-              className={`flex flex-col items-center justify-center w-32 h-24 border rounded-md transition 
-              ${
+              className={`flex flex-col items-center justify-center w-32 h-24 border rounded-md transition ${
                 form.role === 'CLIENT'
-                  ? 'bg-gray-100 border-gray-400'
+                  ? 'bg-blue-400 text-white'
                   : 'border-gray-200 hover:border-gray-400'
               }`}
             >
@@ -221,8 +232,7 @@ const SignUpPage = () => {
             <button
               type="button"
               onClick={() => handleRoleSelect('FREELANCER')}
-              className={`flex flex-col items-center justify-center w-32 h-24 border rounded-md transition 
-              ${
+              className={`flex flex-col items-center justify-center w-32 h-24 border rounded-md transition ${
                 form.role === 'FREELANCER'
                   ? 'bg-rose-400 text-white'
                   : 'border-gray-200 hover:border-gray-400'
@@ -239,6 +249,7 @@ const SignUpPage = () => {
             </button>
           </div>
 
+          {/* 에러 메시지 */}
           {errorMessage && <p className="text-red-500 text-sm text-center">{errorMessage}</p>}
 
           {/* 하단 버튼 */}

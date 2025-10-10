@@ -1,4 +1,9 @@
-export type Role = 'CLIENT' | 'FREELANCER';
+export const Role = {
+  CLIENT: 'CLIENT',
+  FREELANCER: 'FREELANCER',
+} as const;
+
+export type Role = (typeof Role)[keyof typeof Role];
 
 export interface UserDto {
   accessToken: string;
