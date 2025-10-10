@@ -9,6 +9,7 @@ import clientIcon from '@/assets/client.png';
 import freelancerIcon from '@/assets/freelancer.png';
 
 import type { Role } from '@/features/user/user';
+import { toast } from 'react-toastify';
 
 const SignUpPage = () => {
   const navigate = useNavigate();
@@ -81,6 +82,8 @@ const SignUpPage = () => {
         birthDate: form.birthDate,
         role: form.role,
       });
+
+      toast.success('회원가입이 완료되었습니다. Pickple에 오신 걸 환영합니다!');
 
       const loginResult = await login({
         email: form.email,
