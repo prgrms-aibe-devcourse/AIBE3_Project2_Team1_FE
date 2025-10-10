@@ -30,7 +30,6 @@ const LoginPage = () => {
       localStorage.setItem('user', JSON.stringify(userData));
 
       setUser(userData);
-
       navigate('/');
     } catch (err) {
       const error = err as AxiosError<{ errorCode: number; message: string }>;
@@ -45,8 +44,8 @@ const LoginPage = () => {
       <div className="bg-white rounded-lg shadow-md max-w-md w-full p-6 space-y-6">
         <h1 className="text-2xl font-bold text-center">로그인</h1>
 
-        <form onSubmit={handleLogin} className="space-y-4">
-          <div>
+        <form onSubmit={handleLogin} className="space-y-4 flex flex-col items-center">
+          <div className="w-full">
             <label htmlFor="email" className="block text-sm font-medium text-gray-700">
               이메일
             </label>
@@ -61,7 +60,8 @@ const LoginPage = () => {
               className="mt-1 block w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-rose-400 focus:border-rose-400"
             />
           </div>
-          <div>
+
+          <div className="w-full">
             <label htmlFor="password" className="block text-sm font-medium text-gray-700">
               비밀번호
             </label>
@@ -78,17 +78,18 @@ const LoginPage = () => {
           </div>
 
           {errorMessage && <p className="text-red-500 text-sm mt-1">{errorMessage}</p>}
+
+          <button type="submit" className="w-[398px] h-[56px] mt-2">
+            <img src={emailIcon} alt="email login" className="w-full h-full object-contain" />
+          </button>
         </form>
 
-        <div className="space-y-3">
+        <div className="space-y-3 flex flex-col items-center">
           <button className="w-[398px] h-[56px]">
-            <img src={emailIcon} alt="email" className="w-full h-full object-contain" />
+            <img src={kakaoIcon} alt="kakao login" className="w-full h-full object-contain" />
           </button>
           <button className="w-[398px] h-[56px]">
-            <img src={kakaoIcon} alt="kakao" className="w-full h-full object-contain" />
-          </button>
-          <button className="w-[398px] h-[56px]">
-            <img src={naverIcon} alt="naver" className="w-full h-full object-contain" />
+            <img src={naverIcon} alt="naver login" className="w-full h-full object-contain" />
           </button>
         </div>
       </div>
