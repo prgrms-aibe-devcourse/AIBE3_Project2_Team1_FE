@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 
-interface Message {
+export interface Message {
   messageId: number;
   senderUserId: number;
   senderName: string;

@@ -1,13 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { Send, ArrowLeft, MoreVertical, Trash2 } from 'lucide-react';
-
-interface Message {
-  messageId: number;
-  senderUserId: number;
-  senderName: string;
-  content: string;
-  createdAt: string;
-}
+import type { Message } from './useChatRoom';
 
 interface ChatRoomPageProps {
   roomId?: number;

@@ -138,16 +138,12 @@ export default function ChatRoomListPage() {
                   <p className="text-sm text-gray-600 truncate">
                     {room.lastMessage ?? '메시지가 없습니다'}
                   </p>
-
-                  <div className="flex items-center gap-2 text-sm text-gray-500 mt-1">
-                    <Clock className="w-4 h-4" />
-                    <span>{formatDate(room.lastMessageTime ?? room.createdAt)}</span>
-                  </div>
                   <div className="flex items-center gap-2 text-sm text-gray-500">
                     <Clock className="w-4 h-4" />
                     <span>{formatDate(room.createdAt)}</span>
                   </div>
                 </div>
+
                 <div className="text-gray-400">
                   <MessageSquare className="w-5 h-5" />
                 </div>
