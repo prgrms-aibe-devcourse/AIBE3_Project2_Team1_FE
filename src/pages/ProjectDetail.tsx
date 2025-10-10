@@ -104,7 +104,20 @@ export default function ProjectDetail() {
 
       {/* 하단 내용 */}
       <div className="max-w-6xl mx-auto p-4">
-        {activeTab === 'service' && <ServiceInfo />}
+        {activeTab === 'service' && (
+          <ServiceInfo
+            project={{
+              title: '웹사이트 제작 의뢰',
+              description: '포트폴리오용 반응형 웹사이트 제작 원합니다.',
+              category: 'IT/프로그래밍',
+              budget: 500000,
+              deadline: '2025-10-15',
+              client: '이해민',
+              freelancer: '김수민',
+              status: 'OPEN',
+            }}
+          />
+        )}
         {activeTab === 'review' && <ProjectReview />}
       </div>
     </div>

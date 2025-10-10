@@ -1,7 +1,9 @@
 import { useNavigate } from 'react-router-dom';
 import favoriteImg from '../../assets/images/Favorite.png';
 import starImg from '../../assets/images/fluent-color_star-16.png';
-import bookmarkImg from '../../assets/images/material-symbols_bookmark-outline.png';
+import bookmarkEmptyImg from '../../assets/images/material-symbols_bookmark-outline.png';
+import bookmarkFullImg from '../../assets/images/material-symbols_bookmark.png';
+import { useState } from 'react';
 
 interface Project {
   project_id: number;
@@ -36,7 +38,11 @@ interface ProjectInfoProps {
 
 export default function ProjectInfo({ project, profile, favorite }: ProjectInfoProps) {
   const navigate = useNavigate();
+  const [bookmarked, setBookmarked] = useState(false);
 
+  const toggleBookmark = () => {
+    setBookmarked((prev) => !prev); // true ↔ false 토글
+  };
   const goHome = () => {
     navigate('/');
   };
@@ -46,8 +52,12 @@ export default function ProjectInfo({ project, profile, favorite }: ProjectInfoP
       {/* 프로젝트 제목 */}
       <div className="max-w-6xl mx-auto flex items-center justify-between p-3">
         <h2 className="text-2xl font-bold">{project.title}</h2>
-        <button onClick={goHome}>
-          <img src={bookmarkImg} alt="bookmark" className="w-8 h-8 cursor-pointer" />
+        <button onClick={toggleBookmark}>
+          <img
+            src={bookmarked ? bookmarkFullImg : bookmarkEmptyImg}
+            alt="bookmark"
+            className="w-8 h-8 cursor-pointer transition-transform duration-200 hover:scale-110"
+          />
         </button>
       </div>
 
