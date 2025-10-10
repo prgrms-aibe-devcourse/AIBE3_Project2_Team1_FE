@@ -1,3 +1,10 @@
+export const Role = {
+  CLIENT: 'CLIENT',
+  FREELANCER: 'FREELANCER',
+} as const;
+
+export type Role = (typeof Role)[keyof typeof Role];
+
 export interface UserDto {
   accessToken: string;
   data: {
@@ -19,6 +26,7 @@ export interface UserRegisterRequestDto {
   name: string;
   phoneNumber: string;
   birthDate: string;
+  role: Role;
 }
 
 export interface UserUpdateRequestDto {
