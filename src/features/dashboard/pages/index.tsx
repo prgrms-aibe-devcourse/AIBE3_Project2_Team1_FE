@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import TabDashboard from './components/TabDashboard';
+import TabDashboard from '@/features/dashboard/components/TabDashboard';
 import TabContentDashboard from '@/features/dashboard/components/TabContent';
-import type { DashboardTabKey, DashboardTabData } from './types';
+import type { DashboardTabKey, DashboardTabData } from '../types';
 
 export default function DashboardPage() {
   const [activeTab, setActiveTab] = useState<DashboardTabKey>('in-progress');

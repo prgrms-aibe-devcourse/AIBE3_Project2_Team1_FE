@@ -7,7 +7,7 @@ import ClientProposalPage from '@/pages/ClientProposal';
 import FreelancerProposalPage from '@/pages/FreelancerProposal';
 import ReviewWritePage from '@/features/review/ReviewWritePage';
 import ProjectList from '@/pages/ProjectList';
-import ProfilePage from '@/features/profile';
+import ProfilePage from '@/features/profile/pages';
 import OverviewPage from '@/pages/OverviewPage';
 import AdminDashboardPage from '@/features/admin/pages/AdminDashboardPage';
 
