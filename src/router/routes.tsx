@@ -9,8 +9,6 @@ import ReviewWritePage from '@/features/review/ReviewWritePage';
 import ProjectList from '@/pages/ProjectList';
 import ProfilePage from '@/features/profile';
 import OverviewPage from '@/pages/OverviewPage';
-
-import FreelancerNotifications from '@/features/message/FreelancerNotificationsPage';
 import AdminDashboardPage from '@/features/admin/pages/AdminDashboardPage';
 
 import ChatRoomListPage from '@/features/message/ChatRoomListPage';
@@ -32,7 +30,6 @@ export const mainRoutes = [
   { path: '/projects/:groupId', element: <ProjectList /> },
   { path: '/profile', element: <ProfilePage /> },
   { path: '/overview', element: <OverviewPage /> },
-  { path: '/messages/notifications', element: <FreelancerNotifications /> },
   { path: '/chat', element: <ChatRoomListPage /> },
   { path: '/chat/:roomId', element: <ChatRoomRoute /> },
   { path: '/admin/dashboard', element: <AdminDashboardPage /> },
