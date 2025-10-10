@@ -44,8 +44,8 @@ const LoginPage = () => {
       <div className="bg-white rounded-lg shadow-md max-w-md w-full p-6 space-y-6">
         <h1 className="text-2xl font-bold text-center">로그인</h1>
 
-        <form onSubmit={handleLogin} className="space-y-4 flex flex-col items-center">
-          <div className="w-full">
+        <form onSubmit={handleLogin} className="space-y-4">
+          <div>
             <label htmlFor="email" className="block text-sm font-medium text-gray-700">
               이메일
             </label>
@@ -61,7 +61,7 @@ const LoginPage = () => {
             />
           </div>
 
-          <div className="w-full">
+          <div>
             <label htmlFor="password" className="block text-sm font-medium text-gray-700">
               비밀번호
             </label>
@@ -77,21 +77,20 @@ const LoginPage = () => {
             />
           </div>
 
-          {errorMessage && <p className="text-red-500 text-sm mt-1">{errorMessage}</p>}
+          {errorMessage && <p className="text-red-500 text-sm">{errorMessage}</p>}
 
-          <button type="submit" className="w-[398px] h-[56px] mt-2">
-            <img src={emailIcon} alt="email login" className="w-full h-full object-contain" />
-          </button>
+          <div className="flex flex-col items-center space-y-3 pt-2">
+            <button type="submit" className="w-[398px] h-[56px]">
+              <img src={emailIcon} alt="email login" className="w-full h-full object-contain" />
+            </button>
+            <button type="button" className="w-[398px] h-[56px]">
+              <img src={kakaoIcon} alt="kakao login" className="w-full h-full object-contain" />
+            </button>
+            <button type="button" className="w-[398px] h-[56px]">
+              <img src={naverIcon} alt="naver login" className="w-full h-full object-contain" />
+            </button>
+          </div>
         </form>
-
-        <div className="space-y-3 flex flex-col items-center">
-          <button className="w-[398px] h-[56px]">
-            <img src={kakaoIcon} alt="kakao login" className="w-full h-full object-contain" />
-          </button>
-          <button className="w-[398px] h-[56px]">
-            <img src={naverIcon} alt="naver login" className="w-full h-full object-contain" />
-          </button>
-        </div>
       </div>
     </div>
   );
