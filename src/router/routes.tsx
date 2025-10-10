@@ -9,7 +9,7 @@ import ReviewWritePage from '@/features/review/ReviewWritePage';
 import ProjectList from '@/pages/ProjectList';
 import ProjectDetail from '../pages/ProjectDetail';
 import ProjectWrite from '../pages/ProjectWrite';
-import ProfilePage from '@/features/profile';
+import ProfilePage from '@/features/profile/pages';
 import OverviewPage from '@/pages/OverviewPage';
 import AdminDashboardPage from '@/features/admin/pages/AdminDashboardPage';
 
