@@ -80,15 +80,15 @@ const LoginPage = () => {
           {errorMessage && <p className="text-red-500 text-sm mt-1">{errorMessage}</p>}
         </form>
 
-        <div className="space-y-2">
-          <button className="w-full flex items-center justify-center border border-gray-300 py-2 rounded hover:bg-gray-100">
-            <img src={emailIcon} alt="email" />
+        <div className="space-y-3">
+          <button className="w-[398px] h-[56px]">
+            <img src={emailIcon} alt="email" className="w-full h-full object-contain" />
           </button>
-          <button className="w-full flex items-center justify-center bg-yellow-400 text-black py-2 rounded hover:bg-yellow-500 transition">
-            <img src={kakaoIcon} alt="kakao" />
+          <button className="w-[398px] h-[56px]">
+            <img src={kakaoIcon} alt="kakao" className="w-full h-full object-contain" />
           </button>
-          <button className="w-full flex items-center justify-center bg-green-500 text-white py-2 rounded hover:bg-green-600 transition">
-            <img src={naverIcon} alt="naver" />
+          <button className="w-[398px] h-[56px]">
+            <img src={naverIcon} alt="naver" className="w-full h-full object-contain" />
           </button>
         </div>
       </div>
