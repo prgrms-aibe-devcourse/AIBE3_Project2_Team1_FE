@@ -8,12 +8,15 @@ export interface AuthContextType {
   loading: boolean;
 }
 
-export const AuthContext = createContext<AuthContextType | undefined>(undefined);
+const defaultAuthContext: AuthContextType = {
+  user: null,
+  setUser: () => {},
+  loading: false,
+};
 
-export const useAuth = () => {
+export const AuthContext = createContext<AuthContextType>(defaultAuthContext);
+
+export const useAuth = (): AuthContextType => {
   const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
   return context;
 };
