@@ -1,3 +1,5 @@
+export type Role = 'CLIENT' | 'FREELANCER';
+
 export interface UserDto {
   accessToken: string;
   data: {
@@ -19,6 +21,7 @@ export interface UserRegisterRequestDto {
   name: string;
   phoneNumber: string;
   birthDate: string;
+  role: Role;
 }
 
 export interface UserUpdateRequestDto {
