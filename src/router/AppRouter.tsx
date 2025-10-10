@@ -1,12 +1,25 @@
 import { Routes, Route } from 'react-router-dom';
-import { routes } from './routes';
+import { mainRoutes, noLayoutRoutes } from './routes';
 
-export default function AppRouter() {
+import MainLayout from '@/layouts/MainLayout';
+import NoLayout from '@/layouts/NoLayout';
+
+const AppRouter = () => {
   return (
     <Routes>
-      {routes.map(({ path, element }) => (
-        <Route key={path} path={path} element={element} />
-      ))}
+      <Route element={<NoLayout />}>
+        {noLayoutRoutes.map((route) => (
+          <Route key={route.path} path={route.path} element={route.element} />
+        ))}
+      </Route>
+
+      <Route element={<MainLayout />}>
+        {mainRoutes.map((route) => (
+          <Route key={route.path} path={route.path} element={route.element} />
+        ))}
+      </Route>
     </Routes>
   );
-}
+};
+
+export default AppRouter;

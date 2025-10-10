@@ -6,12 +6,14 @@ import axios from 'axios';
  */
 
 export const axiosInstance = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL ?? '/api', // API의 기본 URL (환경 변수에서 가져오거나 기본값 사용)
+  baseURL: import.meta.env.VITE_API_BASE_URL ?? '/api/v1', // API의 기본 URL (환경 변수에서 가져오거나 기본값 사용)
   withCredentials: true, // 쿠키 등 인증 정보 포함
   headers: {
     'Content-Type': 'application/json', // 기본 요청 헤더
   },
 });
+
+export default axiosInstance;
 
 // 요청 인터셉터 설정 -> 로컬 스토리지에서 accessToken을 가져와 Authorization 헤더에 자동으로 추가
 axiosInstance.interceptors.request.use(
@@ -39,3 +41,4 @@ axiosInstance.interceptors.response.use(
     return Promise.reject(error);
   }
 );
+// 테스트용 주석
