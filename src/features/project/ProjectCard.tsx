@@ -1,3 +1,4 @@
+import { useNavigate } from 'react-router-dom';
 import starImg from '../../assets/images/fluent-color_star-16.png';
 
 interface ProjectCardProps {
@@ -7,11 +8,31 @@ interface ProjectCardProps {
   author: string;
   rating: number;
   reviews: number;
+  groupId: string;
+  categoryId: string;
 }
 
-export default function ProjectCard({ title, rating, reviews, budget, author }: ProjectCardProps) {
+export default function ProjectCard({
+  project_id,
+  title,
+  rating,
+  reviews,
+  budget,
+  author,
+  groupId,
+  categoryId,
+}: ProjectCardProps) {
+  const navigate = useNavigate();
+
+  const handleClick = () => {
+    navigate(`/project/${project_id}?type=${groupId}&category=${categoryId}`);
+  };
+
   return (
-    <div className="h-[340px] w-[320px] rounded hover:bg-[#f2f2f2] hover:rounded-[20px] flex flex-col justify-center items-center p-2">
+    <div
+      onClick={handleClick}
+      className="h-[340px] w-[320px] rounded hover:bg-[#f2f2f2] hover:rounded-[20px] flex flex-col justify-center items-center p-2"
+    >
       <div>
         <div
           className="bg-gray-200 h-[190px] w-[280px] mb-2 rounded-[20px] flex items-center justify-center"

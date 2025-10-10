@@ -27,6 +27,9 @@ const Header = () => {
         </Link>
 
         <nav className="flex items-center space-x-8 text-sm text-gray-700 font-medium">
+          <Link to="/project/write" className="hover:text-rose-400">
+            프로젝트 생성하기
+          </Link>
           <Link to="/projects/freelancer" className="hover:text-rose-400">
             프리랜서 찾기
           </Link>
