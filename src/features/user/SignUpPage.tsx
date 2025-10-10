@@ -59,7 +59,8 @@ const SignUpPage = () => {
   };
 
   const handleRoleSelect = (role: Role) => {
-    setForm({ ...form, role });
+    setForm((prev) => ({ ...prev, role }));
+    setErrorMessage('');
   };
 
   const handleSignUp = async (e: FormEvent) => {
