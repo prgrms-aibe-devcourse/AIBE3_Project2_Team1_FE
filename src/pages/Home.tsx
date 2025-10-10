@@ -1,4 +1,3 @@
-import React from 'react';
 import { Link } from 'react-router-dom';
 import illustrationImg from '../assets/images/Rectangle.png';
 import circleChartImg from '../assets/images/Circle Chart.png';

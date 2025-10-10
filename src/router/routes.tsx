@@ -23,7 +23,7 @@ export const noLayoutRoutes = [
   { path: '/admin/login', element: <AdminLoginPage /> },
 ];
 
-export const routes = [
+export const mainRoutes = [
   { path: '/', element: <Home /> },
   { path: '/client-proposal', element: <ClientProposalPage /> },
   { path: '/freelancer-proposal', element: <FreelancerProposalPage /> },

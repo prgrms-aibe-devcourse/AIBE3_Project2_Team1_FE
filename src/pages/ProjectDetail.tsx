@@ -28,7 +28,7 @@ export default function ProjectDetail() {
   const handleCategoryClick = () => {
     const groupId = type === 'freelancer' ? 'freelancer' : 'client';
     const categoryId = category || 'all';
-    navigate(`/projects/${groupId}?category=${categoryId}`);
+    navigate(`/projects/${groupId}/${categoryId}`);
   };
 
   const handleGroupClick = () => {

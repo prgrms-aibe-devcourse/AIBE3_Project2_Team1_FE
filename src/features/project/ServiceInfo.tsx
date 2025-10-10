@@ -1,6 +1,19 @@
-import React from 'react';
+interface Project {
+  title: string;
+  description: string;
+  category: string;
+  budget: number;
+  deadline: string;
+  client?: string;
+  freelancer?: string;
+  status: 'OPEN' | 'IN_PROGRESS' | 'CLOSED';
+}
 
-export default function ServiceInfo({ project }) {
+interface ServiceInfoProps {
+  project?: Project; // project가 아직 로딩 중일 수도 있으므로 optional
+}
+
+export default function ServiceInfo({ project }: ServiceInfoProps) {
   // project prop 예시:
   // {
   //   title: "로고 디자인 의뢰",

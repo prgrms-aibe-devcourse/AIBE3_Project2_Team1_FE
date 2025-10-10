@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import axios from 'axios';
 
 const commonCategories = [
@@ -33,21 +33,33 @@ export default function WritePage() {
       alert('모든 필드를 입력해주세요.');
       return;
     }
+    const parsedBudget = Number(budget);
+    if (!Number.isFinite(parsedBudget) || parsedBudget < 0) {
+      alert('예산은 0 이상의 숫자여야 합니다.');
+      return;
+    }
 
     const projectData = {
       title,
       description: content,
-      budget: Number(budget) || 0,
+      budget: parsedBudget,
       deadline: deadline || null,
       category, // ENUM 문자열 (예: "VIDEO", "WRITE")
     };
 
     try {
-      const response = await axios.post('http://localhost:8080/api/v1/projects', projectData, {
+      const token = localStorage.getItem('accessToken');
+      if (!token) {
+        alert('로그인이 필요합니다. 다시 로그인 후 이용해주세요.');
+        return;
+      }
+      const baseURL = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8080';
+      const response = await axios.post(`${baseURL}/api/v1/projects`, projectData, {
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${localStorage.getItem('accessToken')}`,
+          Authorization: `Bearer ${token}`,
         },
+        timeout: 8000,
       });
       alert('프로젝트가 등록되었습니다!');
       console.log('등록 성공:', response.data);
