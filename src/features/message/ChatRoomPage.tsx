@@ -1,106 +1,37 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Send, ArrowLeft, MoreVertical, Trash2 } from 'lucide-react';
-import type { Message } from './useChatRoom';
+import { useChatRoom } from '@/features/message/useChatRoom';
+import { useContext } from 'react';
+import { AuthContext } from '@/features/auth/AuthContext'; // 실제 경로에 맞게
 
 interface ChatRoomPageProps {
   roomId?: number;
 }
 
 export default function ChatRoomPage({ roomId = 1 }: ChatRoomPageProps) {
-  const [messages, setMessages] = useState<Message[]>([]);
+  const { user } = useContext(AuthContext);
+  const currentUserId = user?.id ?? null;
+  const { messages, loading, sendMessage, deleteMessage } = useChatRoom(roomId);
   const [newMessage, setNewMessage] = useState('');
-  const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
-  const [currentUserId] = useState<number>(1); // setter 제거
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const eventSourceRef = useRef<EventSource | null>(null);
-
-  // 메시지 목록 로드 (useCallback으로 의존성 충족)
-  const fetchMessages = useCallback(async () => {
-    try {
-      setLoading(true);
-      const response = await fetch(`/api/messages/chatroom/${roomId}`);
-      const data = await response.json();
-      setMessages(data);
-    } catch (error) {
-      console.error('메시지 로드 실패:', error);
-    } finally {
-      setLoading(false);
-    }
-  }, [roomId]);
-
-  // SSE 연결
-  useEffect(() => {
-    const eventSource = new EventSource(`/api/sse/chatroom/${roomId}`);
-    eventSourceRef.current = eventSource;
-
-    eventSource.addEventListener('message', (event) => {
-      try {
-        const newMsg = JSON.parse(event.data);
-        setMessages((prev) => [...prev, newMsg]);
-      } catch (error) {
-        console.error('메시지 파싱 실패:', error);
-      }
-    });
-
-    eventSource.addEventListener('connect', (event) => {
-      console.log('SSE 연결됨:', event.data);
-    });
-
-    eventSource.onerror = (error) => {
-      console.error('SSE 에러:', error);
-      eventSource.close();
-    };
-
-    return () => {
-      eventSource.close();
-    };
-  }, [roomId]);
-
-  // 초기 메시지 로드
-  useEffect(() => {
-    void fetchMessages();
-  }, [fetchMessages]);
 
   // 새 메시지 올 때마다 스크롤
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  const sendMessage = async () => {
+  const handleSendMessage = async () => {
     if (!newMessage.trim()) return;
 
     try {
       setSending(true);
-      await fetch('/api/v1/messages', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          chatRoomId: roomId,
-          content: newMessage,
-        }),
-      });
-
+      await sendMessage(newMessage);
       setNewMessage('');
-    } catch (error) {
-      console.error('메시지 전송 실패:', error);
+    } catch {
       alert('메시지 전송에 실패했습니다.');
     } finally {
       setSending(false);
-    }
-  };
-
-  const deleteMessage = async (messageId: number) => {
-    if (!confirm('이 메시지를 삭제하시겠습니까?')) return;
-
-    try {
-      await fetch(`/api/v1/messages/${messageId}`, {
-        method: 'DELETE',
-      });
-      setMessages((prev) => prev.filter((m) => m.messageId !== messageId));
-    } catch (error) {
-      console.error('메시지 삭제 실패:', error);
-      alert('메시지 삭제에 실패했습니다.');
     }
   };
 
@@ -238,7 +169,7 @@ export default function ChatRoomPage({ roomId = 1 }: ChatRoomPageProps) {
             onKeyDown={(e) => {
               if (e.key === 'Enter' && !e.shiftKey) {
                 e.preventDefault();
-                void sendMessage(); // Promise 경고 해결
+                void handleSendMessage(); // Promise 경고 해결
               }
             }}
             placeholder="메시지를 입력하세요..."
@@ -246,7 +177,7 @@ export default function ChatRoomPage({ roomId = 1 }: ChatRoomPageProps) {
             disabled={sending}
           />
           <button
-            onClick={() => void sendMessage()}
+            onClick={() => void handleSendMessage()}
             disabled={sending || !newMessage.trim()}
             className="px-6 py-3 text-white rounded-lg transition-all disabled:bg-gray-300 disabled:cursor-not-allowed"
             style={{ backgroundColor: sending || !newMessage.trim() ? undefined : '#1ABC9C' }}
