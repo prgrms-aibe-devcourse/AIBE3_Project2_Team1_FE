@@ -1,3 +1,4 @@
+import { useNavigate } from 'react-router-dom';
 import type { ProfileCardProps } from '../types';
 
 export default function ProfileCard({
@@ -9,6 +10,7 @@ export default function ProfileCard({
   completedCount,
   inProgressCount,
 }: ProfileCardProps) {
+  const navigate = useNavigate();
   return (
     <section className="max-w-4xl w-full mx-auto mt-6 p-6 bg-white rounded-lg border">
       <div className="flex items-center gap-6">
@@ -16,7 +18,10 @@ export default function ProfileCard({
         <div className="flex-1">
           <div className="flex items-center gap-3">
             <h2 className="text-lg font-semibold">{name || '알수 없음'}</h2>
-            <button className="px-3 py-1 rounded-full bg-gray-200 text-gray-600 text-sm hover:bg-gray-300">
+            <button
+              onClick={() => navigate('/profile/edit')}
+              className="px-3 py-1 rounded-full bg-gray-200 text-gray-600 text-sm hover:bg-gray-300"
+            >
               회원정보 수정
             </button>
             <button className="px-3 py-1 rounded-full bg-gray-200 text-gray-600 text-sm hover:bg-gray-300">
