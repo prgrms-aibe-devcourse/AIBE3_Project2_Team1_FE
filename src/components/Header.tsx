@@ -1,24 +1,19 @@
-import { AuthContext } from '@/features/auth/AuthContext';
+import { useAuth } from '@/features/auth/AuthContext';
 import { logout } from '@/features/auth/auth';
-import { useContext } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 const Header = () => {
-  const { user, setUser } = useContext(AuthContext);
+  const { user, setUser } = useAuth();
+  const navigate = useNavigate();
 
   const handleLogout = async () => {
     try {
-      await logout(); // 서버에 로그아웃 요청
-
-      // 로컬스토리지 정리
+      await logout();
       localStorage.removeItem('accessToken');
       localStorage.removeItem('apiKey');
       localStorage.removeItem('user');
-
-      // 상태 초기화
       setUser(null);
-
-      console.log('로그아웃 완료');
+      navigate('/');
     } catch (err) {
       console.error('로그아웃 실패', err);
     }

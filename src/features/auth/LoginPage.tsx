@@ -1,13 +1,13 @@
-import { AuthContext } from '@/features/auth/AuthContext';
+import { useAuth } from '@/features/auth/AuthContext';
 import { login } from '@/features/auth/auth';
 import { AxiosError } from 'axios';
-import { useContext, useState } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 const LoginPage = () => {
   const [form, setForm] = useState({ email: '', password: '' });
   const [errorMessage, setErrorMessage] = useState<string>('');
-  const { setUser } = useContext(AuthContext);
+  const { setUser } = useAuth();
   const navigate = useNavigate();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -25,15 +25,12 @@ const LoginPage = () => {
 
       localStorage.setItem('accessToken', accessToken);
       localStorage.setItem('user', JSON.stringify(userData));
-
       setUser(userData);
 
       navigate('/');
     } catch (error) {
       const err = error as AxiosError<{ errorCode: number; message: string }>;
-
       console.error(err);
-
       const message = err.response?.data?.message || '로그인 실패';
       setErrorMessage(message);
     }
