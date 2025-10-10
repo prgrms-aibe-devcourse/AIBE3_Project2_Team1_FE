@@ -1,10 +1,9 @@
 import AdminLoginPage from '@/features/admin/pages/AdminLoginPage';
 import LoginPage from '@/features/auth/LoginPage';
-import OAuthCallback from '@/features/auth/OAuthCallback';
 import SignUpPage from '@/features/user/SignUpPage';
 
 import AdminDashboardPage from '@/features/admin/pages/AdminDashboardPage';
-import ProfilePage from '@/features/profile';
+import ProfilePage from '@/features/profile/pages';
 import ReviewWritePage from '@/features/review/ReviewWritePage';
 import ClientProposalPage from '@/pages/ClientProposal';
 import FreelancerProposalPage from '@/pages/FreelancerProposal';
@@ -20,7 +19,6 @@ export const noLayoutRoutes = [
   { path: '/login', element: <LoginPage /> },
   { path: '/signup', element: <SignUpPage /> },
   { path: '/admin/login', element: <AdminLoginPage /> },
-  { path: '/oauth/callback', element: <OAuthCallback /> },
 ];
 
 // 메인 레이아웃이 적용되는 페이지

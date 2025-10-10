@@ -23,7 +23,7 @@ export default function TabContentDashboard({ tabData, loading, error }: TabCont
       return (
         <div className="flex flex-col gap-4">
           {tabData.requests.map((item) => (
-            <RequestCard key={item.id} title={item.title} />
+            <RequestCard key={item.id} id={item.id} title={item.title} />
           ))}
         </div>
       );

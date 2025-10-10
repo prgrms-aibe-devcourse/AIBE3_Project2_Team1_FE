@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import ProfileCard from './components/ProfileCard';
-import DashboardPage from '../dashboard';
-import type { Mode } from './types';
+import ProfileCard from '@/features/profile/components/ProfileCard';
+import DashboardPage from '@/features/dashboard/pages';
+import type { Mode } from '@/features/profile/types';
 
 export default function ProfilePage() {
   const [mode, setMode] = useState<Mode>('client');
