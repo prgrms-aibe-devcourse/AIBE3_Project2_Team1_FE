@@ -7,16 +7,12 @@ import ClientProposalPage from '@/pages/ClientProposal';
 import FreelancerProposalPage from '@/pages/FreelancerProposal';
 import ReviewWritePage from '@/features/review/ReviewWritePage';
 import ProjectList from '@/pages/ProjectList';
-import ProfilePage from '@/features/profile';
+import ProfilePage from '@/features/profile/pages';
 import OverviewPage from '@/pages/OverviewPage';
 import AdminDashboardPage from '@/features/admin/pages/AdminDashboardPage';
 
 import ChatRoomListPage from '@/features/message/ChatRoomListPage';
 import ChatRoomRoute from './ChatRoomRoute';
-
-import Matching from '@/pages/MatchingPage';
-import MatchDetailPage from '@/features/dashboard/pages/MatchDetailPage';
-import MyPageEdit from '@/features/profile/pages/MyPageEdit';
 
 // 레이아웃 없는 페이지 (로그인/회원가입 관련)
 export const noLayoutRoutes = [
@@ -33,10 +29,7 @@ export const mainRoutes = [
   { path: '/review/write', element: <ReviewWritePage /> },
   { path: '/projects/:groupId', element: <ProjectList /> },
   { path: '/profile', element: <ProfilePage /> },
-  { path: '/profile/edit', element: <MyPageEdit /> },
   { path: '/overview', element: <OverviewPage /> },
-  { path: '/matching', element: <Matching /> },
-  { path: '/match/:id', element: <MatchDetailPage /> },
   { path: '/chat', element: <ChatRoomListPage /> },
   { path: '/chat/:roomId', element: <ChatRoomRoute /> },
   { path: '/admin/dashboard', element: <AdminDashboardPage /> },
