@@ -36,43 +36,74 @@ const LoginPage = () => {
     }
   };
 
+  const handleSocialLogin = (provider: string) => {
+    window.location.href = `http://localhost:8080/oauth2/authorization/${provider}`;
+  };
+
   return (
-    <form onSubmit={handleLogin} className="p-6 max-w-md mx-auto">
-      <h1 className="text-xl font-bold mb-4">로그인</h1>
+    <div className="min-h-screen flex items-center justify-center bg-gray-100">
+      <div className="bg-white p-8 rounded-lg shadow-md w-full max-w-sm">
+        <h1 className="text-2xl font-bold text-center mb-6">Pickple 로그인</h1>
 
-      <div className="mb-4">
-        <label htmlFor="email" className="block mb-1">
-          Email
-        </label>
-        <input
-          id="email"
-          name="email"
-          type="email"
-          value={form.email}
-          onChange={handleChange}
-          required
-          className="border p-2 w-full rounded"
-        />
+        <form onSubmit={handleLogin} className="space-y-4">
+          <div>
+            <input
+              type="email"
+              name="email"
+              value={form.email}
+              onChange={handleChange}
+              placeholder="이메일을 입력해 주세요."
+              required
+              className="w-full px-4 py-2 border rounded focus:outline-none focus:ring focus:border-blue-300"
+            />
+          </div>
+
+          <div>
+            <input
+              type="password"
+              name="password"
+              value={form.password}
+              onChange={handleChange}
+              placeholder="비밀번호를 입력해 주세요."
+              required
+              className="w-full px-4 py-2 border rounded focus:outline-none focus:ring focus:border-blue-300"
+            />
+          </div>
+
+          {errorMessage && <p className="text-red-500 text-sm text-center">{errorMessage}</p>}
+
+          <button
+            type="submit"
+            className="w-full bg-red-400 text-white py-2 rounded hover:bg-red-500 transition"
+          >
+            이메일 로그인
+          </button>
+        </form>
+
+        <div className="mt-6 space-y-3">
+          <button
+            onClick={() => handleSocialLogin('kakao')}
+            className="w-full bg-yellow-400 text-black py-2 rounded hover:bg-yellow-500 transition flex items-center justify-center"
+          >
+            카카오로 시작하기
+          </button>
+
+          <button
+            onClick={() => handleSocialLogin('naver')}
+            className="w-full bg-green-500 text-white py-2 rounded hover:bg-green-600 transition flex items-center justify-center"
+          >
+            네이버로 시작하기
+          </button>
+
+          <button
+            onClick={() => handleSocialLogin('google')}
+            className="w-full bg-red-500 text-white py-2 rounded hover:bg-red-600 transition flex items-center justify-center"
+          >
+            구글로 시작하기
+          </button>
+        </div>
       </div>
-
-      <div className="mb-4">
-        <label>Password</label>
-        <input
-          name="password"
-          type="password"
-          value={form.password}
-          onChange={handleChange}
-          required
-          className="border p-2 w-full rounded"
-        />
-      </div>
-
-      {errorMessage && <p className="text-red-500 text-sm mb-4">{errorMessage}</p>}
-
-      <button type="submit" className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
-        로그인
-      </button>
-    </form>
+    </div>
   );
 };
 
