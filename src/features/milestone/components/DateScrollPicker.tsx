@@ -14,7 +14,6 @@ export default function DateScrollPicker({ value, onDateChange }: DateScrollPick
   const year = value.getFullYear();
   const month = value.getMonth() + 1; // 1~12
   const day = value.getDate();
-
   const currentYear = new Date().getFullYear();
   const minYear = Math.min(currentYear, year) - 3;
 
