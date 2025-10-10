@@ -7,6 +7,8 @@ import ClientProposalPage from '@/pages/ClientProposal';
 import FreelancerProposalPage from '@/pages/FreelancerProposal';
 import ReviewWritePage from '@/features/review/ReviewWritePage';
 import ProjectList from '@/pages/ProjectList';
+import ProjectDetail from '../pages/ProjectDetail';
+import ProjectWrite from '../pages/ProjectWrite';
 import ProfilePage from '@/features/profile/pages';
 import OverviewPage from '@/pages/OverviewPage';
 import AdminDashboardPage from '@/features/admin/pages/AdminDashboardPage';
@@ -21,7 +23,6 @@ export const noLayoutRoutes = [
   { path: '/admin/login', element: <AdminLoginPage /> },
 ];
 
-// 메인 레이아웃이 적용되는 페이지
 export const mainRoutes = [
   { path: '/', element: <Home /> },
   { path: '/client-proposal', element: <ClientProposalPage /> },
@@ -33,4 +34,7 @@ export const mainRoutes = [
   { path: '/chat', element: <ChatRoomListPage /> },
   { path: '/chat/:roomId', element: <ChatRoomRoute /> },
   { path: '/admin/dashboard', element: <AdminDashboardPage /> },
+  { path: '/projects/:groupId/:categoryId', element: <ProjectList /> },
+  { path: '/project/:projectId', element: <ProjectDetail /> },
+  { path: '/project/write', element: <ProjectWrite /> },
 ];
