@@ -29,12 +29,6 @@ export default function AiRecommendPage() {
       <header className="bg-white shadow-sm px-8 py-4 relative w-full">
         <div className="text-center relative">
           <div className="text-rose-500 font-bold text-4xl inline-block">Pickple</div>
-
-          <div className="absolute right-8 top-1/2 -translate-y-1/2 flex gap-2 text-gray-600 text-sm">
-            <button className="hover:text-gray-800">로그인</button>
-            <span>|</span>
-            <button className="hover:text-gray-800">회원가입</button>
-          </div>
         </div>
 
         <div className="mt-6 text-left pl-4">
