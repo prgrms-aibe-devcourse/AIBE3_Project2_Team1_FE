@@ -1,6 +1,8 @@
 import ProposalMatchForm from '../ProposalMatchForm';
 
-const FreelancerProposalMatchPage: React.FC = () => {
-  return <ProposalMatchForm targetType="freelancer" targetName="아샷추" projectId={1} />;
+const FreelancerProposalMatchPage = ({ projectId }: { projectId: string }) => {
+  return (
+    <ProposalMatchForm targetType="freelancer" targetName="아샷추" projectId={Number(projectId)} />
+  );
 };
 export default FreelancerProposalMatchPage;

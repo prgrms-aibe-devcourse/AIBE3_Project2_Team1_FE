@@ -48,8 +48,11 @@ export default function ProjectInfo({ project, profile, favorite }: ProjectInfoP
   };
   const goHProposal = () => {
     console.log(project.groupId);
-    if (project.groupId === 'client') navigate('/project/{project.project_id}/client-proposal');
-    else navigate('/project/{project.project_id}/freelancer-proposal');
+    if (project.groupId === 'client') {
+      navigate('/project/${project.project_id}/client-proposal');
+    } else {
+      navigate('/project/${project.project_id}/freelancer-proposal');
+    }
   };
 
   return (
