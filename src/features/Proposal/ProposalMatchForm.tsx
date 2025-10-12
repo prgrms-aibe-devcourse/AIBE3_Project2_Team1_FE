@@ -1,25 +1,33 @@
 import React, { useState } from 'react';
 import PortfolioUpload from './PortfolioUpload';
 import MatchingModal from './MatchingModal';
+import axios from 'axios';
 
 interface ProposalMatchFormProps {
   targetType: 'client' | 'freelancer';
   targetName: string;
-  //includePortfolio?: boolean;
+  projectId: number;
 }
 
-const ProposalMatchForm: React.FC<ProposalMatchFormProps> = ({ targetType, targetName }) => {
+const ProposalMatchForm: React.FC<ProposalMatchFormProps> = ({
+  targetType,
+  targetName,
+  projectId,
+}) => {
   // 공통 로직
   const [amount, setAmount] = useState<number | ''>('');
   const [message, setMessage] = useState<string>('');
+  const [files, setFiles] = useState<File[]>([]);
   const [showModal, setShowModal] = useState(false);
+  const [action, setAction] = useState<'submit' | 'draft' | null>(null);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   const title =
     targetType === 'client' ? '클라이언트에게 매칭 제안하기' : '프리랜서에게 매칭 제안하기';
 
   const comment = targetType === 'client' ? '클라이언트에게 보내는 말' : '프리랜서에게 보내는 말';
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!amount || amount <= 0) {
       alert('제안 금액을 입력해주세요.');
@@ -30,20 +38,48 @@ const ProposalMatchForm: React.FC<ProposalMatchFormProps> = ({ targetType, targe
       return;
     }
 
-    // TODO: API 요청 처리
-    // try {
-    //   await submitProposal({ targetType, targetName, amount, message });
-    //   setShowModal(true);
-    // } catch (error) {
-    //   console.error('제안 제출 실패:', error);
-    //   alert('제안 제출에 실패했습니다.');
-    // }
+    try {
+      const formData = new FormData();
+      formData.append('projectId', projectId.toString());
+      formData.append('description', message);
+      formData.append('proposedAmount', amount.toString());
+      // 여러 개 파일 추가
+      files.forEach((file) => {
+        formData.append('portfolioFiles', file);
+        // key 이름을 서버 DTO랑 맞춰야 함
+      });
 
-    setShowModal(true); // 임시: API 구현 전까지 모달 표시
+      if (action === 'submit') {
+        await axios.post('/api/v1/proposals', formData, {
+          headers: { 'Content-Type': 'multipart/form-data' },
+        });
+        setShowModal(true);
+      } else if (action === 'draft') {
+        await axios.post('/api/v1/proposals/draft', formData, {
+          headers: { 'Content-Type': 'multipart/form-data' },
+        });
+
+        setToastMessage('임시저장 성공!');
+        setTimeout(() => setToastMessage(null), 2000);
+      }
+    } catch (error) {
+      if (action === 'submit') {
+        console.error('제출 실패:', error);
+        alert('제출에 실패했습니다.');
+      } else if (action === 'draft') {
+        console.error('임시저장 실패:', error);
+        alert('임시저장에 실패했습니다.');
+      }
+    }
   };
   return (
     <div className="max-w-md mx-auto mt-12 p-8 bg-white rounded-xl shadow-md">
       <h2 className="text-lg font-semibold mb-6">{title}</h2>
+      {toastMessage && (
+        <div className="fixed top-5 left-1/2 -translate-x-1/2 bg-green-500 text-white px-4 py-2 rounded-md shadow-md transition-all">
+          {toastMessage}
+        </div>
+      )}
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* 제안 금액 */}
         <div>
@@ -77,7 +113,8 @@ const ProposalMatchForm: React.FC<ProposalMatchFormProps> = ({ targetType, targe
           />
         </div>
 
-        <PortfolioUpload />
+        {/* 파일 업로드 */}
+        <PortfolioUpload onFilesSelect={setFiles} />
 
         {/* 안내 문구 */}
         <p className="text-center text-gray-600">{targetName}님의 프로젝트와 매칭하시겠습니까?</p>
@@ -85,9 +122,18 @@ const ProposalMatchForm: React.FC<ProposalMatchFormProps> = ({ targetType, targe
         {/* 버튼 */}
         <button
           type="submit"
+          onClick={() => setAction('submit')}
           className="w-full py-3 bg-red-400 hover:bg-red-500 text-white font-semibold rounded-lg transition-colors"
         >
-          매칭하기
+          제출하기
+        </button>
+
+        <button
+          type="submit"
+          onClick={() => setAction('draft')}
+          className="w-full py-3 bg-green-400 hover:bg-green-500 text-white font-semibold rounded-lg transition-colors"
+        >
+          임시저장
         </button>
       </form>
 

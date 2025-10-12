@@ -30,8 +30,8 @@ export const noLayoutRoutes = [
 // 메인 레이아웃 적용되는 페이지
 export const mainRoutes = [
   { path: '/', element: <Home /> },
-  { path: '/client-proposal', element: <ClientProposalPage /> },
-  { path: '/freelancer-proposal', element: <FreelancerProposalPage /> },
+  { path: '/project/:projectId/client-proposal', element: <ClientProposalPage /> },
+  { path: '/project/:projectId/freelancer-proposal', element: <FreelancerProposalPage /> },
   { path: '/review/write', element: <ReviewWritePage /> },
   { path: '/projects/:groupId', element: <ProjectList /> },
   { path: '/projects/:groupId/:categoryId', element: <ProjectList /> },
