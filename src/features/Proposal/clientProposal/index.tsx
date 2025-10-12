@@ -1,6 +1,9 @@
 import ProposalMatchForm from '../ProposalMatchForm';
 
-const ClientProposalMatchPage: React.FC = () => {
-  return <ProposalMatchForm targetType="client" targetName="아샷추" projectId={1} />;
+const ClientProposalMatchPage = ({ projectId }: { projectId: string }) => {
+  return (
+    <ProposalMatchForm targetType="client" targetName="아샷추" projectId={Number(projectId)} />
+  );
 };
+
 export default ClientProposalMatchPage;

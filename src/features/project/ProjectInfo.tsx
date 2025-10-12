@@ -46,6 +46,11 @@ export default function ProjectInfo({ project, profile, favorite }: ProjectInfoP
   const goHome = () => {
     navigate('/');
   };
+  const goHProposal = () => {
+    console.log(project.groupId);
+    if (project.groupId === 'client') navigate('/project/{project.project_id}/client-proposal');
+    else navigate('/project/{project.project_id}/freelancer-proposal');
+  };
 
   return (
     <>
@@ -117,7 +122,7 @@ export default function ProjectInfo({ project, profile, favorite }: ProjectInfoP
 
         {/* 매칭 제안하기 버튼 */}
         <button
-          onClick={goHome}
+          onClick={goHProposal}
           className="absolute bottom-4 right-4 bg-[#FF6B6B] rounded-[12px] px-4 py-2 text-[#F2F2F2] font-semibold hover:bg-[#ff4b4b] transition"
         >
           매칭 제안하기
