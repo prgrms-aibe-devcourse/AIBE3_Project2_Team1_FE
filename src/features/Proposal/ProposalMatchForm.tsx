@@ -1,20 +1,16 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import PortfolioUpload from './PortfolioUpload';
 import MatchingModal from './MatchingModal';
 import { axiosInstance } from '../../services/axios';
 
 interface ProposalMatchFormProps {
   targetType: 'client' | 'freelancer';
-  targetName: string;
   projectId: number;
 }
 
-const ProposalMatchForm: React.FC<ProposalMatchFormProps> = ({
-  targetType,
-  targetName,
-  projectId,
-}) => {
+const ProposalMatchForm: React.FC<ProposalMatchFormProps> = ({ targetType, projectId }) => {
   // 공통 로직
+  const [targetName, setTargetName] = useState<string>('');
   const [amount, setAmount] = useState<number | ''>('');
   const [message, setMessage] = useState<string>('');
   const [files, setFiles] = useState<File[]>([]);
@@ -22,6 +18,20 @@ const ProposalMatchForm: React.FC<ProposalMatchFormProps> = ({
   const [proposalId, setProposalId] = useState<number | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  useEffect(() => {
+    const fetchCreatorName = async () => {
+      try {
+        const res = await axiosInstance.get(`/projects/${projectId}/creator-name`);
+        setTargetName(res.data.data); // 문자열만 내려주는 API라면 이대로 OK
+      } catch (err) {
+        console.error('프로젝트 생성자 이름 불러오기 실패:', err);
+        setTargetName('알 수 없음');
+      }
+    };
+
+    fetchCreatorName();
+  }, [projectId]);
 
   const title =
     targetType === 'client' ? '클라이언트에게 매칭 제안하기' : '프리랜서에게 매칭 제안하기';
@@ -150,7 +160,9 @@ const ProposalMatchForm: React.FC<ProposalMatchFormProps> = ({
         <PortfolioUpload onFilesSelect={setFiles} />
 
         {/* 안내 문구 */}
-        <p className="text-center text-gray-600">{targetName}님의 프로젝트와 매칭하시겠습니까?</p>
+        <p className="text-center text-gray-600">
+          {targetName ? `${targetName}님의 프로젝트와 매칭하시겠습니까?` : '로딩 중...'}
+        </p>
 
         {/* 버튼 */}
         <button
