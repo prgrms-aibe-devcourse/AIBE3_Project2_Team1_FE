@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { MessageSquare, Users, Clock } from 'lucide-react';
+import { MessageSquare, Clock, User } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 interface ChatRoom {
@@ -8,6 +8,10 @@ interface ChatRoom {
   createdAt: string;
   lastMessage?: string | null;
   lastMessageTime?: string | null;
+  // 추가: 상대방 정보 (백엔드에서 제공하면 주석 해제)
+  // otherUserId?: number;
+  // otherUserName?: string;
+  // otherUserProfileImage?: string;
 }
 
 export default function ChatRoomListPage() {
@@ -72,6 +76,19 @@ export default function ChatRoomListPage() {
       return '';
     }
   };
+  //  채팅방 제목 추출 (상대방 이름)
+  const getChatRoomDisplayName = (room: ChatRoom): string => {
+    // 백엔드에서 otherUserName 제공 시 (주석 해제)
+    // if (room.otherUserName) return room.otherUserName;
+
+    // title에서 "채팅방 #숫자" 제거하고 상대방 이름만 추출
+    if (room.title && !room.title.startsWith('채팅방 #')) {
+      return room.title;
+    }
+
+    // 기본값
+    return '알 수 없는 사용자';
+  };
 
   const handleRoomClick = (roomId: number) => {
     navigate(`/chat/${roomId}`);
@@ -94,59 +111,94 @@ export default function ChatRoomListPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-4xl mx-auto p-6">
-        {/* 헤더 */}
+        {/*  헤더 */}
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-3">
             <div
-              className="w-12 h-12 rounded-full flex items-center justify-center"
+              className="w-12 h-12 rounded-full flex items-center justify-center shadow-md"
               style={{ backgroundColor: '#E0F5F1' }}
             >
               <MessageSquare className="w-6 h-6" style={{ color: '#1ABC9C' }} />
             </div>
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">채팅방</h1>
+              <h1 className="text-2xl font-bold text-gray-900">채팅</h1>
               <p className="text-sm text-gray-500">{chatRooms.length}개의 대화</p>
             </div>
           </div>
         </div>
 
-        {/* 채팅방 목록 */}
+        {/*  채팅방 목록 */}
         <div className="space-y-3">
-          {chatRooms.map((room) => (
-            <div
-              key={room.chatRoomId}
-              onClick={() => handleRoomClick(room.chatRoomId)}
-              className="bg-white rounded-lg p-4 border border-gray-200 hover:shadow-md transition-all cursor-pointer"
-            >
-              <div className="flex items-center gap-4">
-                <div
-                  className="w-14 h-14 rounded-full flex items-center justify-center flex-shrink-0"
-                  style={{ backgroundColor: '#E0F5F1' }}
-                >
-                  <Users className="w-7 h-7" style={{ color: '#1ABC9C' }} />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <h3 className="font-semibold text-gray-900 mb-1">{room.title}</h3>
-                  {/* 마지막 메시지 미리보기 */}
-                  <p className="text-sm text-gray-600 truncate">
-                    {room.lastMessage ?? '메시지가 없습니다'}
-                  </p>
-                  <div className="flex items-center gap-2 text-sm text-gray-500">
-                    <Clock className="w-4 h-4" />
-                    <span>{formatDate(room.lastMessageTime, room.createdAt)}</span>
+          {chatRooms.map((room) => {
+            const displayName = getChatRoomDisplayName(room);
+            const hasMessage = room.lastMessage && room.lastMessage.trim() !== '';
+
+            return (
+              <div
+                key={room.chatRoomId}
+                onClick={() => handleRoomClick(room.chatRoomId)}
+                className="bg-white rounded-xl p-4 border border-gray-200 hover:shadow-lg hover:border-[#1ABC9C] transition-all cursor-pointer"
+              >
+                <div className="flex items-center gap-4">
+                  {/*  프로필 이미지 (상대방) */}
+                  <div
+                    className="w-14 h-14 rounded-full flex items-center justify-center flex-shrink-0 shadow-sm"
+                    style={{ backgroundColor: '#E0F5F1' }}
+                  >
+                    {/* 백엔드에서 프로필 이미지 제공 시 주석 해제 */}
+                    {/* {room.otherUserProfileImage ? (
+                      <img
+                        src={room.otherUserProfileImage}
+                        alt={displayName}
+                        className="w-full h-full rounded-full object-cover"
+                      />
+                    ) : ( */}
+                    <span className="text-lg font-bold" style={{ color: '#1ABC9C' }}>
+                      {displayName[0]}
+                    </span>
+                    {/* )} */}
+                  </div>
+
+                  {/*  채팅방 정보 */}
+                  <div className="flex-1 min-w-0">
+                    {/* 상대방 이름 */}
+                    <h3 className="font-semibold text-gray-900 mb-1 truncate">{displayName}</h3>
+
+                    {/* 마지막 메시지 미리보기 */}
+                    <p
+                      className={`text-sm truncate ${
+                        hasMessage ? 'text-gray-600' : 'text-gray-400 italic'
+                      }`}
+                    >
+                      {hasMessage ? room.lastMessage : '메시지가 없습니다'}
+                    </p>
+
+                    {/* 시간 */}
+                    <div className="flex items-center gap-1 mt-1 text-xs text-gray-500">
+                      <Clock className="w-3 h-3" />
+                      <span>{formatDate(room.lastMessageTime, room.createdAt)}</span>
+                    </div>
+                  </div>
+
+                  {/*  오른쪽 아이콘 */}
+                  <div className="text-gray-300">
+                    <MessageSquare className="w-5 h-5" />
                   </div>
                 </div>
-
-                <div className="text-gray-400">
-                  <MessageSquare className="w-5 h-5" />
-                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
 
+          {/*  빈 상태 */}
           {chatRooms.length === 0 && (
-            <div className="bg-white rounded-lg p-12 text-center border border-gray-200">
-              <h3 className="text-lg font-semibold mb-2">문의할 상대를 찾아보세요!</h3>
+            <div className="bg-white rounded-xl p-12 text-center border-2 border-dashed border-gray-300">
+              <div
+                className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4"
+                style={{ backgroundColor: '#E0F5F1' }}
+              >
+                <User className="w-8 h-8" style={{ color: '#1ABC9C' }} />
+              </div>
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">아직 채팅이 없어요</h3>
               <p className="text-gray-500 mb-4">
                 프로젝트/프로필 상세에서 &ldquo;문의하기&rdquo;를 누르면 1:1 채팅방이 자동으로
                 생성돼요.
