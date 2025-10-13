@@ -5,7 +5,8 @@ export interface ProfileCardProps {
   setMode: (m: Mode) => void;
   name?: string;
   email?: string;
-  bio?: string;
+  description?: string;
+  skills?: string;
   completedCount?: number;
   inProgressCount?: number;
 }
@@ -13,7 +14,8 @@ export interface ProfileCardProps {
 export interface ProfileInfo {
   name: string;
   email: string;
-  bio?: string;
+  description?: string;
+  skills?: string;
   completedCount: number;
   inProgressCount: number;
   mode: Mode;

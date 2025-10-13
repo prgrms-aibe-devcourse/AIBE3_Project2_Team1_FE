@@ -6,7 +6,8 @@ export default function ProfileCard({
   setMode,
   name,
   email,
-  bio,
+  description,
+  skills,
   completedCount,
   inProgressCount,
 }: ProfileCardProps) {
@@ -24,12 +25,22 @@ export default function ProfileCard({
             >
               회원정보 수정
             </button>
-            <button className="px-3 py-1 rounded-full bg-gray-200 text-gray-600 text-sm hover:bg-gray-300">
-              로그아웃
+            <button
+              onClick={() => {
+                navigate('/profile/password-change');
+              }}
+              className="px-3 py-1 rounded-full bg-gray-200 text-gray-600 text-sm hover:bg-gray-300"
+            >
+              비밀번호 변경
             </button>
           </div>
           <p className="text-gray-500 text-sm">{email}</p>
-          <p className="mt-1 text-sm text-gray-600">{bio}</p>
+          <p className="mt-1 text-sm text-gray-600">
+            {description ? description : '설명이 없습니다.'}
+          </p>
+          <p className="mt-1 text-sm text-gray-600">
+            {skills ? skills : '보유 기술을 작성해주세요.'}
+          </p>
           <div className="flex gap-4 mt-2 text-sm text-gray-500">
             <span>
               완료한 의뢰 <b className="text-black">{completedCount ?? 0}건</b>

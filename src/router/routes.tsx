@@ -1,20 +1,22 @@
 // routes.tsx
 
-import AdminLoginPage from '@/features/admin/pages/AdminLoginPage';
 import AdminDashboardPage from '@/features/admin/pages/AdminDashboardPage';
+import AdminLoginPage from '@/features/admin/pages/AdminLoginPage';
 
 import LoginPage from '@/features/auth/LoginPage';
 import SignUpPage from '@/features/user/SignUpPage';
 
-import ProfilePage from '@/features/profile/pages';
+import PasswordChangePage from '@/features/profile/pages/PasswordChangePage';
+import ProfileEditPage from '@/features/profile/pages/ProfileEditPage';
+import ProfilePage from '@/features/profile/pages/ProfilePage';
 import ReviewWritePage from '@/features/review/ReviewWritePage';
 
 import ClientProposalPage from '@/pages/ClientProposal';
 import FreelancerProposalPage from '@/pages/FreelancerProposal';
 import Home from '@/pages/Home';
 import OverviewPage from '@/pages/OverviewPage';
-import ProjectList from '@/pages/ProjectList';
 import ProjectDetail from '@/pages/ProjectDetail';
+import ProjectList from '@/pages/ProjectList';
 import ProjectWrite from '@/pages/ProjectWrite';
 
 import ChatRoomListPage from '@/features/message/ChatRoomListPage';
@@ -38,6 +40,8 @@ export const mainRoutes = [
   { path: '/project/:projectId', element: <ProjectDetail /> },
   { path: '/project/write', element: <ProjectWrite /> },
   { path: '/profile', element: <ProfilePage /> },
+  { path: '/profile/edit', element: <ProfileEditPage /> },
+  { path: '/profile/password-change', element: <PasswordChangePage /> },
   { path: '/overview', element: <OverviewPage /> },
   { path: '/chat', element: <ChatRoomListPage /> },
   { path: '/chat/:roomId', element: <ChatRoomRoute /> },
