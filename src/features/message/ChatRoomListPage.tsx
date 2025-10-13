@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { MessageSquare, Plus, Users, Clock } from 'lucide-react';
+import { MessageSquare, Users, Clock } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 interface ChatRoom {
   chatRoomId: number;
@@ -12,19 +13,38 @@ interface ChatRoom {
 export default function ChatRoomListPage() {
   const [chatRooms, setChatRooms] = useState<ChatRoom[]>([]);
   const [loading, setLoading] = useState(true);
-  const [showCreateModal, setShowCreateModal] = useState(false);
-  const [newRoomName, setNewRoomName] = useState('');
-  const [creating, setCreating] = useState(false);
+  const navigate = useNavigate();
 
   useEffect(() => {
     void fetchChatRooms();
   }, []);
 
+  const authHeaders = (): HeadersInit => {
+    const token = localStorage.getItem('accessToken');
+    return {
+      'Content-Type': 'application/json',
+      ...(token && { Authorization: `Bearer ${token}` }),
+    };
+  };
+
   const fetchChatRooms = async () => {
     try {
       setLoading(true);
-      const response = await fetch('/api/v1/chatrooms');
-      const data = await response.json();
+      const response = await fetch('/api/v1/chatrooms/my-chatrooms', {
+        headers: authHeaders(),
+      });
+      if (!response.ok) {
+        if (response.status === 401) {
+          console.error('인증 실패 - 로그인이 필요합니다');
+          // 로그인 페이지로 리다이렉트 (옵션)
+          // navigate('/login');
+          throw new Error('인증이 필요합니다');
+        }
+        throw new Error('Failed to fetch chatrooms');
+      }
+
+      const result = await response.json();
+      const data: ChatRoom[] = result?.data ?? result ?? [];
       setChatRooms(data);
     } catch (error) {
       console.error('채팅방 목록 로드 실패:', error);
@@ -34,47 +54,27 @@ export default function ChatRoomListPage() {
     }
   };
 
-  const createChatRoom = async () => {
-    if (!newRoomName.trim()) {
-      alert('채팅방 이름을 입력해주세요.');
-      return;
-    }
+  const formatDate = (iso?: string | null, fallback?: string) => {
+    const src = iso || fallback;
+    if (!src) return '';
 
     try {
-      setCreating(true);
-      const response = await fetch('/api/v1/chatrooms', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ title: newRoomName }),
-      });
+      const date = new Date(src);
+      const now = new Date();
+      const diff = now.getTime() - date.getTime();
+      const hours = Math.floor(diff / 3600000);
+      const days = Math.floor(diff / 86400000);
 
-      if (response.ok) {
-        setShowCreateModal(false);
-        setNewRoomName('');
-        await fetchChatRooms();
-      }
-    } catch (error) {
-      console.error('채팅방 생성 실패:', error);
-      alert('채팅방 생성에 실패했습니다.');
-    } finally {
-      setCreating(false);
+      if (hours < 24) return `${hours}시간 전`;
+      if (days < 7) return `${days}일 전`;
+      return date.toLocaleDateString('ko-KR');
+    } catch {
+      return '';
     }
-  };
-
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    const now = new Date();
-    const diff = now.getTime() - date.getTime();
-    const hours = Math.floor(diff / 3600000);
-    const days = Math.floor(diff / 86400000);
-
-    if (hours < 24) return `${hours}시간 전`;
-    if (days < 7) return `${days}일 전`;
-    return date.toLocaleDateString('ko-KR');
   };
 
   const handleRoomClick = (roomId: number) => {
-    window.location.href = `/chat/${roomId}`;
+    navigate(`/chat/${roomId}`);
   };
 
   if (loading) {
@@ -108,13 +108,6 @@ export default function ChatRoomListPage() {
               <p className="text-sm text-gray-500">{chatRooms.length}개의 대화</p>
             </div>
           </div>
-          <button
-            onClick={() => setShowCreateModal(true)}
-            className="flex items-center gap-2 px-4 py-2 text-white rounded-lg transition-colors font-medium"
-            style={{ backgroundColor: '#1ABC9C' }}
-          >
-            <Plus className="w-5 h-5" />새 채팅방
-          </button>
         </div>
 
         {/* 채팅방 목록 */}
@@ -140,7 +133,7 @@ export default function ChatRoomListPage() {
                   </p>
                   <div className="flex items-center gap-2 text-sm text-gray-500">
                     <Clock className="w-4 h-4" />
-                    <span>{formatDate(room.createdAt)}</span>
+                    <span>{formatDate(room.lastMessageTime, room.createdAt)}</span>
                   </div>
                 </div>
 
@@ -153,57 +146,24 @@ export default function ChatRoomListPage() {
 
           {chatRooms.length === 0 && (
             <div className="bg-white rounded-lg p-12 text-center border border-gray-200">
-              <MessageSquare className="w-16 h-16 mx-auto mb-4 text-gray-300" />
-              <p className="text-gray-500 mb-4">아직 참여한 채팅방이 없습니다</p>
+              <h3 className="text-lg font-semibold mb-2">문의할 상대를 찾아보세요!</h3>
+              <p className="text-gray-500 mb-4">
+                프로젝트/프로필 상세에서 &ldquo;문의하기&rdquo;를 누르면 1:1 채팅방이 자동으로
+                생성돼요.
+              </p>
               <button
-                onClick={() => setShowCreateModal(true)}
+                onClick={() => {
+                  window.location.href = '/projects/:groupId';
+                }}
                 className="px-5 py-2 text-white rounded-lg transition-colors font-medium"
                 style={{ backgroundColor: '#1ABC9C' }}
               >
-                첫 채팅방 만들기
+                프로젝트 둘러보기
               </button>
             </div>
           )}
         </div>
       </div>
-
-      {/* 채팅방 생성 모달 */}
-      {showCreateModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50 backdrop-blur-sm">
-          <div className="bg-white rounded-2xl p-6 w-96 shadow-2xl">
-            <h3 className="text-lg font-bold text-gray-900 mb-4">새 채팅방 만들기</h3>
-            <input
-              type="text"
-              value={newRoomName}
-              onChange={(e) => setNewRoomName(e.target.value)}
-              placeholder="채팅방 이름을 입력하세요"
-              className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1ABC9C] mb-4"
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') void createChatRoom(); // Promise 경고 해결
-              }}
-            />
-            <div className="flex gap-2 justify-end">
-              <button
-                onClick={() => {
-                  setShowCreateModal(false);
-                  setNewRoomName('');
-                }}
-                className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
-              >
-                취소
-              </button>
-              <button
-                onClick={() => void createChatRoom()}
-                disabled={creating}
-                className="px-5 py-2 text-white rounded-lg transition-colors font-medium disabled:bg-gray-300"
-                style={{ backgroundColor: creating ? undefined : '#1ABC9C' }}
-              >
-                {creating ? '생성 중...' : '생성하기'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

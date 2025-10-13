@@ -3,6 +3,7 @@ import { Send, ArrowLeft, MoreVertical, Trash2 } from 'lucide-react';
 import { useChatRoom } from '@/features/message/useChatRoom';
 import { useContext } from 'react';
 import { AuthContext } from '@/features/auth/AuthContext'; // 실제 경로에 맞게
+import { useSearchParams } from 'react-router-dom'; //
 
 interface ChatRoomPageProps {
   roomId?: number;
@@ -11,15 +12,39 @@ interface ChatRoomPageProps {
 export default function ChatRoomPage({ roomId = 1 }: ChatRoomPageProps) {
   const { user } = useContext(AuthContext);
   const currentUserId = user?.id ?? null;
+  console.log('user 구조 확인:', user);
   const { messages, loading, sendMessage, deleteMessage } = useChatRoom(roomId);
   const [newMessage, setNewMessage] = useState('');
   const [sending, setSending] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
+  // ✅ URL 파라미터에서 projectId 가져오기
+  const [searchParams] = useSearchParams();
+  const projectIdFromUrl = searchParams.get('projectId');
+
+  // ✅ 마지막으로 언급된 projectId 추적
+  const [lastMentionedProjectId, setLastMentionedProjectId] = useState<string | null>(null);
+
   // 새 메시지 올 때마다 스크롤
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
+  // ✅ 컴포넌트 마운트 시 URL의 projectId로 시스템 메시지 전송
+  useEffect(() => {
+    if (projectIdFromUrl && projectIdFromUrl !== lastMentionedProjectId && !loading) {
+      sendProjectContextMessage(projectIdFromUrl);
+      setLastMentionedProjectId(projectIdFromUrl);
+    }
+  }, [projectIdFromUrl, loading]);
+
+  // ✅ 프로젝트 컨텍스트 시스템 메시지 전송
+  const sendProjectContextMessage = async (projectId: string) => {
+    try {
+      await sendMessage(` 프로젝트 #${projectId}에 대해 문의합니다`);
+    } catch (error) {
+      console.error('Error:', error);
+    }
+  };
 
   const handleSendMessage = async () => {
     if (!newMessage.trim()) return;
@@ -33,6 +58,10 @@ export default function ChatRoomPage({ roomId = 1 }: ChatRoomPageProps) {
     } finally {
       setSending(false);
     }
+  };
+
+  const isSystemMessage = (content: string) => {
+    return content.startsWith(' 프로젝트 #');
   };
 
   const formatTime = (dateString: string) => {
@@ -85,6 +114,18 @@ export default function ChatRoomPage({ roomId = 1 }: ChatRoomPageProps) {
         <div className="max-w-4xl mx-auto space-y-4">
           {messages.map((message) => {
             const isMyMessage = message.senderUserId === currentUserId;
+            const isSystem = isSystemMessage(message.content);
+
+            // ✅ 시스템 메시지 UI
+            if (isSystem) {
+              return (
+                <div key={message.messageId} className="flex justify-center my-4">
+                  <div className="px-4 py-2 bg-blue-50 border border-blue-200 rounded-full">
+                    <p className="text-sm text-blue-700 font-medium">{message.content}</p>
+                  </div>
+                </div>
+              );
+            }
 
             return (
               <div
@@ -99,7 +140,7 @@ export default function ChatRoomPage({ roomId = 1 }: ChatRoomPageProps) {
                       style={{ backgroundColor: '#E0F5F1' }}
                     >
                       <span className="text-xs font-semibold" style={{ color: '#1ABC9C' }}>
-                        {message.senderName[0]}
+                        {message.senderName?.[0] ?? '?'}
                       </span>
                     </div>
                   )}
