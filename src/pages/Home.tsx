@@ -8,25 +8,30 @@ import languageImg from '../assets/images/Language.png';
 import rocketImg from '../assets/images/Rocket.png';
 import videoCallImg from '../assets/images/Video Call.png';
 import xBoxControllerImg from '../assets/images/Xbox Controller.png';
+import { categoryGroups } from '@/features/project/constants/categories';
+
+// 이미지 매핑: id와 이미지 연결
+const categoryIcons: Record<string, string> = {
+  VIDEO: videoCallImg,
+  WRITE: designImg,
+  IT: codeImg,
+  MARKETING: circleChartImg,
+  HOBBY: xBoxControllerImg,
+  TAX: debtImg,
+  STARTUP: rocketImg,
+  TRANSLATE: languageImg,
+};
 
 export default function Home() {
-  const categories = [
-    { id: 'video', name: '영상/사진/음향', icon: videoCallImg },
-    { id: 'write', name: '문서/글쓰기', icon: designImg },
-    { id: 'it', name: 'IT/프로그래밍', icon: codeImg },
-    { id: 'marketing', name: '마케팅', icon: circleChartImg },
-    { id: 'hobby', name: '취미 레슨', icon: xBoxControllerImg },
-    { id: 'tax', name: '세무/법무/노무', icon: debtImg },
-    { id: 'startup', name: '창업/사업', icon: rocketImg },
-    { id: 'translate', name: '번역/통역', icon: languageImg },
-  ];
-
   const freelancers = Array(4).fill({
     name: '전국 출장 음식사진 전문',
     studio: '스튜디오포트힙',
     price: '140,000원~',
     rating: '⭐ 4.6 (1,222)',
   });
+
+  // 클라이언트용 카테고리만 사용
+  const clientCategories = categoryGroups.find((g) => g.groupId === 'client')?.categories ?? [];
 
   return (
     <div className="min-h-screen bg-white">
@@ -63,18 +68,25 @@ export default function Home() {
       </section>
 
       {/* 카테고리 섹션 */}
-      <section className="flex justify-center gap-10 py-10 border-b">
-        {categories.map((cat) => (
-          <div
-            key={cat.id}
-            className="flex flex-col items-center text-sm text-gray-700 hover:text-emerald-500 cursor-pointer"
-          >
-            <div className="w-14 h-14 flex items-center justify-center rounded-full bg-gray-100 mb-2">
-              <img src={cat.icon} alt={cat.name} className="w-8 h-8 object-contain" />
-            </div>
-            <span>{cat.name}</span>
-          </div>
-        ))}
+      <section className="flex justify-center gap-10 py-10 border-b flex-wrap">
+        {clientCategories
+          .filter((cat) => cat.id !== 'ALL') // '전체'는 홈에서는 제외
+          .map((cat) => (
+            <Link
+              key={cat.id}
+              to={`/projects/client/${cat.id}`}
+              className="flex flex-col items-center text-sm text-gray-700 hover:text-emerald-500 cursor-pointer"
+            >
+              <div className="w-14 h-14 flex items-center justify-center rounded-full bg-gray-100 mb-2">
+                <img
+                  src={categoryIcons[cat.id]}
+                  alt={cat.name}
+                  className="w-8 h-8 object-contain"
+                />
+              </div>
+              <span>{cat.name}</span>
+            </Link>
+          ))}
       </section>
 
       {/* 인기 프리랜서 */}
@@ -83,7 +95,9 @@ export default function Home() {
           <h2 className="text-lg font-bold">
             픽플 <span className="text-emerald-500">인기</span> 프리랜서
           </h2>
-          <button className="text-sm text-gray-500 hover:text-emerald-500">전체 보기 &gt;</button>
+          <Link to="/projects/freelancer" className="text-sm text-gray-500 hover:text-emerald-500">
+            전체 보기 &gt;
+          </Link>
         </div>
 
         <div className="grid grid-cols-4 gap-6">
@@ -105,7 +119,9 @@ export default function Home() {
           <h2 className="text-lg font-bold">
             픽플 <span className="text-emerald-500">신입</span> 프리랜서
           </h2>
-          <button className="text-sm text-gray-500 hover:text-emerald-500">전체 보기 &gt;</button>
+          <Link to="/projects/freelancer" className="text-sm text-gray-500 hover:text-emerald-500">
+            전체 보기 &gt;
+          </Link>
         </div>
 
         <div className="grid grid-cols-4 gap-6">
