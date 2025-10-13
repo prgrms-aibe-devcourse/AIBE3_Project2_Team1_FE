@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import PortfolioUpload from './PortfolioUpload';
 import MatchingModal from './MatchingModal';
-import axios from 'axios';
+import { axiosInstance } from '../../services/axios';
 
 interface ProposalMatchFormProps {
   targetType: 'client' | 'freelancer';
@@ -19,16 +19,18 @@ const ProposalMatchForm: React.FC<ProposalMatchFormProps> = ({
   const [message, setMessage] = useState<string>('');
   const [files, setFiles] = useState<File[]>([]);
   const [showModal, setShowModal] = useState(false);
-  const [action, setAction] = useState<'submit' | 'draft' | null>(null);
+  const [proposalId, setProposalId] = useState<number | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const title =
     targetType === 'client' ? '클라이언트에게 매칭 제안하기' : '프리랜서에게 매칭 제안하기';
 
   const comment = targetType === 'client' ? '클라이언트에게 보내는 말' : '프리랜서에게 보내는 말';
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = async (submitAction: 'submit' | 'draft'): Promise<void> => {
+    if (isSubmitting) return;
+
     if (!amount || amount <= 0) {
       alert('제안 금액을 입력해주세요.');
       return;
@@ -39,37 +41,68 @@ const ProposalMatchForm: React.FC<ProposalMatchFormProps> = ({
     }
 
     try {
+      setIsSubmitting(true);
       const formData = new FormData();
-      formData.append('projectId', projectId.toString());
-      formData.append('description', message);
-      formData.append('proposedAmount', amount.toString());
+      const proposalData = {
+        projectId: projectId,
+        description: message,
+        proposedAmount: amount,
+        status: submitAction === 'submit' ? 'SUBMITTED' : 'DRAFT',
+      };
+
+      formData.append(
+        'proposal',
+        new Blob([JSON.stringify(proposalData)], { type: 'application/json' })
+      );
       // 여러 개 파일 추가
       files.forEach((file) => {
         formData.append('portfolioFiles', file);
-        // key 이름을 서버 DTO랑 맞춰야 함
       });
 
-      if (action === 'submit') {
-        await axios.post('/api/v1/proposals', formData, {
-          headers: { 'Content-Type': 'multipart/form-data' },
-        });
+      if (submitAction === 'submit') {
+        if (!proposalId) {
+          // 임시저장 없이 바로 제출한 경우
+          await axiosInstance.post('/proposals', formData, {
+            headers: { 'Content-Type': 'multipart/form-data' },
+          });
+        } else {
+          // 임시저장된 제안서가 이미 존재하면 PATCH로 업데이트 + 상태 변경
+          await axiosInstance.patch(`/proposals/${proposalId}`, formData, {
+            headers: { 'Content-Type': 'multipart/form-data' },
+          });
+        }
         setShowModal(true);
-      } else if (action === 'draft') {
-        await axios.post('/api/v1/proposals/draft', formData, {
-          headers: { 'Content-Type': 'multipart/form-data' },
-        });
-
+      } else if (submitAction === 'draft') {
+        let response;
+        if (!proposalId) {
+          response = await axiosInstance.post('/proposals', formData, {
+            headers: { 'Content-Type': 'multipart/form-data' },
+          });
+          const newId = response.data?.data?.proposalId;
+          if (typeof newId === 'number') {
+            setProposalId(newId);
+          } else {
+            console.warn('임시저장 후 서버에서 proposalId를 반환하지 않았습니다.');
+            throw new Error('Invalid response format');
+          }
+        } else {
+          await axiosInstance.patch(`/proposals/${proposalId}`, formData, {
+            headers: { 'Content-Type': 'multipart/form-data' },
+          });
+        }
         setToastMessage('임시저장 성공!');
         setTimeout(() => setToastMessage(null), 2000);
       }
     } catch (error) {
-      if (action === 'submit') {
+      if (submitAction === 'submit') {
         console.error('제출 실패:', error);
         alert('제출에 실패했습니다.');
-      } else if (action === 'draft') {
+      } else if (submitAction === 'draft') {
         console.error('임시저장 실패:', error);
         alert('임시저장에 실패했습니다.');
       }
+    } finally {
+      setIsSubmitting(false);
     }
   };
   return (
@@ -80,7 +113,7 @@ const ProposalMatchForm: React.FC<ProposalMatchFormProps> = ({
           {toastMessage}
         </div>
       )}
-      <form onSubmit={handleSubmit} className="space-y-6">
+      <form className="space-y-6">
         {/* 제안 금액 */}
         <div>
           <label htmlFor="amount" className="block font-medium mb-2">
@@ -121,19 +154,21 @@ const ProposalMatchForm: React.FC<ProposalMatchFormProps> = ({
 
         {/* 버튼 */}
         <button
-          type="submit"
-          onClick={() => setAction('submit')}
+          type="button"
+          onClick={() => handleSubmit('submit')}
+          disabled={isSubmitting}
           className="w-full py-3 bg-red-400 hover:bg-red-500 text-white font-semibold rounded-lg transition-colors"
         >
-          제출하기
+          {isSubmitting ? '처리 중...' : '제출하기'}
         </button>
 
         <button
-          type="submit"
-          onClick={() => setAction('draft')}
+          type="button"
+          onClick={() => handleSubmit('draft')}
+          disabled={isSubmitting}
           className="w-full py-3 bg-green-400 hover:bg-green-500 text-white font-semibold rounded-lg transition-colors"
         >
-          임시저장
+          {isSubmitting ? '저장 중...' : '임시저장'}
         </button>
       </form>
 
