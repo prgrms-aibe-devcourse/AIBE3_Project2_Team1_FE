@@ -21,6 +21,7 @@ const ProposalMatchForm: React.FC<ProposalMatchFormProps> = ({
   const [showModal, setShowModal] = useState(false);
   const [proposalId, setProposalId] = useState<number | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const title =
     targetType === 'client' ? '클라이언트에게 매칭 제안하기' : '프리랜서에게 매칭 제안하기';
@@ -28,6 +29,8 @@ const ProposalMatchForm: React.FC<ProposalMatchFormProps> = ({
   const comment = targetType === 'client' ? '클라이언트에게 보내는 말' : '프리랜서에게 보내는 말';
 
   const handleSubmit = async (submitAction: 'submit' | 'draft'): Promise<void> => {
+    if (isSubmitting) return;
+
     if (!amount || amount <= 0) {
       alert('제안 금액을 입력해주세요.');
       return;
@@ -38,6 +41,7 @@ const ProposalMatchForm: React.FC<ProposalMatchFormProps> = ({
     }
 
     try {
+      setIsSubmitting(true);
       const formData = new FormData();
       const proposalData = {
         projectId: projectId,
@@ -97,6 +101,8 @@ const ProposalMatchForm: React.FC<ProposalMatchFormProps> = ({
         console.error('임시저장 실패:', error);
         alert('임시저장에 실패했습니다.');
       }
+    } finally {
+      setIsSubmitting(false);
     }
   };
   return (
@@ -150,17 +156,19 @@ const ProposalMatchForm: React.FC<ProposalMatchFormProps> = ({
         <button
           type="button"
           onClick={() => handleSubmit('submit')}
+          disabled={isSubmitting}
           className="w-full py-3 bg-red-400 hover:bg-red-500 text-white font-semibold rounded-lg transition-colors"
         >
-          제출하기
+          {isSubmitting ? '처리 중...' : '제출하기'}
         </button>
 
         <button
           type="button"
           onClick={() => handleSubmit('draft')}
+          disabled={isSubmitting}
           className="w-full py-3 bg-green-400 hover:bg-green-500 text-white font-semibold rounded-lg transition-colors"
         >
-          임시저장
+          {isSubmitting ? '저장 중...' : '임시저장'}
         </button>
       </form>
 
