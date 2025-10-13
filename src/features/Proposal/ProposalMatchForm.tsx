@@ -27,11 +27,7 @@ const ProposalMatchForm: React.FC<ProposalMatchFormProps> = ({
 
   const comment = targetType === 'client' ? '클라이언트에게 보내는 말' : '프리랜서에게 보내는 말';
 
-  const handleSubmit = async (
-    e: React.FormEvent,
-    submitAction: 'submit' | 'draft'
-  ): Promise<void> => {
-    e.preventDefault();
+  const handleSubmit = async (submitAction: 'submit' | 'draft'): Promise<void> => {
     if (!amount || amount <= 0) {
       alert('제안 금액을 입력해주세요.');
       return;
@@ -79,7 +75,12 @@ const ProposalMatchForm: React.FC<ProposalMatchFormProps> = ({
             headers: { 'Content-Type': 'multipart/form-data' },
           });
           const newId = response.data?.data?.proposalId;
-          if (newId) setProposalId(newId);
+          if (typeof newId === 'number') {
+            setProposalId(newId);
+          } else {
+            console.warn('임시저장 후 서버에서 proposalId를 반환하지 않았습니다.');
+            throw new Error('Invalid response format');
+          }
         } else {
           await axiosInstance.patch(`/proposals/${proposalId}`, formData, {
             headers: { 'Content-Type': 'multipart/form-data' },
@@ -148,7 +149,7 @@ const ProposalMatchForm: React.FC<ProposalMatchFormProps> = ({
         {/* 버튼 */}
         <button
           type="button"
-          onClick={(e) => handleSubmit(e as React.FormEvent, 'submit')}
+          onClick={() => handleSubmit('submit')}
           className="w-full py-3 bg-red-400 hover:bg-red-500 text-white font-semibold rounded-lg transition-colors"
         >
           제출하기
@@ -156,7 +157,7 @@ const ProposalMatchForm: React.FC<ProposalMatchFormProps> = ({
 
         <button
           type="button"
-          onClick={(e) => handleSubmit(e as React.FormEvent, 'draft')}
+          onClick={() => handleSubmit('draft')}
           className="w-full py-3 bg-green-400 hover:bg-green-500 text-white font-semibold rounded-lg transition-colors"
         >
           임시저장
