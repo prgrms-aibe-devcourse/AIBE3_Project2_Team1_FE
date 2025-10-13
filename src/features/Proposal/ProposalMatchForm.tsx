@@ -47,6 +47,7 @@ const ProposalMatchForm: React.FC<ProposalMatchFormProps> = ({
         projectId: projectId,
         description: message,
         proposedAmount: amount,
+        status: submitAction === 'submit' ? 'SUBMITTED' : 'DRAFT',
       };
 
       formData.append(
@@ -59,32 +60,31 @@ const ProposalMatchForm: React.FC<ProposalMatchFormProps> = ({
       });
 
       if (submitAction === 'submit') {
-        await axiosInstance.post('/proposals', formData, {
-          headers: { 'Content-Type': 'multipart/form-data' },
-        });
+        if (!proposalId) {
+          // 임시저장 없이 바로 제출한 경우
+          await axiosInstance.post('/proposals', formData, {
+            headers: { 'Content-Type': 'multipart/form-data' },
+          });
+        } else {
+          // 임시저장된 제안서가 이미 존재하면 PATCH로 업데이트 + 상태 변경
+          await axiosInstance.patch(`/proposals/${proposalId}`, formData, {
+            headers: { 'Content-Type': 'multipart/form-data' },
+          });
+        }
         setShowModal(true);
       } else if (submitAction === 'draft') {
         let response;
-
         if (!proposalId) {
-          response = await axiosInstance.post('/proposals/draft', formData, {
+          response = await axiosInstance.post('/proposals', formData, {
             headers: { 'Content-Type': 'multipart/form-data' },
           });
-
           const newId = response.data?.data?.proposalId;
           if (newId) setProposalId(newId);
         } else {
-          const updateBody = {
-            description: message,
-            proposedAmount: amount,
-            portfolioFiles: files, // 백엔드에서 @RequestBody 받으므로 JSON 변환됨
-          };
-
-          await axiosInstance.patch(`/proposals/${proposalId}`, updateBody, {
-            headers: { 'Content-Type': 'application/json' },
+          await axiosInstance.patch(`/proposals/${proposalId}`, formData, {
+            headers: { 'Content-Type': 'multipart/form-data' },
           });
         }
-
         setToastMessage('임시저장 성공!');
         setTimeout(() => setToastMessage(null), 2000);
       }
