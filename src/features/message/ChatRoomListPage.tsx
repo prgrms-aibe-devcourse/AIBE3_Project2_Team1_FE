@@ -1,37 +1,40 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { MessageSquare, Clock, User } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+
+interface PeerUser {
+  userId: number;
+  nickname: string;
+  profileImageUrl?: string | null;
+}
 
 interface ChatRoom {
   chatRoomId: number;
   title: string;
   createdAt: string;
-  lastMessage?: string | null;
-  lastMessageTime?: string | null;
+  lastMessageContent?: string | null;
+  lastMessageAt?: string | null;
+  peerUser?: PeerUser | null;
   // 추가: 상대방 정보 (백엔드에서 제공하면 주석 해제)
   // otherUserId?: number;
   // otherUserName?: string;
   // otherUserProfileImage?: string;
 }
 
+const authHeaders = (): HeadersInit => {
+  const token = localStorage.getItem('accessToken');
+  return {
+    'Content-Type': 'application/json',
+    ...(token && { Authorization: `Bearer ${token}` }),
+  };
+};
+
 export default function ChatRoomListPage() {
   const [chatRooms, setChatRooms] = useState<ChatRoom[]>([]);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
-  useEffect(() => {
-    void fetchChatRooms();
-  }, []);
-
-  const authHeaders = (): HeadersInit => {
-    const token = localStorage.getItem('accessToken');
-    return {
-      'Content-Type': 'application/json',
-      ...(token && { Authorization: `Bearer ${token}` }),
-    };
-  };
-
-  const fetchChatRooms = async () => {
+  const fetchChatRooms = useCallback(async () => {
     try {
       setLoading(true);
       const response = await fetch('/api/v1/chatrooms/my-chatrooms', {
@@ -39,14 +42,10 @@ export default function ChatRoomListPage() {
       });
       if (!response.ok) {
         if (response.status === 401) {
-          console.error('인증 실패 - 로그인이 필요합니다');
-          // 로그인 페이지로 리다이렉트 (옵션)
-          // navigate('/login');
           throw new Error('인증이 필요합니다');
         }
         throw new Error('Failed to fetch chatrooms');
       }
-
       const result = await response.json();
       const data: ChatRoom[] = result?.data ?? result ?? [];
       setChatRooms(data);
@@ -56,7 +55,11 @@ export default function ChatRoomListPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    void fetchChatRooms();
+  }, [fetchChatRooms]);
 
   const formatDate = (iso?: string | null, fallback?: string) => {
     const src = iso || fallback;
@@ -78,21 +81,12 @@ export default function ChatRoomListPage() {
   };
   //  채팅방 제목 추출 (상대방 이름)
   const getChatRoomDisplayName = (room: ChatRoom): string => {
-    // 백엔드에서 otherUserName 제공 시 (주석 해제)
-    // if (room.otherUserName) return room.otherUserName;
-
-    // title에서 "채팅방 #숫자" 제거하고 상대방 이름만 추출
-    if (room.title && !room.title.startsWith('채팅방 #')) {
-      return room.title;
-    }
-
-    // 기본값
+    if (room.peerUser?.nickname) return room.peerUser.nickname;
+    if (room.title && !room.title.startsWith('채팅방 #')) return room.title;
     return '알 수 없는 사용자';
   };
 
-  const handleRoomClick = (roomId: number) => {
-    navigate(`/chat/${roomId}`);
-  };
+  const handleRoomClick = (roomId: number) => navigate(`/chat/${roomId}`);
 
   if (loading) {
     return (
@@ -131,7 +125,7 @@ export default function ChatRoomListPage() {
         <div className="space-y-3">
           {chatRooms.map((room) => {
             const displayName = getChatRoomDisplayName(room);
-            const hasMessage = room.lastMessage && room.lastMessage.trim() !== '';
+            const hasMessage = room.lastMessageContent && room.lastMessageContent.trim() !== '';
 
             return (
               <div
@@ -170,13 +164,13 @@ export default function ChatRoomListPage() {
                         hasMessage ? 'text-gray-600' : 'text-gray-400 italic'
                       }`}
                     >
-                      {hasMessage ? room.lastMessage : '메시지가 없습니다'}
+                      {hasMessage ? room.lastMessageContent : '메시지가 없습니다'}
                     </p>
 
                     {/* 시간 */}
                     <div className="flex items-center gap-1 mt-1 text-xs text-gray-500">
                       <Clock className="w-3 h-3" />
-                      <span>{formatDate(room.lastMessageTime, room.createdAt)}</span>
+                      <span>{formatDate(room.lastMessageAt, room.createdAt)}</span>
                     </div>
                   </div>
 
@@ -205,7 +199,7 @@ export default function ChatRoomListPage() {
               </p>
               <button
                 onClick={() => {
-                  window.location.href = '/projects/:groupId';
+                  navigate('/projects');
                 }}
                 className="px-5 py-2 text-white rounded-lg transition-colors font-medium"
                 style={{ backgroundColor: '#1ABC9C' }}
