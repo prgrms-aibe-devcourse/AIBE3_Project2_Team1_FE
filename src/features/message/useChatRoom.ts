@@ -46,7 +46,7 @@ export function useChatRoom(roomId: number): UseChatRoomReturn {
       });
       if (!res.ok) throw new Error('Failed to fetch messages');
 
-      // ✅ CommonResponse 적용 + 필드 매핑(createDate → createdAt)
+      // CommonResponse 적용 + 필드 매핑(createDate → createdAt)
       const json = await res.json();
       const rawList: ServerMessage[] = json?.data ?? json ?? [];
       const mapped: Message[] = rawList.map((m: ServerMessage) => ({
@@ -88,14 +88,14 @@ export function useChatRoom(roomId: number): UseChatRoomReturn {
           createdAt: m.createDate ?? m.createdAt ?? new Date().toISOString(),
         };
 
-        // ✅ 중복 체크 (핵심!)
+        // 중복 체크 (핵심!)
         setMessages((prev) => {
           const exists = prev.some((msg) => msg.messageId === newMsg.messageId);
           if (exists) {
-            console.log('⚠️ Duplicate message ignored:', newMsg.messageId);
+            console.log(' Duplicate message ignored:', newMsg.messageId);
             return prev;
           }
-          console.log('✅ New message added:', newMsg.messageId);
+          console.log(' New message added:', newMsg.messageId);
           return [...prev, newMsg];
         });
       } catch (error) {
@@ -122,14 +122,14 @@ export function useChatRoom(roomId: number): UseChatRoomReturn {
     fetchMessages();
   }, [fetchMessages]);
 
-  // ✅ 메시지 전송 (Authorization 헤더 추가)
+  // 메시지 전송 (Authorization 헤더 추가)
   const sendMessage = useCallback(
     async (content: string) => {
       if (!content.trim()) throw new Error('메시지 내용이 비어있습니다');
 
       const res = await fetch('/api/v1/messages', {
         method: 'POST',
-        headers: authHeaders(), // ✅ 수정!
+        headers: authHeaders(), // 수정!
         body: JSON.stringify({
           chatRoomId: roomId,
           content: content.trim(),

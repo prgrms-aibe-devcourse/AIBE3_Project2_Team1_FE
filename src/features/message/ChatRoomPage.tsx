@@ -2,12 +2,8 @@ import { useState, useEffect, useRef } from 'react';
 import { Send, ArrowLeft, MoreVertical, Trash2, LogOut } from 'lucide-react';
 import { useChatRoom } from '@/features/message/useChatRoom';
 import { useContext } from 'react';
-import { AuthContext } from '@/features/auth/AuthContext'; // 실제 경로에 맞게
-import { useSearchParams, useNavigate } from 'react-router-dom'; //
-
-interface ChatRoomPageProps {
-  roomId?: number;
-}
+import { AuthContext } from '@/features/auth/AuthContext';
+import { useParams, useSearchParams, useNavigate } from 'react-router-dom';
 
 // localStorage에서 userId 가져오는 헬퍼 함수
 const getUserId = () => {
@@ -15,8 +11,34 @@ const getUserId = () => {
   return userIdStr ? parseInt(userIdStr, 10) : null;
 };
 
-export default function ChatRoomPage({ roomId = 1 }: ChatRoomPageProps) {
+function getSenderId(m: unknown): number | null {
+  if (typeof m !== 'object' || m === null) return null;
+
+  const obj = m as Record<string, unknown>;
+
+  if ('senderUserId' in obj && typeof obj.senderUserId === 'number') return obj.senderUserId;
+  if ('senderId' in obj && typeof obj.senderId === 'number') return obj.senderId;
+  if ('userId' in obj && typeof obj.userId === 'number') return obj.userId;
+
+  if ('sender' in obj && typeof obj.sender === 'object' && obj.sender !== null) {
+    const s = obj.sender as Record<string, unknown>;
+    if ('userId' in s && typeof s.userId === 'number') return s.userId;
+    if ('id' in s && typeof s.id === 'number') return s.id;
+  }
+  return null;
+}
+
+export default function ChatRoomPage() {
   const navigate = useNavigate();
+  const { roomId: roomIdParam } = useParams();
+  const roomId = Number(roomIdParam); // ← 문자열을 숫자로
+
+  // roomId가 숫자가 아니면 리스트로 돌려보내기 (안전가드)
+  useEffect(() => {
+    if (!roomId || Number.isNaN(roomId)) {
+      navigate('/chat');
+    }
+  }, [roomId, navigate]);
   const { user } = useContext(AuthContext);
   // AuthContext의 user가 있으면 사용, 없으면 localStorage 사용
   const currentUserId = user?.id ?? getUserId();
@@ -24,8 +46,8 @@ export default function ChatRoomPage({ roomId = 1 }: ChatRoomPageProps) {
   const { messages, loading, sendMessage, deleteMessage } = useChatRoom(roomId);
   const [newMessage, setNewMessage] = useState('');
   const [sending, setSending] = useState(false);
-  const [showMenu, setShowMenu] = useState(false); // ✅ 메뉴 표시 상태
-  const [otherUserName, setOtherUserName] = useState('채팅 상대'); // ✅ 상대방 이름
+  const [showMenu, setShowMenu] = useState(false); //  메뉴 표시 상태
+  const [otherUserName, setOtherUserName] = useState('채팅 상대'); //  상대방 이름
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -162,7 +184,7 @@ export default function ChatRoomPage({ roomId = 1 }: ChatRoomPageProps) {
               style={{ backgroundColor: '#E0F5F1' }}
             >
               <span className="text-sm font-semibold" style={{ color: '#1ABC9C' }}>
-                {otherUserName[0]}
+                {otherUserName?.[0] ?? '?'}
               </span>
             </div>
 
@@ -201,7 +223,7 @@ export default function ChatRoomPage({ roomId = 1 }: ChatRoomPageProps) {
       <div className="flex-1 overflow-y-auto px-6 py-4 bg-gray-50">
         <div className="max-w-4xl mx-auto space-y-4">
           {messages.map((message) => {
-            const isMyMessage = message.senderUserId === currentUserId;
+            const isMyMessage = getSenderId(message) === currentUserId;
             const isSystem = isSystemMessage(message.content);
 
             // 시스템 메시지 UI
