@@ -17,6 +17,7 @@ interface ProjectDetailResponse {
   deadline: string;
   category: string;
   status: string;
+  imageUrls?: string[];
 }
 
 export default function ProjectDetail() {
@@ -206,6 +207,7 @@ export default function ProjectDetail() {
                 project.status === 'CLOSED'
                   ? project.status
                   : 'OPEN',
+              imageUrls: project.imageUrls || [],
             }}
           />
         ) : (
