@@ -2,6 +2,21 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import ProjectCard from './ProjectCard';
 import { categoryGroups } from './constants/categories';
+import { AxiosError } from 'axios';
+import api from './api';
+
+interface Project {
+  projectId: number;
+  title: string;
+  budget: number;
+  initiatorNickname: string;
+  participantNickname?: string;
+  category: string;
+  status: string;
+  rating?: number;
+  reviews?: number;
+  groupId?: string; // 서버에 없을 수 있으니 임시로 클라이언트에서 매핑
+}
 
 export default function CategoryFilter({
   initialGroup = 'client',
@@ -17,43 +32,41 @@ export default function CategoryFilter({
   const [selectedCategory, setSelectedCategory] = useState(categoryId || initialCategory);
   const [sortOption, setSortOption] = useState('latest');
 
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  // ✅ URL 파라미터 변경 시 상태 반영
   useEffect(() => {
     if (groupId) setSelectedGroup(groupId);
     setSelectedCategory(categoryId || 'ALL');
   }, [groupId, categoryId]);
 
-  const cards = [
-    {
-      project_id: 1,
-      title: '영상 촬영 프로젝트',
-      rating: 4.6,
-      reviews: 1222,
-      budget: 140000,
-      author: '스튜디오 포토칩',
-      groupId: 'client',
-      categoryId: 'VIDEO',
-    },
-    {
-      project_id: 2,
-      title: '웹 개발 프리랜서',
-      rating: 4.8,
-      reviews: 540,
-      budget: 300000,
-      author: '개발자 김철수',
-      groupId: 'freelancer',
-      categoryId: 'IT',
-    },
-    {
-      project_id: 3,
-      title: '문서 작성 의뢰',
-      rating: 4.5,
-      reviews: 320,
-      budget: 50000,
-      author: '글쓰기 스튜디오',
-      groupId: 'client',
-      categoryId: 'WRITE',
-    },
-  ];
+  // ✅ 서버에서 프로젝트 전체 조회
+  useEffect(() => {
+    const fetchProjects = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const res = await api.get('/projects');
+        const data = res.data.data || res.data; // 응답 구조 유연하게 대응
+        setProjects(data);
+      } catch (err) {
+        // ✅ 타입 좁히기: AxiosError 인지 체크
+        if (err instanceof AxiosError) {
+          console.error('프로젝트 목록 불러오기 실패:', err.response?.data || err.message);
+          setError(err.response?.data?.message || '프로젝트 목록을 불러오지 못했습니다.');
+        } else {
+          console.error('예상치 못한 에러:', err);
+          setError('알 수 없는 오류가 발생했습니다.');
+        }
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProjects();
+  }, []);
 
   const handleGroupClick = (group: string) => {
     setSelectedGroup(group);
@@ -66,14 +79,21 @@ export default function CategoryFilter({
     navigate(`/projects/${selectedGroup}/${category}`);
   };
 
-  const filteredCards = cards
-    .filter(
-      (card) =>
-        card.groupId === selectedGroup &&
-        (selectedCategory === 'ALL' || card.categoryId === selectedCategory)
-    )
+  // ✅ groupId, categoryId 기반 필터링
+  const filteredProjects = projects
+    .filter((project) => {
+      const matchesGroup =
+        selectedGroup === 'client'
+          ? project.initiatorNickname // 클라이언트가 만든 프로젝트
+          : project.participantNickname; // 프리랜서 프로젝트 참여자
+      const matchesCategory =
+        selectedCategory === 'ALL' ||
+        project.category?.toLowerCase() === selectedCategory.toLowerCase();
+
+      return matchesGroup && matchesCategory;
+    })
     .sort((a, b) => {
-      if (sortOption === 'latest') return b.project_id - a.project_id;
+      if (sortOption === 'latest') return b.projectId - a.projectId;
       if (sortOption === 'highBudget') return b.budget - a.budget;
       if (sortOption === 'lowBudget') return a.budget - b.budget;
       return 0;
@@ -128,16 +148,34 @@ export default function CategoryFilter({
         </select>
       </div>
 
-      {/* 카드 목록 */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-        {filteredCards.length ? (
-          filteredCards.map((card) => <ProjectCard key={card.project_id} {...card} />)
-        ) : (
-          <p className="text-gray-500 text-center col-span-full py-10">
-            선택한 카테고리에 해당하는 카드가 없습니다.
-          </p>
-        )}
-      </div>
+      {/* 로딩 / 에러 / 목록 */}
+      {loading ? (
+        <p className="text-gray-500 text-center py-10">로딩 중...</p>
+      ) : error ? (
+        <p className="text-red-500 text-center py-10">{error}</p>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+          {filteredProjects.length ? (
+            filteredProjects.map((p) => (
+              <ProjectCard
+                key={p.projectId}
+                project_id={p.projectId}
+                title={p.title}
+                rating={p.rating || 0}
+                reviews={p.reviews || 0}
+                budget={p.budget}
+                author={p.initiatorNickname}
+                groupId={selectedGroup}
+                categoryId={p.category}
+              />
+            ))
+          ) : (
+            <p className="text-gray-500 text-center col-span-full py-10">
+              선택한 카테고리에 해당하는 프로젝트가 없습니다.
+            </p>
+          )}
+        </div>
+      )}
     </div>
   );
 }
