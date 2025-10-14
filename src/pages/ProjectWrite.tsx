@@ -54,7 +54,7 @@ export default function WritePage() {
         return;
       }
       const baseURL = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8080';
-      const response = await axios.post(`${baseURL}/api/v1/projects`, projectData, {
+      const response = await axios.post(`${baseURL}/projects`, projectData, {
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
