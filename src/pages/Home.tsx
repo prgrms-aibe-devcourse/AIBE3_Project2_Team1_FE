@@ -1,17 +1,17 @@
+import { categoryGroups } from '@/features/project/constants/categories';
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import api from '../features/project/api';
-import ProjectCard from '../features/project/ProjectCard';
-import illustrationImg from '../assets/images/Rectangle.png';
 import circleChartImg from '../assets/images/Circle Chart.png';
 import codeImg from '../assets/images/Code.png';
 import debtImg from '../assets/images/Debt.png';
 import designImg from '../assets/images/Design.png';
 import languageImg from '../assets/images/Language.png';
+import illustrationImg from '../assets/images/Rectangle.png';
 import rocketImg from '../assets/images/Rocket.png';
 import videoCallImg from '../assets/images/Video Call.png';
 import xBoxControllerImg from '../assets/images/Xbox Controller.png';
-import { categoryGroups } from '@/features/project/constants/categories';
+import api from '../features/project/api';
+import ProjectCard from '../features/project/ProjectCard';
 
 const categoryIcons: Record<string, string> = {
   VIDEO: videoCallImg,
@@ -56,7 +56,6 @@ export default function Home() {
     api
       .get('/projects')
       .then((res) => {
-        console.table(res.data.data);
         const projectsData =
           (res.data.data as ProjectApiResponse[])?.map((p) => ({
             project_id: p.projectId,
@@ -117,7 +116,6 @@ export default function Home() {
         {clientCategories
           .filter((cat) => cat.id !== 'ALL')
           .map((cat) => {
-            console.log(cat.id);
             return (
               <Link
                 key={cat.id}

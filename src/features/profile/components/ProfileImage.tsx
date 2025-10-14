@@ -1,8 +1,28 @@
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
+import { getMyUser, type UserResponseDto } from '../profile';
 
-const ProfileImageUpload: React.FC = () => {
-  const [image, setImage] = useState<string | null>(null);
+interface ProfileImageUploadProps {
+  initialImageUrl?: string; // 부모 컴포넌트에서 전달 가능
+}
+
+const ProfileImageUpload: React.FC<ProfileImageUploadProps> = ({ initialImageUrl }) => {
+  const [image, setImage] = useState<string | null>(initialImageUrl ?? null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // API에서 불러오기
+  useEffect(() => {
+    if (!initialImageUrl) {
+      const fetchUser = async () => {
+        try {
+          const res: UserResponseDto = await getMyUser();
+          setImage(res.data.ProfileImgUrl ?? null);
+        } catch (err) {
+          console.error('유저 이미지 로드 실패', err);
+        }
+      };
+      fetchUser();
+    }
+  }, [initialImageUrl]);
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
