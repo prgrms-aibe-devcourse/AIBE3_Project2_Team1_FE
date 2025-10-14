@@ -25,7 +25,6 @@ export default function ProjectCard({
 }: ProjectCardProps) {
   const navigate = useNavigate();
 
-  // ✅ 카테고리명 찾기
   const categoryName =
     categoryGroups.find((g) => g.groupId === groupId)?.categories.find((c) => c.id === categoryId)
       ?.name || '기타';
@@ -50,19 +49,19 @@ export default function ProjectCard({
       {/* 제목 */}
       <p className="text-sm font-semibold mb-1 truncate">{title || '프로젝트 제목'}</p>
 
-      {/* ⭐ 평점 + 리뷰 */}
+      {/* 평점 + 리뷰 */}
       <div className="flex items-center text-xs text-gray-500 mb-1 gap-1">
         <img src={starImg} alt="star" className="w-4 h-4" />
         <span>{rating ? rating.toFixed(1) : '4.6'}</span>
         <span>({reviews?.toLocaleString() || 100})</span>
       </div>
 
-      {/* 💰 예산 */}
+      {/* 예산 */}
       <p className="text-sm font-semibold text-[#1ABC9C] mb-1">
         {budget ? `${budget.toLocaleString()}원~` : '150,000원~'}
       </p>
 
-      {/* 👤 작성자 */}
+      {/* 작성자 */}
       <p className="text-xs text-gray-400">{author || '홍길동'}</p>
     </div>
   );

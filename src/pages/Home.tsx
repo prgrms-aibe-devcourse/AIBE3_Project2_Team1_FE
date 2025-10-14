@@ -53,13 +53,12 @@ export default function Home() {
   const [projects, setProjects] = useState<Project[]>([]);
   const [recommended, setRecommended] = useState<Project[]>([]);
 
-  // ✅ 프로젝트 불러오기 (로그인 여부와 무관)
+  // 프로젝트 불러오기 (로그인 여부와 무관)
   useEffect(() => {
     api
       .get('/projects')
       .then((res) => {
-        console.log('✅ 프로젝트 응답:', res.data);
-
+        console.table(res.data.data);
         const projectsData =
           (res.data.data as ProjectApiResponse[])?.map((p) => ({
             project_id: p.projectId,
@@ -74,19 +73,19 @@ export default function Home() {
 
         setProjects(projectsData);
 
-        // ✅ AI 추천 (간단히 랜덤 4개)
+        // AI 추천 (간단히 랜덤 4개)
         const shuffled = [...projectsData].sort(() => 0.5 - Math.random());
         setRecommended(shuffled.slice(0, 4));
       })
-      .catch((err) => console.error('❌ 프로젝트 불러오기 실패:', err));
+      .catch((err) => console.error('프로젝트 불러오기 실패:', err));
   }, []);
 
-  // ✅ 카테고리 목록
+  // 카테고리 목록
   const clientCategories = categoryGroups.find((g) => g.groupId === 'client')?.categories ?? [];
 
   return (
     <div className="min-h-screen bg-white">
-      {/* ✅ Hero Section */}
+      {/* Hero Section */}
       <section className="flex flex-col md:flex-row items-center justify-between bg-[#1ABC9C] px-[80px] py-[40px]">
         <img src={illustrationImg} alt="illustration" className="w-[400px] mb-6 md:mb-0 md:mr-10" />
 
@@ -100,7 +99,7 @@ export default function Home() {
           </p>
           <div className="flex gap-3 justify-end">
             <Link
-              to="/project/write"
+              to="/projects/write"
               className="bg-[#ff6b6b] hover:bg-[#f56767] text-white px-6 py-2 rounded-[12px] font-semibold transition-all"
             >
               프로젝트 등록
@@ -115,29 +114,32 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ✅ 카테고리 섹션 */}
+      {/* 카테고리 섹션 */}
       <section className="flex justify-center gap-10 py-10 border-b flex-wrap">
         {clientCategories
           .filter((cat) => cat.id !== 'ALL')
-          .map((cat) => (
-            <Link
-              key={cat.id}
-              to={`/projects/client/${cat.id}`}
-              className="flex flex-col items-center text-sm text-gray-700 hover:text-emerald-500 cursor-pointer transition-all"
-            >
-              <div className="w-14 h-14 flex items-center justify-center rounded-full bg-gray-100 mb-2 shadow-sm hover:shadow-md">
-                <img
-                  src={categoryIcons[cat.id]}
-                  alt={cat.name}
-                  className="w-8 h-8 object-contain"
-                />
-              </div>
-              <span>{cat.name}</span>
-            </Link>
-          ))}
+          .map((cat) => {
+            console.log(cat.id);
+            return (
+              <Link
+                key={cat.id}
+                to={`/projects/client/${cat.id}`}
+                className="flex flex-col items-center text-sm text-gray-700 hover:text-emerald-500 cursor-pointer transition-all"
+              >
+                <div className="w-14 h-14 flex items-center justify-center rounded-full bg-gray-100 mb-2 shadow-sm hover:shadow-md">
+                  <img
+                    src={categoryIcons[cat.id]}
+                    alt={cat.name}
+                    className="w-8 h-8 object-contain"
+                  />
+                </div>
+                <span>{cat.name}</span>
+              </Link>
+            );
+          })}
       </section>
 
-      {/* ✅ 최신 프로젝트 섹션 */}
+      {/* 최신 프로젝트 섹션 */}
       <section className="px-20 py-10 border-b">
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-lg font-bold">
@@ -150,9 +152,9 @@ export default function Home() {
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {projects.length > 0 ? (
-            projects
-              .slice(0, 4)
-              .map((p) => (
+            projects.slice(0, 4).map((p) => {
+              console.log(p.project_id);
+              return (
                 <ProjectCard
                   key={p.project_id}
                   project_id={p.project_id}
@@ -164,14 +166,15 @@ export default function Home() {
                   groupId={p.groupId}
                   categoryId={p.categoryId}
                 />
-              ))
+              );
+            })
           ) : (
             <p className="text-gray-400 col-span-4 text-center">등록된 프로젝트가 없습니다.</p>
           )}
         </div>
       </section>
 
-      {/* ✅ AI 추천 프로젝트 섹션 */}
+      {/* AI 추천 프로젝트 섹션 */}
       <section className="px-20 py-10">
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-lg font-bold">
