@@ -1,25 +1,82 @@
 import { useState, useEffect, useRef } from 'react';
-import { Send, ArrowLeft, MoreVertical, Trash2 } from 'lucide-react';
+import { Send, ArrowLeft, MoreVertical, Trash2, LogOut } from 'lucide-react';
 import { useChatRoom } from '@/features/message/useChatRoom';
 import { useContext } from 'react';
 import { AuthContext } from '@/features/auth/AuthContext'; // 실제 경로에 맞게
+import { useSearchParams, useNavigate } from 'react-router-dom'; //
 
 interface ChatRoomPageProps {
   roomId?: number;
 }
 
+// localStorage에서 userId 가져오는 헬퍼 함수
+const getUserId = () => {
+  const userIdStr = localStorage.getItem('userId');
+  return userIdStr ? parseInt(userIdStr, 10) : null;
+};
+
 export default function ChatRoomPage({ roomId = 1 }: ChatRoomPageProps) {
+  const navigate = useNavigate();
   const { user } = useContext(AuthContext);
-  const currentUserId = user?.id ?? null;
+  // AuthContext의 user가 있으면 사용, 없으면 localStorage 사용
+  const currentUserId = user?.id ?? getUserId();
+
   const { messages, loading, sendMessage, deleteMessage } = useChatRoom(roomId);
   const [newMessage, setNewMessage] = useState('');
   const [sending, setSending] = useState(false);
+  const [showMenu, setShowMenu] = useState(false); // ✅ 메뉴 표시 상태
+  const [otherUserName, setOtherUserName] = useState('채팅 상대'); // ✅ 상대방 이름
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  // URL 파라미터에서 projectId 가져오기
+  const [searchParams] = useSearchParams();
+  const projectIdFromUrl = searchParams.get('projectId');
+
+  // 마지막으로 언급된 projectId 추적
+  const [lastMentionedProjectId, setLastMentionedProjectId] = useState<string | null>(null);
+
+  //  메시지에서 상대방 이름 추출
+  useEffect(() => {
+    if (messages.length > 0 && currentUserId) {
+      const otherMessage = messages.find((m) => m.senderUserId !== currentUserId);
+      if (otherMessage?.senderName) {
+        setOtherUserName(otherMessage.senderName);
+      }
+    }
+  }, [messages, currentUserId]);
+
+  // 메뉴 외부 클릭 시 닫기
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setShowMenu(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   // 새 메시지 올 때마다 스크롤
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
+  // 컴포넌트 마운트 시 URL의 projectId로 시스템 메시지 전송
+  useEffect(() => {
+    if (projectIdFromUrl && projectIdFromUrl !== lastMentionedProjectId && !loading) {
+      sendProjectContextMessage(projectIdFromUrl);
+      setLastMentionedProjectId(projectIdFromUrl);
+    }
+  }, [projectIdFromUrl, loading]);
+
+  // 프로젝트 컨텍스트 시스템 메시지 전송
+  const sendProjectContextMessage = async (projectId: string) => {
+    try {
+      await sendMessage(` 프로젝트 #${projectId}에 대해 문의합니다`);
+    } catch (error) {
+      console.error('Error:', error);
+    }
+  };
 
   const handleSendMessage = async () => {
     if (!newMessage.trim()) return;
@@ -33,6 +90,33 @@ export default function ChatRoomPage({ roomId = 1 }: ChatRoomPageProps) {
     } finally {
       setSending(false);
     }
+  };
+  //  채팅방 나가기
+  const handleLeaveChatRoom = async () => {
+    if (!confirm('정말 채팅방을 나가시겠습니까?')) return;
+
+    try {
+      const response = await fetch(`/api/v1/chatrooms/${roomId}/leave`, {
+        method: 'POST',
+        headers: {
+          Authorization: 'Bearer ' + localStorage.getItem('accessToken'),
+        },
+      });
+
+      if (response.ok) {
+        alert('채팅방을 나갔습니다.');
+        navigate('/chat'); // 채팅방 리스트로 이동
+      } else {
+        alert('채팅방 나가기에 실패했습니다.');
+      }
+    } catch (error) {
+      console.error('Error:', error);
+      alert('오류가 발생했습니다.');
+    }
+  };
+
+  const isSystemMessage = (content: string) => {
+    return content.startsWith(' 프로젝트 #');
   };
 
   const formatTime = (dateString: string) => {
@@ -63,49 +147,94 @@ export default function ChatRoomPage({ roomId = 1 }: ChatRoomPageProps) {
       <div className="bg-white border-b border-gray-200 px-6 py-4">
         <div className="flex items-center justify-between max-w-4xl mx-auto">
           <div className="flex items-center gap-3">
+            {/* 뒤로가기 버튼 */}
             <button
-              onClick={() => window.history.back()}
+              onClick={() => navigate('/chat')}
               className="p-2 hover:bg-gray-100 rounded-lg transition"
+              title="채팅 목록으로"
             >
               <ArrowLeft className="w-5 h-5 text-gray-600" />
             </button>
+
+            {/* 상대방 프로필 */}
+            <div
+              className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0"
+              style={{ backgroundColor: '#E0F5F1' }}
+            >
+              <span className="text-sm font-semibold" style={{ color: '#1ABC9C' }}>
+                {otherUserName[0]}
+              </span>
+            </div>
+
+            {/* 상대방 이름 */}
             <div>
-              <h1 className="font-semibold text-gray-900">채팅방 #{roomId}</h1>
+              <h1 className="font-semibold text-gray-900">{otherUserName}</h1>
               <p className="text-xs text-gray-500">실시간 대화</p>
             </div>
           </div>
-          <button className="p-2 hover:bg-gray-100 rounded-lg transition">
-            <MoreVertical className="w-5 h-5 text-gray-600" />
-          </button>
+
+          {/* 메뉴 버튼 */}
+          <div className="relative" ref={menuRef}>
+            <button
+              onClick={() => setShowMenu(!showMenu)}
+              className="p-2 hover:bg-gray-100 rounded-lg transition"
+            >
+              <MoreVertical className="w-5 h-5 text-gray-600" />
+            </button>
+
+            {/* 드롭다운 메뉴 */}
+            {showMenu && (
+              <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-10">
+                <button
+                  onClick={handleLeaveChatRoom}
+                  className="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
+                >
+                  <LogOut className="w-4 h-4" />
+                  채팅방 나가기
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       </div>
-
       {/* 메시지 영역 */}
-      <div className="flex-1 overflow-y-auto px-6 py-4">
+      <div className="flex-1 overflow-y-auto px-6 py-4 bg-gray-50">
         <div className="max-w-4xl mx-auto space-y-4">
           {messages.map((message) => {
             const isMyMessage = message.senderUserId === currentUserId;
+            const isSystem = isSystemMessage(message.content);
 
+            // 시스템 메시지 UI
+            if (isSystem) {
+              return (
+                <div key={message.messageId} className="flex justify-center my-4">
+                  <div className="px-4 py-2 bg-blue-50 border border-blue-200 rounded-full">
+                    <p className="text-sm text-blue-700 font-medium">{message.content}</p>
+                  </div>
+                </div>
+              );
+            }
+            //일반 메세지
             return (
               <div
                 key={message.messageId}
                 className={`flex ${isMyMessage ? 'justify-end' : 'justify-start'}`}
               >
                 <div className={`flex gap-2 max-w-lg ${isMyMessage ? 'flex-row-reverse' : ''}`}>
-                  {/* 프로필 */}
+                  {/* 프로필 (상대) */}
                   {!isMyMessage && (
                     <div
                       className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"
                       style={{ backgroundColor: '#E0F5F1' }}
                     >
                       <span className="text-xs font-semibold" style={{ color: '#1ABC9C' }}>
-                        {message.senderName[0]}
+                        {message.senderName?.[0] ?? '?'}
                       </span>
                     </div>
                   )}
 
                   <div className={isMyMessage ? 'text-right' : ''}>
-                    {/* 이름 */}
+                    {/* 이름 (상대) */}
                     {!isMyMessage && (
                       <p className="text-xs text-gray-600 mb-1 ml-1">{message.senderName}</p>
                     )}
