@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import { axiosInstance } from '@/services/axios';
 
 interface ProposalData {
-  fileUrl: string;
+  fileUrls: string[];
   proposedAmount: number;
   description: string;
 }
@@ -13,10 +13,23 @@ const ProposalPage = () => {
   const [proposal, setProposal] = useState<ProposalData | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const handleFileDownload = async (fileUrl: string) => {
-    const key = fileUrl.split('.com/')[1]; // ✅ 버킷 이름 뒤 경로만 추출
-    const res = await axiosInstance.get(`/files/presigned?fileName=${key}`);
-    window.open(res.data, '_blank');
+  const handleSingleDownload = async (fileUrl: string) => {
+    try {
+      const key = fileUrl.split('.com/')[1]; // S3 key 추출
+      const res = await axiosInstance.get(`/files/presigned?fileName=${encodeURIComponent(key)}`);
+      const presignedUrl: string = res.data;
+
+      // 브라우저 다운로드 트리거
+      const link = document.createElement('a');
+      link.href = presignedUrl;
+      link.download = fileUrl.split('/').pop()!;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } catch (err) {
+      console.error('파일 다운로드 실패:', err);
+      alert('파일 다운로드 중 오류가 발생했습니다.');
+    }
   };
 
   const handleAccept = async () => {
@@ -52,7 +65,7 @@ const ProposalPage = () => {
 
         // 서버 구조에 따라 필드명 매핑
         setProposal({
-          fileUrl: data.portfolioFiles?.[0]?.fileUrl ?? '명세서(첨부된 파일 없음)',
+          fileUrls: data.portfolioFiles?.map((f: { fileUrl: string }) => f.fileUrl) ?? [],
           proposedAmount: data.proposedAmount,
           description: data.description,
         });
@@ -104,14 +117,32 @@ const ProposalPage = () => {
             </div>
           </div>
 
-          {/* 파일 이름 + 다운로드 버튼 */}
-          <div className="flex items-center justify-between border border-gray-300 rounded-lg px-4 py-3 bg-gray-50">
-            <button onClick={() => handleFileDownload(proposal.fileUrl)}>파일 열기</button>
-            <button
-              className="p-2 rounded-full hover:bg-gray-100 transition"
-              title="파일 다운로드"
-              onClick={() => window.open(`/proposals/${proposalId}/file`, '_blank')}
-            ></button>
+          {/* 파일 목록 + 개별 다운로드 버튼 */}
+          <div className="border border-gray-300 rounded-lg px-4 py-3 bg-gray-50">
+            <label className="block font-medium mb-3 text-gray-700">첨부 파일</label>
+
+            {proposal.fileUrls.length > 0 ? (
+              <ul className="space-y-2">
+                {proposal.fileUrls.map((url, idx) => (
+                  <li
+                    key={idx}
+                    className="flex justify-between items-center border-b border-gray-200 pb-2 last:border-b-0"
+                  >
+                    <span className="truncate text-gray-700 w-3/4">
+                      📎 {decodeURIComponent(url.split('/').pop()!)}
+                    </span>
+                    <button
+                      onClick={() => handleSingleDownload(url)}
+                      className="text-emerald-500 hover:text-emerald-600 font-medium"
+                    >
+                      다운로드
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="text-gray-400 text-sm">첨부된 파일이 없습니다.</p>
+            )}
           </div>
 
           {/* 버튼 영역 */}
