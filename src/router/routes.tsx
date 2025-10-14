@@ -13,6 +13,8 @@ import ClientProposalPage from '@/pages/ClientProposal';
 import FreelancerProposalPage from '@/pages/FreelancerProposal';
 import Home from '@/pages/Home';
 import OverviewPage from '@/pages/OverviewPage';
+import MilestonePage from '@/features/milestone/pages/MilestonePage';
+
 import ProjectList from '@/pages/ProjectList';
 import ProjectDetail from '@/pages/ProjectDetail';
 import ProjectWrite from '@/pages/ProjectWrite';
@@ -42,4 +44,5 @@ export const mainRoutes = [
   { path: '/chat', element: <ChatRoomListPage /> },
   { path: '/chat/:roomId', element: <ChatRoomRoute /> },
   { path: '/admin/dashboard', element: <AdminDashboardPage /> },
+  { path: '/milestone/:milestoneId', element: <MilestonePage /> },
 ];

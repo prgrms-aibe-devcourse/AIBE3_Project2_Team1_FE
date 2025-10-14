@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, useMemo, useCallback } from 'react';
+
 import {
   Upload,
   X,
@@ -20,6 +21,8 @@ import {
   Pencil,
 } from 'lucide-react';
 
+import { filesApi, type FileResponseDto } from '../api/milestoneApi';
+
 /* ===== Design Tokens ===== */
 const PRIMARY = '#1ABC9C';
 const TEXT = '#2C2C2C';
@@ -38,7 +41,6 @@ type FileItem = {
 type SortKey = 'name' | 'size' | 'createdAt';
 
 /* ===== Utils ===== */
-const id = () => Math.random().toString(36).slice(2, 10);
 const formatBytes = (b: number) => {
   if (b === 0) return '0 B';
   const k = 1024,
@@ -59,7 +61,13 @@ function fileKindIcon(mime: string, name: string) {
 }
 
 /* ===== Main ===== */
-export default function FilesView() {
+export default function FilesView({
+  milestoneId = 1,
+  refreshTick,
+}: {
+  milestoneId?: number; // 마일스톤 ID (어떤 마일스톤의 파일인지)
+  refreshTick?: number; // 5초마다 갱신용
+}) {
   const [files, setFiles] = useState<FileItem[]>([]);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [query, setQuery] = useState('');
@@ -73,6 +81,7 @@ export default function FilesView() {
   const [renameId, setRenameId] = useState<string | null>(null);
   const [renameValue, setRenameValue] = useState<string>('');
 
+  //키보드 단축키
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'a') {
@@ -88,6 +97,7 @@ export default function FilesView() {
     return () => window.removeEventListener('keydown', onKey);
   }, [files]);
 
+  // 정렬/ 필터링
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
     const arr = q ? files.filter((f) => f.name.toLowerCase().includes(q)) : files.slice();
@@ -137,30 +147,135 @@ export default function FilesView() {
   const clearSelection = () => setSelected(new Set());
   const selectAll = () => setSelected(new Set(filtered.map((f) => f.id)));
 
-  const filesRef = useRef<FileItem[]>([]);
-  useEffect(() => {
-    filesRef.current = files;
-  }, [files]);
+  // 서버에서 파일 목록 가져오기
+  const fetchFiles = useCallback(async () => {
+    try {
+      console.log(' 파일 목록 조회:', milestoneId);
+      const serverFiles: FileResponseDto[] = await filesApi.list(milestoneId);
 
-  const onDelete = useCallback((ids: string | string[]) => {
-    const delIds = new Set(Array.isArray(ids) ? ids : [ids]);
-    setFiles((prev) => {
-      // ← 괄호 수정
-      prev.forEach((file) => {
-        if (delIds.has(file.id)) {
-          URL.revokeObjectURL(file.url);
-        }
-      });
-      return prev.filter((file) => !delIds.has(file.id));
-    });
-    setSelected(new Set());
-  }, []);
+      const items: FileItem[] = serverFiles.map((f) => ({
+        id: String(f.fileId ?? f.id),
+        name: f.name,
+        url: f.downloadUrl,
+        size: f.size,
+        type: f.type,
+        createdAt: new Date(f.createdAt).getTime(),
+      }));
+
+      setFiles(items);
+      console.log(' 파일 목록 업데이트:', items.length, '개');
+    } catch (e) {
+      console.error('파일 목록 조회 실패:', e);
+    }
+  }, [milestoneId]);
+
+  // 컴포넌트 마운트 시 파일 목록 로드
   useEffect(() => {
-    // ← 괄호 수정
-    return () => {
-      filesRef.current.forEach((file) => URL.revokeObjectURL(file.url));
-    };
-  }, []);
+    void fetchFiles();
+  }, [fetchFiles]);
+
+  // refreshTick 변경 시 자동 갱신
+  useEffect(() => {
+    if (refreshTick !== undefined) {
+      void fetchFiles();
+    }
+  }, [refreshTick, fetchFiles]);
+
+  // 파일 업로드
+  const uploadFiles = useCallback(
+    async (fileList: FileList | null) => {
+      if (!fileList || fileList.length === 0) {
+        console.log(' 업로드할 파일 없음');
+        return;
+      }
+
+      const filesArr = Array.from(fileList);
+
+      if (filesArr.length > 10) {
+        alert('최대 10개까지 업로드 가능합니다.');
+        return;
+      }
+
+      for (const f of filesArr) {
+        if (f.size > 10 * 1024 * 1024) {
+          alert(`파일 크기는 10MB를 초과할 수 없습니다: ${f.name}`);
+          return;
+        }
+      }
+
+      try {
+        console.log(' 파일 업로드 시작:', filesArr.length, '개');
+
+        // 한 번에 하나씩 업로드
+        for (const file of filesArr) {
+          console.log('업로드 중:', file.name);
+
+          const formData = new FormData();
+          formData.append('file', file);
+
+          // 백엔드로 전송 (백엔드가 S3 업로드 + DB 저장!)
+          const res = await fetch(`/api/v1/milestones/${milestoneId}/files`, {
+            method: 'POST',
+            body: formData,
+            credentials: 'include',
+          });
+
+          if (!res.ok) {
+            const text = await res.text().catch(() => '');
+            throw new Error(`업로드 실패: ${res.status} ${text}`);
+          }
+
+          const dto: FileResponseDto = await res.json();
+          console.log(' 업로드 완료:', dto);
+        }
+
+        // 업로드 완료 후 목록 새로고침
+        await fetchFiles();
+        setShowFileModal(false);
+
+        console.log(' 전체 업로드 완료:', filesArr.length, '개');
+        alert(`${filesArr.length}개 파일 업로드 완료!`);
+      } catch (e) {
+        console.error('파일 업로드 실패:', e);
+        alert(`업로드 실패: ${e instanceof Error ? e.message : '알 수 없는 오류'}`);
+      }
+    },
+    [milestoneId, fetchFiles]
+  );
+
+  // 파일 삭제
+  const onDelete = useCallback(
+    async (ids: string | string[]) => {
+      const delIds = Array.isArray(ids) ? ids : [ids];
+      const targets = files.filter((f) => delIds.includes(f.id));
+
+      if (targets.length === 0) return;
+
+      const confirm = window.confirm(`정말 ${targets.length}개 파일을 삭제하시겠습니까?`);
+      if (!confirm) return;
+
+      try {
+        console.log('🗑️ 파일 삭제 시작:', targets.length, '개');
+
+        for (const f of targets) {
+          console.log('🗑️ 삭제 중:', f.name);
+          // 백엔드 API 호출 (S3 삭제 + DB 삭제 자동!)
+          await filesApi.remove(milestoneId, Number(f.id));
+          console.log('✅ 삭제 완료:', f.name);
+        }
+
+        setFiles((prev) => prev.filter((f) => !delIds.includes(f.id)));
+        setSelected(new Set());
+
+        console.log('✅ 전체 삭제 완료:', targets.length, '개');
+        alert(`${targets.length}개 파일 삭제 완료!`);
+      } catch (e) {
+        console.error('❌ 파일 삭제 실패:', e);
+        alert(`삭제 실패: ${e instanceof Error ? e.message : '알 수 없는 오류'}`);
+      }
+    },
+    [files, milestoneId]
+  );
 
   const startRename = (f: FileItem) => {
     setRenameId(f.id);
@@ -313,10 +428,7 @@ export default function FilesView() {
       )}
 
       {showFileModal && (
-        <FileModal
-          onClose={() => setShowFileModal(false)}
-          onUpload={(items) => setFiles((prev) => [...items, ...prev])}
-        />
+        <FileModal onClose={() => setShowFileModal(false)} onUpload={uploadFiles} />
       )}
       {showPreview && <PreviewModal file={showPreview} onClose={() => setShowPreview(null)} />}
     </div>
@@ -615,28 +727,17 @@ function FileModal({
   onUpload,
 }: {
   onClose: () => void;
-  onUpload: (items: FileItem[]) => void;
+  onUpload: (files: FileList | null) => Promise<void>;
 }) {
   const uploadRef = useRef<HTMLInputElement | null>(null);
   const dropRef = useRef<HTMLDivElement | null>(null);
   const [dragOver, setDragOver] = useState(false);
 
   const handleFiles = useCallback(
-    (fileList: FileList | null) => {
-      if (!fileList || fileList.length === 0) return;
-      const arr = Array.from(fileList);
-      const items: FileItem[] = arr.map((file) => ({
-        id: id(),
-        name: file.name,
-        url: URL.createObjectURL(file),
-        size: file.size,
-        type: file.type || 'application/octet-stream',
-        createdAt: Date.now(),
-      }));
-      onUpload(items);
-      onClose();
+    async (fileList: FileList | null) => {
+      await onUpload(fileList);
     },
-    [onUpload, onClose]
+    [onUpload]
   );
 
   useEffect(() => {
@@ -682,8 +783,11 @@ function FileModal({
             ref={uploadRef}
             type="file"
             multiple
+            accept="image/*"
             className="flex-1 text-sm"
-            onChange={(e) => handleFiles(e.target.files)}
+            onChange={(e) => {
+              void handleFiles(e.target.files);
+            }}
           />
         </div>
 
@@ -698,7 +802,9 @@ function FileModal({
           <button
             className="px-3 py-2 text-sm rounded-md text-white"
             style={{ background: PRIMARY }}
-            onClick={() => handleFiles(uploadRef.current?.files || null)}
+            onClick={() => {
+              void handleFiles(uploadRef.current?.files || null);
+            }}
           >
             추가
           </button>

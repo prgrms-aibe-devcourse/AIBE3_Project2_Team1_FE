@@ -1,5 +1,6 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Pencil, Check } from 'lucide-react';
+
 import TabNavigation from './components/TabNavigation';
 import KanbanView from './views/KanbanView.tsx';
 import CalendarView from './views/CalendarView';
@@ -11,9 +12,24 @@ interface Member {
   role: string;
   avatar: string | null;
 }
-
 export default function OverviewView() {
-  const [activeTab, setActiveTab] = useState('overview');
+  const [activeTab, setActiveTab] = useState('overview'); // 탭 상태
+
+  // 5초 폴링 + 포커스 복귀 시 즉시 갱신 트리거
+  const [refreshTick, setRefreshTick] = useState(0);
+  useEffect(() => {
+    const tick = () => setRefreshTick((t) => t + 1); // 숫자만 증가 → 자식들이 이 변화를 보고 refetch
+    const id = window.setInterval(tick, 2000); // 2초마다 tick
+    const onFocus = () => tick(); // 창으로 돌아오면 즉시 한 번
+    window.addEventListener('focus', onFocus);
+    document.addEventListener('visibilitychange', onFocus);
+    return () => {
+      clearInterval(id);
+      window.removeEventListener('focus', onFocus);
+      document.removeEventListener('visibilitychange', onFocus);
+    };
+  }, []);
+
   const [editMode, setEditMode] = useState(false);
   const [description, setDescription] = useState('프로젝트의 상세 내용을 적습니다.');
   const [projectTitle, setProjectTitle] = useState('프로젝트 제목');
@@ -116,7 +132,8 @@ export default function OverviewView() {
 
       {/* 컨텐츠 */}
       <div className="max-w-7xl mx-auto px-4 py-8">
-        {activeTab === 'overview' && (
+        {/* 🔹 언마운트 방지: 각 섹션을 항상 렌더하고 hidden으로만 토글 */}
+        <section className={activeTab === 'overview' ? '' : 'hidden'}>
           <div className="space-y-8">
             <section className="bg-white rounded-lg border border-gray-200 p-6">
               <div className="flex items-center justify-between mb-4">
@@ -213,13 +230,23 @@ export default function OverviewView() {
               ))}
             </div>
           </div>
-        )}
+        </section>
+        <section className={activeTab === 'kanban' ? '' : 'hidden'}></section>
 
-        {activeTab === 'kanban' && <KanbanView />}
+        {/* 칸반 탭 */}
+        <section className={activeTab === 'kanban' ? '' : 'hidden'}>
+          <KanbanView refreshTick={refreshTick} />
+        </section>
 
-        {activeTab === 'calendar' && <CalendarView />}
+        {/* 캘린더 탭 */}
+        <section className={activeTab === 'calendar' ? '' : 'hidden'}>
+          <CalendarView refreshTick={refreshTick} />
+        </section>
 
-        {activeTab === 'files' && <FilesView />}
+        {/* 파일 탭 */}
+        <section className={activeTab === 'files' ? '' : 'hidden'}>
+          <FilesView refreshTick={refreshTick} />
+        </section>
       </div>
     </>
   );
