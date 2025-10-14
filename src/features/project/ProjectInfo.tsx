@@ -66,7 +66,28 @@ export default function ProjectInfo({ project }: { project: Project }) {
     }
   };
 
-  const goHome = () => navigate('/');
+  //const goHome = () => navigate('/');
+
+  const goChatRoom = async () => {
+    try {
+      // 1. 프로젝트 생성자 ID 조회
+      const creatorRes = await api.get(`/projects/${project.project_id}/creator-id`);
+      const targetUserId = creatorRes.data.data;
+
+      // 2. 채팅방 생성 요청
+      const res = await api.post('/chatrooms/direct', {
+        targetUserId,
+        title: project.author, // 혹은 project.title
+      });
+      console.log(res);
+
+      // 3. 채팅방으로 이동
+      const roomId = res.data.data.chatRoomId;
+      navigate(`/chat/${roomId}`);
+    } catch (err) {
+      console.error('채팅방 이동 실패:', err);
+    }
+  };
 
   const goHProposal = () => {
     if (project.groupId === 'client') {
@@ -101,7 +122,7 @@ export default function ProjectInfo({ project }: { project: Project }) {
           </div>
 
           <button
-            onClick={goHome}
+            onClick={goChatRoom}
             className="ml-auto bg-[#D9D9D9] rounded-[12px] px-4 py-2 text-[#2C2C2C] font-semibold hover:bg-[#c5c5c5] transition"
           >
             문의하기
