@@ -9,6 +9,7 @@ export interface ProfileCardProps {
   skills?: string;
   completedCount?: number;
   inProgressCount?: number;
+  profileImgUrl?: string | null;
 }
 
 export interface ProfileInfo {

@@ -10,6 +10,7 @@ export interface UserResponseDto {
     phoneNumber: string;
     birth: string; // YYYY-MM-DD
     email: string;
+    ProfileImgUrl: string | null;
   };
 }
 

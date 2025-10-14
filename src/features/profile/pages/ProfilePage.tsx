@@ -45,7 +45,6 @@ export default function ProfilePage() {
 
   return (
     <div className="min-h-screen flex flex-col bg-gray-50">
-      {/* 프로필 카드 */}
       <ProfileCard
         mode={mode}
         setMode={setMode}
@@ -55,9 +54,8 @@ export default function ProfilePage() {
         completedCount={0}
         inProgressCount={0}
         skills={profile?.data.skills ?? '보유 기술을 작성해주세요.'}
+        profileImgUrl={user.data.ProfileImgUrl} // ✅ 여기 imgUrl 전달
       />
-
-      {/* 대시보드 */}
       <DashboardPage />
     </div>
   );
