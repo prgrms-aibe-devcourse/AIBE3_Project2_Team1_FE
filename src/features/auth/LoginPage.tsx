@@ -25,6 +25,8 @@ const LoginPage = () => {
 
       localStorage.setItem('accessToken', accessToken);
       localStorage.setItem('user', JSON.stringify(userData));
+      localStorage.setItem('userId', String(userData.userId ?? userData.id));
+
       setUser(userData);
 
       navigate('/');

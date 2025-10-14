@@ -8,12 +8,29 @@ export interface Message {
   createdAt: string;
 }
 
+interface ServerMessage {
+  messageId: number;
+  senderUserId: number;
+  senderName: string;
+  content: string;
+  createDate?: string;
+  createdAt?: string;
+}
+
 interface UseChatRoomReturn {
   messages: Message[];
   loading: boolean;
   sendMessage: (content: string) => Promise<void>;
   deleteMessage: (messageId: number) => Promise<void>;
   refreshMessages: () => Promise<void>;
+}
+
+function authHeaders(): HeadersInit {
+  const token = localStorage.getItem('accessToken');
+  return {
+    'Content-Type': 'application/json',
+    ...(token && { Authorization: `Bearer ${token}` }),
+  };
 }
 
 export function useChatRoom(roomId: number): UseChatRoomReturn {
@@ -24,10 +41,23 @@ export function useChatRoom(roomId: number): UseChatRoomReturn {
   const fetchMessages = useCallback(async () => {
     try {
       setLoading(true);
-      const response = await fetch(`/api/v1/messages/chatroom/${roomId}`);
-      if (!response.ok) throw new Error('Failed to fetch messages');
-      const data = await response.json();
-      setMessages(data);
+      const res = await fetch(`/api/v1/messages/${roomId}`, {
+        headers: authHeaders(),
+      });
+      if (!res.ok) throw new Error('Failed to fetch messages');
+
+      // CommonResponse 적용 + 필드 매핑(createDate → createdAt)
+      const json = await res.json();
+      const rawList: ServerMessage[] = json?.data ?? json ?? [];
+      const mapped: Message[] = rawList.map((m: ServerMessage) => ({
+        messageId: m.messageId,
+        senderUserId: m.senderUserId,
+        senderName: m.senderName,
+        content: m.content,
+        // ?? 연산자로 두 필드명 모두 대응
+        createdAt: m.createDate ?? m.createdAt ?? '',
+      }));
+      setMessages(mapped);
     } catch (error) {
       console.error('메시지 로드 실패:', error);
       throw error;
@@ -38,28 +68,52 @@ export function useChatRoom(roomId: number): UseChatRoomReturn {
 
   // SSE 연결
   useEffect(() => {
-    const eventSource = new EventSource(`/api/v1/sse/chatroom/${roomId}`);
+    const token = localStorage.getItem('accessToken');
+    const url = token
+      ? `/api/v1/sse/connect?chatRoomId=${roomId}&token=${encodeURIComponent(token)}`
+      : `/api/v1/sse/connect?chatRoomId=${roomId}`;
 
-    eventSource.addEventListener('message', (event) => {
+    const es = new EventSource(url);
+
+    es.addEventListener('message', (event) => {
       try {
-        const newMessage = JSON.parse(event.data);
-        setMessages((prev) => [...prev, newMessage]);
+        const m = JSON.parse(event.data);
+
+        // SSE로 온 페이로드도 필드 매핑 통일
+        const newMsg: Message = {
+          messageId: m.messageId,
+          senderUserId: m.senderUserId,
+          senderName: m.senderName,
+          content: m.content,
+          createdAt: m.createDate ?? m.createdAt ?? new Date().toISOString(),
+        };
+
+        // 중복 체크 (핵심!)
+        setMessages((prev) => {
+          const exists = prev.some((msg) => msg.messageId === newMsg.messageId);
+          if (exists) {
+            console.log(' Duplicate message ignored:', newMsg.messageId);
+            return prev;
+          }
+          console.log(' New message added:', newMsg.messageId);
+          return [...prev, newMsg];
+        });
       } catch (error) {
         console.error('메시지 파싱 실패:', error);
       }
     });
 
-    eventSource.addEventListener('connect', (event) => {
+    es.addEventListener('connect', (event) => {
       console.log('SSE 연결됨:', event.data);
     });
 
-    eventSource.onerror = (error) => {
+    es.onerror = (error) => {
       console.error('SSE 에러:', error);
-      eventSource.close();
+      es.close();
     };
 
     return () => {
-      eventSource.close();
+      es.close();
     };
   }, [roomId]);
 
@@ -68,37 +122,30 @@ export function useChatRoom(roomId: number): UseChatRoomReturn {
     fetchMessages();
   }, [fetchMessages]);
 
-  // 메시지 전송
+  // 메시지 전송 (Authorization 헤더 추가)
   const sendMessage = useCallback(
     async (content: string) => {
-      if (!content.trim()) {
-        throw new Error('메시지 내용이 비어있습니다');
-      }
+      if (!content.trim()) throw new Error('메시지 내용이 비어있습니다');
 
-      try {
-        const response = await fetch('/api/v1/messages', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            chatRoomId: roomId,
-            content: content.trim(),
-          }),
-        });
+      const res = await fetch('/api/v1/messages', {
+        method: 'POST',
+        headers: authHeaders(), // 수정!
+        body: JSON.stringify({
+          chatRoomId: roomId,
+          content: content.trim(),
+        }),
+      });
 
-        if (!response.ok) throw new Error('메시지 전송 실패');
-      } catch (error) {
-        console.error('메시지 전송 실패:', error);
-        throw error;
-      }
+      if (!res.ok) throw new Error('메시지 전송 실패');
     },
     [roomId]
   );
-
   // 메시지 삭제
   const deleteMessage = useCallback(async (messageId: number) => {
     try {
       const response = await fetch(`/api/v1/messages/${messageId}`, {
         method: 'DELETE',
+        headers: authHeaders(),
       });
 
       if (!response.ok) throw new Error('메시지 삭제 실패');
