@@ -13,7 +13,6 @@ import videoCallImg from '../assets/images/Video Call.png';
 import xBoxControllerImg from '../assets/images/Xbox Controller.png';
 import { categoryGroups } from '@/features/project/constants/categories';
 
-// ✅ 카테고리 아이콘 매핑
 const categoryIcons: Record<string, string> = {
   VIDEO: videoCallImg,
   WRITE: designImg,
@@ -25,7 +24,6 @@ const categoryIcons: Record<string, string> = {
   TRANSLATE: languageImg,
 };
 
-// ✅ Project 타입 정의
 interface Project {
   project_id: number;
   title: string;
