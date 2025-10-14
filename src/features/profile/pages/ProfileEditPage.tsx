@@ -1,7 +1,7 @@
 import axios, { type AxiosError } from 'axios';
 import React, { useEffect, useState, type ChangeEvent, type KeyboardEvent } from 'react';
 import ProfileImage from '../components/ProfileImage';
-import { getMyUser, updateMyUser, type UserUpdateRequestDto } from '../profile';
+import { getMyUser, updateMyUser } from '../profile';
 
 interface ProfileForm {
   name: string;
@@ -79,12 +79,14 @@ const ProfileEditPage: React.FC = () => {
     setSuccessMessage('');
     setLoading(true);
 
-    const updateData: UserUpdateRequestDto = {
+    const updateData = {
       name: form.name,
       nickname: form.nickname,
       phoneNumber: form.phone,
-      birth: form.birth,
+      birthDate: form.birth, // 서버 필드명에 맞춤
     };
+
+    console.log('업데이트 데이터:', updateData); // 요청 확인용
 
     try {
       await updateMyUser(updateData);
