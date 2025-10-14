@@ -1,10 +1,9 @@
 import { useParams } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { axiosInstance } from '@/services/axios';
-import { Upload } from 'lucide-react';
 
 interface ProposalData {
-  fileName: string;
+  fileUrl: string;
   proposedAmount: number;
   description: string;
 }
@@ -13,6 +12,12 @@ const ProposalPage = () => {
   const { proposalId } = useParams();
   const [proposal, setProposal] = useState<ProposalData | null>(null);
   const [loading, setLoading] = useState(true);
+
+  const handleFileDownload = async (fileUrl: string) => {
+    const key = fileUrl.split('.com/')[1]; // ✅ 버킷 이름 뒤 경로만 추출
+    const res = await axiosInstance.get(`/files/presigned?fileName=${key}`);
+    window.open(res.data, '_blank');
+  };
 
   const handleAccept = async () => {
     try {
@@ -45,9 +50,9 @@ const ProposalPage = () => {
         const res = await axiosInstance.get(`/proposals/${proposalId}`);
         const data = res.data.data;
 
-        // ✅ 서버 구조에 따라 필드명 매핑
+        // 서버 구조에 따라 필드명 매핑
         setProposal({
-          fileName: data.portfolioFiles?.[0]?.fileName ?? '명세서(첨부된 파일 없음)',
+          fileUrl: data.portfolioFiles?.[0]?.fileUrl ?? '명세서(첨부된 파일 없음)',
           proposedAmount: data.proposedAmount,
           description: data.description,
         });
@@ -101,27 +106,25 @@ const ProposalPage = () => {
 
           {/* 파일 이름 + 다운로드 버튼 */}
           <div className="flex items-center justify-between border border-gray-300 rounded-lg px-4 py-3 bg-gray-50">
-            <span className="text-gray-600 truncate">{proposal.fileName}</span>
+            <button onClick={() => handleFileDownload(proposal.fileUrl)}>파일 열기</button>
             <button
               className="p-2 rounded-full hover:bg-gray-100 transition"
               title="파일 다운로드"
               onClick={() => window.open(`/proposals/${proposalId}/file`, '_blank')}
-            >
-              <Upload className="w-5 h-5 text-gray-600" />
-            </button>
+            ></button>
           </div>
 
           {/* 버튼 영역 */}
           <div className="flex justify-end gap-3 mt-4">
             <button
               onClick={handleReject}
-              className="px-6 py-3 bg-gray-100 hover:bg-gray-200 rounded-lg text-gray-700 font-medium transition"
+              className="px-6 py-3  bg-red-400 hover:bg-red-500 text-white font-semibold rounded-lg transition-colors"
             >
               매칭 거절
             </button>
             <button
               onClick={handleAccept}
-              className="px-6 py-3 bg-[#1ABC9C] hover:bg-[#16a085] rounded-lg text-white font-medium transition"
+              className="px-6 py-3 bg-green-400 hover:bg-green-500 text-white font-semibold rounded-lg transition-colors"
             >
               매칭 수락
             </button>
