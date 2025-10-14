@@ -1,3 +1,5 @@
+import { updateUserMode } from '@/services/user';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { ProfileCardProps } from '../types';
 
@@ -10,9 +12,25 @@ export default function ProfileCard({
   skills,
   completedCount,
   inProgressCount,
-  profileImgUrl, // ✅ 추가
+  profileImgUrl,
 }: ProfileCardProps) {
   const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
+
+  const handleModeChange = async (newMode: 'client' | 'freelancer') => {
+    if (loading || newMode === mode) return;
+    setLoading(true);
+
+    try {
+      await updateUserMode(newMode.toUpperCase() as 'CLIENT' | 'FREELANCER');
+      setMode(newMode);
+    } catch (error) {
+      console.error('모드 변경 실패:', error);
+      alert('모드 변경 중 오류가 발생했습니다.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <section className="max-w-4xl w-full mx-auto mt-6 p-6 bg-white rounded-lg border">
@@ -67,16 +85,18 @@ export default function ProfileCard({
 
         <div className="flex gap-2">
           <button
-            onClick={() => setMode('client')}
-            className={`px-3 py-1 text-sm rounded-full border ${
+            onClick={() => handleModeChange('client')}
+            disabled={loading}
+            className={`px-3 py-1 text-sm rounded-full border transition ${
               mode === 'client' ? 'bg-red-400 text-white' : 'bg-white text-gray-700'
             }`}
           >
             클라이언트 모드
           </button>
           <button
-            onClick={() => setMode('freelancer')}
-            className={`px-3 py-1 text-sm rounded-full border ${
+            onClick={() => handleModeChange('freelancer')}
+            disabled={loading}
+            className={`px-3 py-1 text-sm rounded-full border transition ${
               mode === 'freelancer' ? 'bg-red-400 text-white' : 'bg-white text-gray-700'
             }`}
           >
