@@ -96,7 +96,7 @@ export default function Home() {
           </p>
           <div className="flex gap-3 justify-end">
             <Link
-              to="/projects/write"
+              to="/project/write"
               className="bg-[#ff6b6b] hover:bg-[#f56767] text-white px-6 py-2 rounded-[12px] font-semibold transition-all"
             >
               프로젝트 등록
@@ -149,7 +149,6 @@ export default function Home() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {projects.length > 0 ? (
             projects.slice(0, 4).map((p) => {
-              console.log(p.project_id);
               return (
                 <ProjectCard
                   key={p.project_id}
