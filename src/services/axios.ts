@@ -52,10 +52,11 @@ axiosInstance.interceptors.response.use(
   async (error: AxiosError) => {
     const originalRequest = error.config as CustomAxiosRequestConfig | undefined;
 
-    if (!originalRequest || window.location.pathname === '/login') {
+    if (!originalRequest) {
       return Promise.reject(error);
     }
 
+    // 401 + 아직 재시도 안 한 경우
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
 
@@ -65,16 +66,9 @@ axiosInstance.interceptors.response.use(
         (originalRequest.headers as Record<string, string>).Authorization =
           `Bearer ${newAccessToken}`;
         return axiosInstance(originalRequest);
-      } else {
-        localStorage.removeItem('accessToken');
-        localStorage.removeItem('user');
-
-        if (window.location.pathname !== '/login') {
-          window.location.replace('/login');
-        }
-
-        return Promise.reject(error);
       }
+      // 재발급 실패하면 그냥 에러 반환
+      return Promise.reject(error);
     }
 
     return Promise.reject(error);
