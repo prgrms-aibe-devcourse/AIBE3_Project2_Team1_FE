@@ -50,11 +50,11 @@ export default function ProfilePage() {
         setMode={setMode}
         name={user.data.name}
         email={user.data.email}
-        description={profile?.data.description ?? '설명이 없습니다.'}
+        title={profile?.data.title ?? '제목이 없습니다.'}
         completedCount={0}
         inProgressCount={0}
         skills={profile?.data.skills ?? '보유 기술을 작성해주세요.'}
-        profileImgUrl={user.data.ProfileImgUrl} // ✅ 여기 imgUrl 전달
+        profileImgUrl={user.data.ProfileImgUrl}
       />
       <DashboardPage />
     </div>
