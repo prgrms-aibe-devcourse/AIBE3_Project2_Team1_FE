@@ -1,28 +1,6 @@
-// ===== milestoneApi.ts (프론트 전용 HTTP 래퍼) =====
-const BASE = '/api/v1/milestones';
+import axiosInstance from '@/services/axios.ts';
 
-async function jsonFetch<T>(input: RequestInfo, init?: RequestInit): Promise<T> {
-  const res = await fetch(input, {
-    headers: { 'Content-Type': 'application/json', ...(init?.headers || {}) },
-    credentials: 'include',
-    ...init,
-  });
-  if (!res.ok) {
-    const text = await res.text().catch(() => res.statusText);
-    throw new Error(`HTTP ${res.status}: ${text}`);
-  }
-  const body = await res.text();
-  return (body ? JSON.parse(body) : undefined) as T;
-}
-async function formFetch<T>(input: RequestInfo, form: FormData, init?: RequestInit): Promise<T> {
-  const res = await fetch(input, { method: 'POST', body: form, credentials: 'include', ...init });
-  if (!res.ok) {
-    const text = await res.text().catch(() => res.statusText);
-    throw new Error(`HTTP ${res.status}: ${text}`);
-  }
-  const body = await res.text();
-  return (body ? JSON.parse(body) : undefined) as T;
-}
+const BASE = '/milestones';
 
 /* ===== 타입 ===== */
 export interface MilestoneResponseDto {
@@ -62,81 +40,155 @@ export interface TeamMemberDto {
   avatarUrl?: string | null;
 }
 
-/* ===== 마일스톤 ===== */
+// ===== 마일스톤 =====
 export const milestoneApi = {
-  get: (milestoneId: number) =>
-    jsonFetch<MilestoneResponseDto>(`${BASE}/${milestoneId}`, { method: 'GET' }),
-  update: (milestoneId: number, payload: Partial<MilestoneResponseDto>) =>
-    jsonFetch<MilestoneResponseDto>(`${BASE}/${milestoneId}`, {
-      method: 'PATCH',
-      body: JSON.stringify(payload),
-    }),
+  // GET /api/v1/milestones/{milestoneId}
+  async get(milestoneId: number) {
+    const { data } = await axiosInstance.get<MilestoneResponseDto>(`${BASE}/${milestoneId}`);
+    return data;
+  },
+
+  // PATCH /api/v1/milestones/{milestoneId}  body: { title?, description?, ... }
+  async update(milestoneId: number, payload: Partial<MilestoneResponseDto>) {
+    const { data } = await axiosInstance.patch<MilestoneResponseDto>(
+      `${BASE}/${milestoneId}`,
+      payload
+    );
+    return data;
+  },
 };
 
-/* ===== 칸반 ===== */
+// ===== 칸반 =====
 export const kanbanApi = {
-  list: (milestoneId: number) =>
-    jsonFetch<KanbanCardResponse[]>(`${BASE}/${milestoneId}/cards`, { method: 'GET' }),
-  create: (milestoneId: number, columnId: string, title: string) =>
-    jsonFetch<KanbanCardResponse>(`${BASE}/${milestoneId}/cards`, {
-      method: 'POST',
-      body: JSON.stringify({ title, columnId }),
-    }),
-  update: (milestoneId: number, cardId: number, patch: CardPatchRequest) =>
-    jsonFetch<KanbanCardResponse>(`${BASE}/${milestoneId}/cards/${cardId}`, {
-      method: 'PATCH',
-      body: JSON.stringify(patch),
-    }),
-  remove: (milestoneId: number, cardId: number) =>
-    jsonFetch<void>(`${BASE}/${milestoneId}/cards/${cardId}`, { method: 'DELETE' }),
+  // GET /api/v1/milestones/{milestoneId}/cards
+  async list(milestoneId: number) {
+    const { data } = await axiosInstance.get<KanbanCardResponse[]>(`${BASE}/${milestoneId}/cards`);
+    return data;
+  },
+
+  // POST /api/v1/milestones/{milestoneId}/cards  body: { title, columnId }
+  async create(milestoneId: number, columnId: string, title: string) {
+    const { data } = await axiosInstance.post<KanbanCardResponse>(`${BASE}/${milestoneId}/cards`, {
+      title,
+      columnId,
+    });
+    return data;
+  },
+
+  // PATCH /api/v1/milestones/{milestoneId}/cards/{cardId}
+  async update(milestoneId: number, cardId: number, patch: CardPatchRequest) {
+    const { data } = await axiosInstance.patch<KanbanCardResponse>(
+      `${BASE}/${milestoneId}/cards/${cardId}`,
+      patch
+    );
+    return data;
+  },
+
+  // DELETE /api/v1/milestones/{milestoneId}/cards/{cardId}
+  async remove(milestoneId: number, cardId: number) {
+    await axiosInstance.delete<void>(`${BASE}/${milestoneId}/cards/${cardId}`);
+  },
 };
 
-/* ===== 캘린더 ===== */
+// ===== 캘린더 =====
 export const calendarApi = {
-  list: (milestoneId: number) =>
-    jsonFetch<CalendarEventResponse[]>(`${BASE}/${milestoneId}/events`, { method: 'GET' }),
-  create: (milestoneId: number, title: string, date: string) =>
-    jsonFetch<CalendarEventResponse>(`${BASE}/${milestoneId}/events`, {
-      method: 'POST',
-      body: JSON.stringify({ title, date }),
-    }),
-  update: (milestoneId: number, eventId: number, patch: EventPatchRequest) =>
-    jsonFetch<CalendarEventResponse>(`${BASE}/${milestoneId}/events/${eventId}`, {
-      method: 'PATCH',
-      body: JSON.stringify(patch),
-    }),
-  remove: (milestoneId: number, eventId: number) =>
-    jsonFetch<void>(`${BASE}/${milestoneId}/events/${eventId}`, { method: 'DELETE' }),
+  // GET /api/v1/milestones/{milestoneId}/events
+  async list(milestoneId: number) {
+    const { data } = await axiosInstance.get<CalendarEventResponse[]>(
+      `${BASE}/${milestoneId}/events`
+    );
+    return data;
+  },
+
+  // POST /api/v1/milestones/{milestoneId}/events  body: { title, date }
+  async create(milestoneId: number, title: string, date: string) {
+    const { data } = await axiosInstance.post<CalendarEventResponse>(
+      `${BASE}/${milestoneId}/events`,
+      {
+        title,
+        date,
+      }
+    );
+    return data;
+  },
+
+  // PATCH /api/v1/milestones/{milestoneId}/events/{eventId}
+  async update(milestoneId: number, eventId: number, patch: EventPatchRequest) {
+    const { data } = await axiosInstance.patch<CalendarEventResponse>(
+      `${BASE}/${milestoneId}/events/${eventId}`,
+      patch
+    );
+    return data;
+  },
+
+  // DELETE /api/v1/milestones/{milestoneId}/events/{eventId}
+  async remove(milestoneId: number, eventId: number) {
+    await axiosInstance.delete<void>(`${BASE}/${milestoneId}/events/${eventId}`);
+  },
 };
 
-/* ===== 파일 ===== */
+// ===== 파일 =====
 export const filesApi = {
-  list: (milestoneId: number) =>
-    jsonFetch<FileResponseDto[]>(`${BASE}/${milestoneId}/files`, { method: 'GET' }),
-  upload: (milestoneId: number, fileList: File[]) => {
+  // GET /api/v1/milestones/{milestoneId}/files
+  async list(milestoneId: number) {
+    const { data } = await axiosInstance.get<FileResponseDto[]>(`${BASE}/${milestoneId}/files`);
+    return data;
+  },
+
+  // POST /api/v1/milestones/{milestoneId}/files  (multipart)
+  async upload(milestoneId: number, fileList: File[]) {
     const form = new FormData();
     fileList.forEach((f) => form.append('files', f));
-    return formFetch<FileResponseDto[]>(`${BASE}/${milestoneId}/files`, form, { method: 'POST' });
+    // axios는 FormData일 때 Content-Type에 boundary를 자동 세팅하므로 헤더 지정 불필요
+    const { data } = await axiosInstance.post<FileResponseDto[]>(
+      `${BASE}/${milestoneId}/files`,
+      form
+    );
+    return data;
   },
-  remove: (milestoneId: number, fileId: number) =>
-    jsonFetch<void>(`${BASE}/${milestoneId}/files/${fileId}`, { method: 'DELETE' }),
-  getDownloadUrl: (fileId: number) => `/api/v1/milestones/files/download/${fileId}`,
+
+  // DELETE /api/v1/milestones/{milestoneId}/files/{fileId}
+  async remove(milestoneId: number, fileId: number) {
+    await axiosInstance.delete<void>(`${BASE}/${milestoneId}/files/${fileId}`);
+  },
+
+  // 파일 다운로드 URL 생성 (다운로드는 브라우저 navigation로 처리)
+  getDownloadUrl(fileId: number) {
+    // axiosInstance.baseURL이 '/api/v1' 이므로, 여기엔 전체 경로를 그대로 사용
+    return `/api/v1/milestones/files/download/${fileId}`;
+  },
 };
 
-/* ===== 팀원(선택) ===== */
+// ===== 팀원 =====
 export const teamApi = {
-  list: (milestoneId: number) =>
-    jsonFetch<TeamMemberDto[]>(`${BASE}/${milestoneId}/team-members`, { method: 'GET' }),
-  create: (milestoneId: number, payload: Partial<TeamMemberDto>) =>
-    jsonFetch<TeamMemberDto>(`${BASE}/${milestoneId}/team-members/one`, {
-      method: 'POST',
-      body: JSON.stringify(payload),
-    }),
-  update: (milestoneId: number, memberId: number, payload: Partial<TeamMemberDto>) =>
-    jsonFetch<TeamMemberDto>(`${BASE}/${milestoneId}/team-members/${memberId}`, {
-      method: 'PATCH',
-      body: JSON.stringify(payload),
-    }),
-  remove: (milestoneId: number, memberId: number) =>
-    jsonFetch<void>(`${BASE}/${milestoneId}/team-members/${memberId}`, { method: 'DELETE' }),
+  // GET /api/v1/milestones/{milestoneId}/team-members
+  async list(milestoneId: number) {
+    const { data } = await axiosInstance.get<TeamMemberDto[]>(
+      `${BASE}/${milestoneId}/team-members`
+    );
+    return data;
+  },
+
+  // POST /api/v1/milestones/{milestoneId}/team-members/one
+  async create(milestoneId: number, payload: Partial<TeamMemberDto>) {
+    const { data } = await axiosInstance.post<TeamMemberDto>(
+      `${BASE}/${milestoneId}/team-members/one`,
+      payload
+    );
+    return data;
+  },
+
+  // PATCH /api/v1/milestones/{milestoneId}/team-members/{memberId}
+  async update(milestoneId: number, memberId: number, payload: Partial<TeamMemberDto>) {
+    const { data } = await axiosInstance.patch<TeamMemberDto>(
+      `${BASE}/${milestoneId}/team-members/${memberId}`,
+      payload
+    );
+    return data;
+  },
+
+  // DELETE /api/v1/milestones/{milestoneId}/team-members/{memberId}
+  async remove(milestoneId: number, memberId: number) {
+    await axiosInstance.delete<void>(`${BASE}/${milestoneId}/team-members/${memberId}`);
+  },
 };

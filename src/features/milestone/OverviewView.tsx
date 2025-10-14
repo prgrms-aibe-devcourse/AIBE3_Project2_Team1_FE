@@ -15,7 +15,7 @@ interface Member {
 export default function OverviewView() {
   const [activeTab, setActiveTab] = useState('overview'); // 탭 상태
 
-  // 5초 폴링 + 포커스 복귀 시 즉시 갱신 트리거
+  // 2초 폴링 + 포커스 복귀 시 즉시 갱신 트리거
   const [refreshTick, setRefreshTick] = useState(0);
   useEffect(() => {
     const tick = () => setRefreshTick((t) => t + 1); // 숫자만 증가 → 자식들이 이 변화를 보고 refetch
