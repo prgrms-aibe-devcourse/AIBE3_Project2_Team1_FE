@@ -1,12 +1,16 @@
 // routes.tsx
 
-import AdminLoginPage from '@/features/admin/pages/AdminLoginPage';
 import AdminDashboardPage from '@/features/admin/pages/AdminDashboardPage';
+import AdminLoginPage from '@/features/admin/pages/AdminLoginPage';
 
 import LoginPage from '@/features/auth/LoginPage';
 import SignUpPage from '@/features/user/SignUpPage';
 
-import ProfilePage from '@/features/profile/pages';
+import PasswordChangePage from '@/features/profile/pages/PasswordChangePage';
+import ProfileEditPage from '@/features/profile/pages/ProfileEditPage';
+import ProfilePage from '@/features/profile/pages/ProfilePage';
+import UserEditPage from '@/features/profile/pages/UserEditPage';
+
 import ReviewWritePage from '@/features/review/ReviewWritePage';
 
 import ClientProposalPage from '@/pages/ClientProposal';
@@ -14,8 +18,8 @@ import FreelancerProposalPage from '@/pages/FreelancerProposal';
 import ProposalPage from '@/pages/ProposalPage';
 import Home from '@/pages/Home';
 import OverviewPage from '@/pages/OverviewPage';
-import ProjectList from '@/pages/ProjectList';
 import ProjectDetail from '@/pages/ProjectDetail';
+import ProjectList from '@/pages/ProjectList';
 import ProjectWrite from '@/pages/ProjectWrite';
 import ProjectUpdate from '@/pages/ProjectUpdate';
 
@@ -42,6 +46,9 @@ export const mainRoutes = [
   { path: '/project/write', element: <ProjectWrite /> },
   { path: '/project/:projectId/update', element: <ProjectUpdate /> },
   { path: '/profile', element: <ProfilePage /> },
+  { path: '/user/edit', element: <UserEditPage /> },
+  { path: '/profile/edit', element: <ProfileEditPage /> },
+  { path: '/profile/password-change', element: <PasswordChangePage /> },
   { path: '/overview', element: <OverviewPage /> },
   { path: '/chat', element: <ChatRoomListPage /> },
   { path: '/chat/:roomId', element: <ChatRoomRoute /> },

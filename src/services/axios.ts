@@ -1,44 +1,84 @@
-import axios from 'axios';
-/**
- *  - 백엔드 API 요청을 위한 axios 인스턴스 관련 설정 파일
- *  - 모든 API 요청에 공통된 설정을 적용합니다.
- *  - 토큰 자동 주입 및 응답 에러를 통합 처리하기 위한 공통 파일
- */
+import axios, { AxiosError, type InternalAxiosRequestConfig } from 'axios';
+
+interface CustomAxiosRequestConfig extends InternalAxiosRequestConfig {
+  _retry?: boolean;
+}
 
 export const axiosInstance = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL ?? '/api/v1', // API의 기본 URL (환경 변수에서 가져오거나 기본값 사용)
-  withCredentials: true, // 쿠키 등 인증 정보 포함
+  baseURL: import.meta.env.VITE_API_BASE_URL ?? '/api/v1',
+  withCredentials: true,
   headers: {
-    'Content-Type': 'application/json', // 기본 요청 헤더
+    'Content-Type': 'application/json',
   },
 });
 
-export default axiosInstance;
-
-// 요청 인터셉터 설정 -> 로컬 스토리지에서 accessToken을 가져와 Authorization 헤더에 자동으로 추가
+// 요청 인터셉터 - accessToken 자동 주입
 axiosInstance.interceptors.request.use(
-  (config) => {
+  (config: InternalAxiosRequestConfig) => {
     const accessToken = localStorage.getItem('accessToken');
-    if (accessToken) {
-      // 헤더에 Bearer 토큰 형태로 Authorization 추가
-      config.headers.Authorization = `Bearer ${accessToken}`;
+    if (accessToken && config.headers) {
+      (config.headers as Record<string, string>).Authorization = `Bearer ${accessToken}`;
     }
     return config;
   },
   (error) => Promise.reject(error)
 );
 
-// 응답 인터셉터 설정 -> 에러 응답이 발생했을 때 공통 처리
+// refreshToken 쿠키 기반 accessToken 재발급
+const reissueAccessToken = async (): Promise<string | null> => {
+  try {
+    const response = await axios.post(
+      `${import.meta.env.VITE_API_BASE_URL ?? '/api/v1'}/auth/reissue`,
+      {},
+      { withCredentials: true }
+    );
+
+    const newAccessToken = response.data?.data?.accessToken;
+    if (newAccessToken) {
+      localStorage.setItem('accessToken', newAccessToken);
+      return newAccessToken;
+    }
+
+    return null;
+  } catch (error) {
+    console.error('토큰 재발급 실패:', error);
+    return null;
+  }
+};
+
+// 응답 인터셉터 - 401 발생 시 재발급 및 재요청
 axiosInstance.interceptors.response.use(
-  (response) => response, // 응답은 그대로 반환
-  (error) => {
-    // 인증 실패 (토큰 만료, 로그아웃 필요 등)
-    if (error.response?.status === 401) {
-      console.error('인증 오류 발생', error.response);
-      // TODO: 로그아웃 처리, 토큰 재발급 요청, 로그인 페이지 이동 등의 설정 필요
+  (response) => response,
+  async (error: AxiosError) => {
+    const originalRequest = error.config as CustomAxiosRequestConfig | undefined;
+
+    if (!originalRequest || window.location.pathname === '/login') {
+      return Promise.reject(error);
+    }
+
+    if (error.response?.status === 401 && !originalRequest._retry) {
+      originalRequest._retry = true;
+
+      const newAccessToken = await reissueAccessToken();
+
+      if (newAccessToken) {
+        (originalRequest.headers as Record<string, string>).Authorization =
+          `Bearer ${newAccessToken}`;
+        return axiosInstance(originalRequest);
+      } else {
+        localStorage.removeItem('accessToken');
+        localStorage.removeItem('user');
+
+        if (window.location.pathname !== '/login') {
+          window.location.replace('/login');
+        }
+
+        return Promise.reject(error);
+      }
     }
 
     return Promise.reject(error);
   }
 );
-// 테스트용 주석
+
+export default axiosInstance;
