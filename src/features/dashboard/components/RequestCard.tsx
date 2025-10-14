@@ -9,7 +9,7 @@ const RequestCard = ({ id, title }: RequestCardProps) => {
   const navigate = useNavigate();
 
   const handleClick = () => {
-    navigate(`/match/${id}`);
+    navigate(`/proposal/${id}`);
   };
 
   return (
