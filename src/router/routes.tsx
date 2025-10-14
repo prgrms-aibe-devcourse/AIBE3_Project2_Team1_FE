@@ -25,6 +25,7 @@ import ProjectUpdate from '@/pages/ProjectUpdate';
 import ChatRoomListPage from '@/features/message/ChatRoomListPage';
 import ChatRoomRoute from './ChatRoomRoute';
 
+import MatchingPage from '@/pages/MatchingPage';
 // 레이아웃 없는 페이지 (로그인/회원가입 관련)
 export const noLayoutRoutes = [
   { path: '/login', element: <LoginPage /> },
@@ -51,4 +52,5 @@ export const mainRoutes = [
   { path: '/chat', element: <ChatRoomListPage /> },
   { path: '/chat/:roomId', element: <ChatRoomRoute /> },
   { path: '/admin/dashboard', element: <AdminDashboardPage /> },
+  { path: '/matching', element: <MatchingPage /> },
 ];
