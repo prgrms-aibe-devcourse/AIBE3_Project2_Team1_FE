@@ -1,6 +1,5 @@
 import axios, { AxiosError, type InternalAxiosRequestConfig } from 'axios';
 
-// 요청 config 확장 (_retry 속성 추가)
 interface CustomAxiosRequestConfig extends InternalAxiosRequestConfig {
   _retry?: boolean;
 }
