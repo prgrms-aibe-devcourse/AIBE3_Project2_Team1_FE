@@ -1,7 +1,9 @@
 import { AuthContext } from '@/features/auth/AuthContext';
 import { getCurrentUser } from '@/features/auth/auth';
-import { type User } from '@/services/user';
-import { type ReactNode, useEffect, useState } from 'react';
+import type { User } from '@/services/user';
+import axios from 'axios';
+import type { ReactNode } from 'react';
+import { useEffect, useState } from 'react';
 
 interface AuthProviderProps {
   children: ReactNode;
@@ -13,39 +15,37 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
   useEffect(() => {
     const restoreUser = async () => {
-      const storedUser = localStorage.getItem('user');
-      const token = localStorage.getItem('accessToken');
-
-      if (storedUser && token) {
-        try {
+      try {
+        const storedUser = localStorage.getItem('user');
+        if (storedUser) {
           const parsedUser = JSON.parse(storedUser);
-          // 기본 유효성 검증
-          if (parsedUser && typeof parsedUser === 'object') {
-            setUser(parsedUser as User);
-          } else {
-            throw new Error('Invalid user data format');
-          }
-        } catch (error) {
-          console.error('저장된 사용자 정보 파싱 실패:', error);
-          localStorage.removeItem('user');
-          localStorage.removeItem('accessToken');
+          setUser(parsedUser as User);
         }
-      } else {
-        try {
-          const res = await getCurrentUser();
-          if (res?.data) {
-            setUser(res.data);
-            localStorage.setItem('user', JSON.stringify(res.data));
-          }
-        } catch (error) {
-          console.error('로그인 상태 없음 또는 토큰 만료:', error);
-          setUser(null);
-          localStorage.removeItem('user');
-          localStorage.removeItem('accessToken');
-        }
-      }
 
-      setLoading(false);
+        const res = await getCurrentUser();
+        if (res?.data) {
+          setUser(res.data);
+          localStorage.setItem('user', JSON.stringify(res.data));
+        }
+      } catch (error: unknown) {
+        if (axios.isAxiosError(error)) {
+          if (error.response?.status === 401) {
+            console.warn('Access token expired → axiosInstance가 자동 재발급 시도 중...');
+          } else {
+            console.error('유저 복원 실패 (AxiosError):', error);
+            localStorage.removeItem('user');
+            localStorage.removeItem('accessToken');
+            setUser(null);
+          }
+        } else {
+          console.error('유저 복원 실패 (Axios 아님):', error);
+          localStorage.removeItem('user');
+          localStorage.removeItem('accessToken');
+          setUser(null);
+        }
+      } finally {
+        setLoading(false);
+      }
     };
 
     restoreUser();
