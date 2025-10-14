@@ -1,5 +1,6 @@
 import axios, { type AxiosError } from 'axios';
 import React, { useEffect, useState, type ChangeEvent, type KeyboardEvent } from 'react';
+import { useNavigate } from 'react-router-dom';
 import ProfileImage from '../components/ProfileImage';
 import { getMyUser, updateMyUser } from '../profile';
 
@@ -18,7 +19,7 @@ const formatPhoneNumber = (value: string) => {
   return `${digits.slice(0, 3)}-${digits.slice(3, 7)}-${digits.slice(7, 11)}`;
 };
 
-const ProfileEditPage: React.FC = () => {
+const UserEditPage: React.FC = () => {
   const [form, setForm] = useState<ProfileForm>({
     name: '',
     nickname: '',
@@ -28,6 +29,7 @@ const ProfileEditPage: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchUserInfo = async () => {
@@ -166,6 +168,13 @@ const ProfileEditPage: React.FC = () => {
           {successMessage && <p className="text-green-500 text-sm mt-1">{successMessage}</p>}
 
           <button
+            onClick={() => navigate('/profile/password-change')}
+            className="px-3 py-1 rounded-full bg-gray-200 text-gray-600 text-sm hover:bg-gray-300"
+          >
+            비밀번호 변경
+          </button>
+
+          <button
             type="submit"
             className="mt-6 bg-rose-400 text-white py-2 rounded-md hover:bg-rose-500 transition"
             disabled={loading}
@@ -178,4 +187,4 @@ const ProfileEditPage: React.FC = () => {
   );
 };
 
-export default ProfileEditPage;
+export default UserEditPage;

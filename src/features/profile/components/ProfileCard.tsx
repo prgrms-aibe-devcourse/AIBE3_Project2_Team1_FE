@@ -34,16 +34,16 @@ export default function ProfileCard({
           <div className="flex items-center gap-3">
             <h2 className="text-lg font-semibold">{name || '알 수 없음'}</h2>
             <button
-              onClick={() => navigate('/profile/edit')}
+              onClick={() => navigate('/user/edit')}
               className="px-3 py-1 rounded-full bg-gray-200 text-gray-600 text-sm hover:bg-gray-300"
             >
               회원정보 수정
             </button>
             <button
-              onClick={() => navigate('/profile/password-change')}
+              onClick={() => navigate('/profile/edit')}
               className="px-3 py-1 rounded-full bg-gray-200 text-gray-600 text-sm hover:bg-gray-300"
             >
-              비밀번호 변경
+              프로필 수정
             </button>
           </div>
 

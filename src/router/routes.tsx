@@ -7,8 +7,8 @@ import LoginPage from '@/features/auth/LoginPage';
 import SignUpPage from '@/features/user/SignUpPage';
 
 import PasswordChangePage from '@/features/profile/pages/PasswordChangePage';
-import ProfileEditPage from '@/features/profile/pages/ProfileEditPage';
 import ProfilePage from '@/features/profile/pages/ProfilePage';
+import UserEditPage from '@/features/profile/pages/UserEditPage';
 import ReviewWritePage from '@/features/review/ReviewWritePage';
 
 import ClientProposalPage from '@/pages/ClientProposal';
@@ -40,7 +40,7 @@ export const mainRoutes = [
   { path: '/project/:projectId', element: <ProjectDetail /> },
   { path: '/project/write', element: <ProjectWrite /> },
   { path: '/profile', element: <ProfilePage /> },
-  { path: '/profile/edit', element: <ProfileEditPage /> },
+  { path: '/user/edit', element: <UserEditPage /> },
   { path: '/profile/password-change', element: <PasswordChangePage /> },
   { path: '/overview', element: <OverviewPage /> },
   { path: '/chat', element: <ChatRoomListPage /> },
