@@ -1,6 +1,6 @@
 import { useParams, Navigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
-import OverviewView from '../OverviewView';
+import OverView from '../OverView.tsx';
 import { milestoneApi } from '@/features/milestone/api/milestoneApi.ts';
 
 export default function MilestonePage() {
@@ -56,7 +56,7 @@ export default function MilestonePage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <OverviewView milestoneId={Number(milestoneId)} />
+      <OverView milestoneId={Number(milestoneId)} />
     </div>
   );
 }
