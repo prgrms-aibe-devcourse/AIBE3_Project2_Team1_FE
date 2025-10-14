@@ -10,22 +10,10 @@ interface Project {
 }
 
 interface ServiceInfoProps {
-  project?: Project; // project가 아직 로딩 중일 수도 있으므로 optional
+  project?: Project;
 }
 
 export default function ServiceInfo({ project }: ServiceInfoProps) {
-  // project prop 예시:
-  // {
-  //   title: "로고 디자인 의뢰",
-  //   description: "스타트업 로고를 만들어 주세요!",
-  //   category: "DESIGN",
-  //   budget: 300000,
-  //   deadline: "2025-10-20",
-  //   client: "이해민",
-  //   freelancer: "김수민",
-  //   status: "OPEN"
-  // }
-
   if (!project) {
     return <div className="text-center text-gray-500 py-10">프로젝트 정보를 불러오는 중...</div>;
   }

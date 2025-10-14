@@ -5,6 +5,7 @@ import ServiceInfo from '../features/project/ServiceInfo';
 import ProjectReview from '../features/project/ProjectReview';
 import { categoryGroups } from '@/features/project/constants/categories';
 import api from '../features/project/api';
+import axios from 'axios';
 
 interface ProjectDetailResponse {
   projectId: number;
@@ -23,56 +24,87 @@ export default function ProjectDetail() {
   const [searchParams] = useSearchParams();
   const type = searchParams.get('type');
   const category = searchParams.get('category');
-  const [activeTab, setActiveTab] = useState<'service' | 'review'>('service');
-
   const navigate = useNavigate();
 
   const [project, setProject] = useState<ProjectDetailResponse | null>(null);
+  const [currentUserNickname, setCurrentUserNickname] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<'service' | 'review'>('service');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
+  // 카테고리명 변환 함수
   const getCategoryName = (categoryId: string | null) => {
     if (!categoryId) return '전체';
-
     const groupId = type === 'freelancer' ? 'freelancer' : 'client';
     const group = categoryGroups.find((g) => g.groupId === groupId);
-
     const foundCategory = group?.categories.find(
       (c) => c.id.toLowerCase() === categoryId.toLowerCase()
     );
-
     return foundCategory ? foundCategory.name : '전체';
   };
 
+  // 내 정보 불러오기
+  useEffect(() => {
+    const fetchUserInfo = async () => {
+      try {
+        const res = await api.get('/users/info');
+        const nickname = res?.data?.data?.nickname ?? null;
+        setCurrentUserNickname(nickname);
+        if (nickname) localStorage.setItem('nickname', nickname);
+      } catch {
+        setCurrentUserNickname(null);
+      }
+    };
+    fetchUserInfo();
+  }, []);
+
+  // 프로젝트 상세 불러오기
   useEffect(() => {
     const fetchProjectDetail = async () => {
       if (!projectId) return;
-
       try {
+        setLoading(true);
         const res = await api.get(`/projects/${projectId}`);
-        setProject(res.data.data);
-      } catch (err: unknown) {
-        console.error('프로젝트 불러오기 실패:', err);
+        const payload = res?.data?.data ?? res?.data ?? null;
+        setProject(payload);
+      } catch {
         setError('프로젝트 정보를 불러오지 못했습니다.');
       } finally {
         setLoading(false);
       }
     };
-
     fetchProjectDetail();
   }, [projectId]);
 
-  const handleCategoryClick = () => {
-    const groupId = type === 'freelancer' ? 'freelancer' : 'client';
-    const categoryId = category || 'all';
-    navigate(`/projects/${groupId}/${categoryId}`);
+  // 삭제 버튼 핸들러
+  const handleDelete = async () => {
+    if (!projectId) return;
+    const confirmed = window.confirm('정말 이 프로젝트를 삭제하시겠습니까?');
+    if (!confirmed) return;
+
+    try {
+      setDeleting(true);
+      await api.delete(`/projects/${projectId}`);
+      alert('프로젝트가 삭제되었습니다.');
+      navigate('/projects/client');
+    } catch (err: unknown) {
+      if (axios.isAxiosError(err)) {
+        alert(`삭제 실패: ${err.response?.data?.message || '서버 오류'}`);
+      } else {
+        alert('서버 연결 오류가 발생했습니다.');
+      }
+    } finally {
+      setDeleting(false);
+    }
   };
 
-  const handleGroupClick = () => {
-    const groupId = type === 'freelancer' ? 'freelancer' : 'client';
-    navigate(`/projects/${groupId}`);
-  };
+  // 작성자 여부 판단
+  const isAuthor =
+    currentUserNickname &&
+    project?.initiatorNickname?.toLowerCase().trim() === currentUserNickname.toLowerCase().trim();
 
+  // 로딩/에러 상태 처리
   if (loading)
     return (
       <div className="min-h-screen flex items-center justify-center text-gray-500">로딩 중...</div>
@@ -97,14 +129,20 @@ export default function ProjectDetail() {
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
           <div className="flex gap-2 flex-wrap">
             <button
-              onClick={handleGroupClick}
+              onClick={() =>
+                navigate(`/projects/${type === 'freelancer' ? 'freelancer' : 'client'}`)
+              }
               className="px-2 font-semibold text-[24px] text-[#666666] hover:underline hover:decoration-[#666666]"
             >
               {type === 'freelancer' ? '프리랜서' : '클라이언트'}
             </button>
             <span className="mx-1 text-[28px] text-[#666666]">›</span>
             <button
-              onClick={handleCategoryClick}
+              onClick={() => {
+                const groupId = type === 'freelancer' ? 'freelancer' : 'client';
+                const categoryId = category || 'all';
+                navigate(`/projects/${groupId}/${categoryId}`);
+              }}
               className="px-2 font-semibold text-[24px] text-[#666666] hover:underline hover:decoration-[#666666]"
             >
               {getCategoryName(project.category || category)}
@@ -150,9 +188,9 @@ export default function ProjectDetail() {
 
       <hr className="border-t border-gray-300 max-w-6xl mx-auto" />
 
-      {/*  하단 내용 */}
+      {/* 탭 내용 */}
       <div className="max-w-6xl mx-auto p-4">
-        {activeTab === 'service' && (
+        {activeTab === 'service' ? (
           <ServiceInfo
             project={{
               title: project.title,
@@ -170,9 +208,36 @@ export default function ProjectDetail() {
                   : 'OPEN',
             }}
           />
+        ) : (
+          <ProjectReview />
         )}
-        {activeTab === 'review' && <ProjectReview />}
       </div>
+      {/* 삭제 버튼 — 프로젝트 정보 바로 아래 */}
+      {isAuthor && (
+        <div className="max-w-6xl mx-auto flex justify-center gap-6 mt-16 mb-32 px-6">
+          {/* 프로젝트 수정 버튼 */}
+          <button
+            onClick={() => navigate(`/project/${projectId}/update`)}
+            className="px-8 py-3 text-lg font-semibold text-white rounded-xl shadow-md transition-all duration-200 bg-[#1ABC9C] hover:bg-[#1EB194] active:scale-95"
+          >
+            프로젝트 수정
+          </button>
+
+          {/* 프로젝트 삭제 버튼 */}
+          <button
+            onClick={handleDelete}
+            disabled={deleting}
+            className={`px-8 py-3 text-lg font-semibold text-white rounded-xl shadow-md transition-all duration-200
+        ${
+          deleting
+            ? 'bg-gray-400 cursor-not-allowed'
+            : 'bg-[#ff5b5b] hover:bg-[#ff3b3b] active:scale-95'
+        }`}
+          >
+            {deleting ? '삭제 중...' : '프로젝트 삭제'}
+          </button>
+        </div>
+      )}
     </div>
   );
 }

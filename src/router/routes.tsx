@@ -20,6 +20,7 @@ import OverviewPage from '@/pages/OverviewPage';
 import ProjectDetail from '@/pages/ProjectDetail';
 import ProjectList from '@/pages/ProjectList';
 import ProjectWrite from '@/pages/ProjectWrite';
+import ProjectUpdate from '@/pages/ProjectUpdate';
 
 import ChatRoomListPage from '@/features/message/ChatRoomListPage';
 import ChatRoomRoute from './ChatRoomRoute';
@@ -41,6 +42,7 @@ export const mainRoutes = [
   { path: '/projects/:groupId/:categoryId', element: <ProjectList /> },
   { path: '/project/:projectId', element: <ProjectDetail /> },
   { path: '/project/write', element: <ProjectWrite /> },
+  { path: '/project/:projectId/update', element: <ProjectUpdate /> },
   { path: '/profile', element: <ProfilePage /> },
   { path: '/user/edit', element: <UserEditPage /> },
   { path: '/profile/edit', element: <ProfileEditPage /> },
