@@ -1,11 +1,12 @@
+import { getMyUser } from '@/features/profile/profile';
 import { updateUserMode } from '@/services/user';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { ProfileCardProps } from '../types';
 
 export default function ProfileCard({
-  mode,
-  setMode,
+  role,
+  setRole,
   name,
   email,
   title,
@@ -17,13 +18,29 @@ export default function ProfileCard({
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
 
-  const handleModeChange = async (newMode: 'client' | 'freelancer') => {
-    if (loading || newMode === mode) return;
+  useEffect(() => {
+    const fetchUserRole = async () => {
+      try {
+        const res = await getMyUser(); // 유저 정보 조회
+        const role = res.data.role; // CLIENT / FREELANCER
+
+        if (role === 'CLIENT') setRole('client');
+        else if (role === 'FREELANCER') setRole('freelancer');
+      } catch (error) {
+        console.error('유저 정보 조회 실패:', error);
+      }
+    };
+
+    fetchUserRole();
+  }, [setRole]);
+
+  const handleRoleChange = async (newRole: 'client' | 'freelancer') => {
+    if (loading || newRole === role) return;
     setLoading(true);
 
     try {
-      await updateUserMode(newMode.toUpperCase() as 'CLIENT' | 'FREELANCER');
-      setMode(newMode);
+      await updateUserMode(newRole.toUpperCase() as 'CLIENT' | 'FREELANCER');
+      setRole(newRole);
     } catch (error) {
       console.error('모드 변경 실패:', error);
       alert('모드 변경 중 오류가 발생했습니다.');
@@ -83,21 +100,22 @@ export default function ProfileCard({
           </div>
         </div>
 
+        {/* 모드 선택 버튼 */}
         <div className="flex gap-2">
           <button
-            onClick={() => handleModeChange('client')}
+            onClick={() => handleRoleChange('client')}
             disabled={loading}
             className={`px-3 py-1 text-sm rounded-full border transition ${
-              mode === 'client' ? 'bg-red-400 text-white' : 'bg-white text-gray-700'
+              role === 'client' ? 'bg-red-400 text-white' : 'bg-white text-gray-700'
             }`}
           >
             클라이언트 모드
           </button>
           <button
-            onClick={() => handleModeChange('freelancer')}
+            onClick={() => handleRoleChange('freelancer')}
             disabled={loading}
             className={`px-3 py-1 text-sm rounded-full border transition ${
-              mode === 'freelancer' ? 'bg-red-400 text-white' : 'bg-white text-gray-700'
+              role === 'freelancer' ? 'bg-red-400 text-white' : 'bg-white text-gray-700'
             }`}
           >
             프리랜서 모드
