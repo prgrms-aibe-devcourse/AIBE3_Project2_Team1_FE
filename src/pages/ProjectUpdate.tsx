@@ -32,7 +32,6 @@ export default function ProjectUpdate() {
         setBudget(data.budget?.toString() || '');
         setDeadline(data.deadline || '');
         setCategory(data.category || '');
-        setUploadedImageUrls(data.images || []);
       } catch (err) {
         console.error('프로젝트 불러오기 실패:', err);
         alert('프로젝트 정보를 불러오지 못했습니다.');
@@ -64,7 +63,7 @@ export default function ProjectUpdate() {
       setUploading(true);
       const res = await api.post('/files/images', formData);
       const urls = res.data?.data || res.data;
-      setUploadedImageUrls((prev) => [...prev, ...urls]);
+      setUploadedImageUrls(urls);
       alert('이미지 업로드 완료!');
     } catch (err) {
       console.error('이미지 업로드 실패:', err);
@@ -107,7 +106,7 @@ export default function ProjectUpdate() {
 
       const formData = new FormData();
 
-      formData.append('dto', new Blob([dto], { type: 'text/plain' }));
+      formData.append('dto', new Blob([dto], { type: 'application/json' }));
 
       images.forEach((file) => formData.append('images', file));
 

@@ -1,7 +1,7 @@
 import RequestCard from './RequestCard';
 import ProjectCard from './ProjectCard';
-import FreelancerCard from './FreelancerCard';
 import ReviewCard from './ReviewCard';
+import BookmarkCard from './BookmarkCard';
 import EmptyState from './EmptyState';
 import ProposalCard from './ProposalCard';
 import type { DashboardTabData } from '../types';
@@ -42,18 +42,6 @@ export default function TabContentDashboard({ tabData, loading, error }: TabCont
         </div>
       );
 
-    case 'freelancer':
-      if (tabData.freelancers.length === 0) {
-        return <EmptyState message="프리랜서가 없습니다" buttonLabel="프리랜서 찾기" />;
-      }
-      return (
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-          {tabData.freelancers.map((item) => (
-            <FreelancerCard key={item.id} image={item.image} name={item.name} info={item.info} />
-          ))}
-        </div>
-      );
-
     case 'review':
       if (tabData.reviews.length === 0) {
         return <EmptyState message="리뷰가 없습니다" />;
@@ -62,6 +50,18 @@ export default function TabContentDashboard({ tabData, loading, error }: TabCont
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
           {tabData.reviews.map((item) => (
             <ReviewCard key={item.id} image={item.image} title={item.title} />
+          ))}
+        </div>
+      );
+
+    case 'bookmark':
+      if (tabData.bookmarks.length === 0) {
+        return <EmptyState message="북마크가 없습니다" />;
+      }
+      return (
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+          {tabData.bookmarks.map((item) => (
+            <BookmarkCard key={item.id} image={item.image} title={item.title} />
           ))}
         </div>
       );
