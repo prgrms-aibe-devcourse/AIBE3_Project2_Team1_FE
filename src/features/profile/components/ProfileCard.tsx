@@ -45,6 +45,12 @@ export default function ProfileCard({
             >
               프로필 수정
             </button>
+            <button
+              onClick={() => navigate('/chat')}
+              className="px-3 py-1 rounded-full bg-gray-200 text-gray-600 text-sm hover:bg-gray-300"
+            >
+              채팅방 이동
+            </button>
           </div>
 
           <p className="text-gray-500 text-sm">{email}</p>
