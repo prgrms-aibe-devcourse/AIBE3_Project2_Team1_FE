@@ -15,7 +15,8 @@ interface Project {
   status: string;
   rating?: number;
   reviews?: number;
-  groupId?: string; // 서버에 없을 수 있으니 임시로 클라이언트에서 매핑
+  groupType: string;
+  imageUrls?: { id: number; fileUrl: string }[];
 }
 
 export default function CategoryFilter({
@@ -49,10 +50,9 @@ export default function CategoryFilter({
       setError(null);
       try {
         const res = await api.get('/projects');
-        const data = res.data.data || res.data; // 응답 구조 유연하게 대응
+        const data = res.data.data || res.data;
         setProjects(data);
       } catch (err) {
-        // ✅ 타입 좁히기: AxiosError 인지 체크
         if (err instanceof AxiosError) {
           console.error('프로젝트 목록 불러오기 실패:', err.response?.data || err.message);
           setError(err.response?.data?.message || '프로젝트 목록을 불러오지 못했습니다.');
@@ -79,13 +79,13 @@ export default function CategoryFilter({
     navigate(`/projects/${selectedGroup}/${category}`);
   };
 
-  // ✅ groupId, categoryId 기반 필터링
+  // ✅ groupType, category 기반 필터링
   const filteredProjects = projects
     .filter((project) => {
       const matchesGroup =
         selectedGroup === 'client'
-          ? project.initiatorNickname // 클라이언트가 만든 프로젝트
-          : project.participantNickname; // 프리랜서 프로젝트 참여자
+          ? project.groupType === 'CLIENT'
+          : project.groupType === 'FREELANCER';
       const matchesCategory =
         selectedCategory === 'ALL' ||
         project.category?.toLowerCase() === selectedCategory.toLowerCase();
@@ -159,14 +159,13 @@ export default function CategoryFilter({
             filteredProjects.map((p) => (
               <ProjectCard
                 key={p.projectId}
-                project_id={p.projectId}
+                projectId={p.projectId}
                 title={p.title}
-                rating={p.rating || 0}
-                reviews={p.reviews || 0}
                 budget={p.budget}
-                author={p.initiatorNickname}
-                groupId={selectedGroup}
-                categoryId={p.category}
+                initiatorNickname={p.initiatorNickname}
+                category={p.category}
+                groupType={p.groupType}
+                imageUrls={p.imageUrls}
               />
             ))
           ) : (
