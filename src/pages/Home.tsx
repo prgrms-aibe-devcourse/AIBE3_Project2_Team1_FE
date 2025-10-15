@@ -25,17 +25,6 @@ const categoryIcons: Record<string, string> = {
   TRANSLATE: languageImg,
 };
 
-interface Project {
-  project_id: number;
-  title: string;
-  budget: number;
-  author: string;
-  rating: number;
-  reviews: number;
-  groupId: string;
-  categoryId: string;
-}
-
 interface ProjectApiResponse {
   projectId: number;
   initiatorNickname: string;
@@ -51,58 +40,32 @@ interface ProjectApiResponse {
 }
 
 export default function Home() {
-  const [projects, setProjects] = useState<Project[]>([]);
-  const [recommended, setRecommended] = useState<Project[]>([]);
+  const [projects, setProjects] = useState<ProjectApiResponse[]>([]);
+  const [recommended, setRecommended] = useState<ProjectApiResponse[]>([]);
   const navigate = useNavigate();
 
   useEffect(() => {
+    // 전체 프로젝트 불러오기
     api
       .get('/projects')
       .then((res) => {
-        const projectsData =
-          (res.data.data as ProjectApiResponse[])?.map((p) => ({
-            project_id: p.projectId,
-            title: p.title,
-            budget: p.budget,
-            author: p.initiatorNickname,
-            rating: 4.6,
-            reviews: 120,
-            groupId: p.groupType.toLowerCase(),
-            categoryId: p.category || 'IT',
-          })) || [];
-
+        const projectsData = res.data?.data || [];
         setProjects(projectsData);
       })
       .catch((err) => console.error('프로젝트 불러오기 실패:', err));
 
+    // 추천 프리랜서 프로젝트 불러오기
     api
       .get('/projects')
       .then((res) => {
         const projects = (res.data?.data || []) as ProjectApiResponse[];
-
-        const freelancerProjects = projects
-          .filter((p) => p.groupType === 'FREELANCER')
-          .map((p) => ({
-            project_id: p.projectId,
-            title: p.title,
-            budget: p.budget,
-            author: p.initiatorNickname,
-            rating: 4.8,
-            reviews: 85,
-            groupId: 'freelancer',
-            categoryId: p.category || 'IT',
-          }));
-
+        const freelancerProjects = projects.filter((p) => p.groupType === 'FREELANCER');
         const shuffled = freelancerProjects.sort(() => Math.random() - 0.5).slice(0, 4);
-
         setRecommended(shuffled);
       })
-      .catch((err) => {
-        console.error('❌ 프리랜서 추천 프로젝트 불러오기 실패:', err);
-      });
+      .catch((err) => console.error('❌ 프리랜서 추천 프로젝트 불러오기 실패:', err));
   }, []);
 
-  // 카테고리 목록
   const clientCategories = categoryGroups.find((g) => g.groupId === 'client')?.categories ?? [];
 
   return (
@@ -140,25 +103,22 @@ export default function Home() {
       <section className="flex justify-center gap-10 py-10 border-b flex-wrap">
         {clientCategories
           .filter((cat) => cat.id !== 'ALL')
-          .map((cat) => {
-            console.log(cat.id);
-            return (
-              <Link
-                key={cat.id}
-                to={`/projects/client/${cat.id}`}
-                className="flex flex-col items-center text-sm text-gray-700 hover:text-emerald-500 cursor-pointer transition-all"
-              >
-                <div className="w-14 h-14 flex items-center justify-center rounded-full bg-gray-100 mb-2 shadow-sm hover:shadow-md">
-                  <img
-                    src={categoryIcons[cat.id]}
-                    alt={cat.name}
-                    className="w-8 h-8 object-contain"
-                  />
-                </div>
-                <span>{cat.name}</span>
-              </Link>
-            );
-          })}
+          .map((cat) => (
+            <Link
+              key={cat.id}
+              to={`/projects/client/${cat.id}`}
+              className="flex flex-col items-center text-sm text-gray-700 hover:text-emerald-500 cursor-pointer transition-all"
+            >
+              <div className="w-14 h-14 flex items-center justify-center rounded-full bg-gray-100 mb-2 shadow-sm hover:shadow-md">
+                <img
+                  src={categoryIcons[cat.id]}
+                  alt={cat.name}
+                  className="w-8 h-8 object-contain"
+                />
+              </div>
+              <span>{cat.name}</span>
+            </Link>
+          ))}
       </section>
 
       {/* 추천 프리랜서 섹션 */}
@@ -176,15 +136,14 @@ export default function Home() {
           {recommended.length > 0 ? (
             recommended.map((p) => (
               <ProjectCard
-                key={`rec-${p.project_id}`}
-                project_id={p.project_id}
+                key={`rec-${p.projectId}`}
+                projectId={p.projectId}
                 title={p.title}
                 budget={p.budget}
-                author={p.author}
-                rating={p.rating}
-                reviews={p.reviews}
-                groupId={p.groupId}
-                categoryId={p.categoryId}
+                initiatorNickname={p.initiatorNickname}
+                category={p.category}
+                groupType={p.groupType}
+                imageUrls={p.imageUrls}
               />
             ))
           ) : (
@@ -206,31 +165,29 @@ export default function Home() {
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {projects.length > 0 ? (
-            projects.slice(0, 4).map((p) => {
-              console.log(p.project_id);
-              return (
+            projects
+              .slice(0, 4)
+              .map((p) => (
                 <ProjectCard
-                  key={p.project_id}
-                  project_id={p.project_id}
+                  key={p.projectId}
+                  projectId={p.projectId}
                   title={p.title}
                   budget={p.budget}
-                  author={p.author}
-                  rating={p.rating}
-                  reviews={p.reviews}
-                  groupId={p.groupId}
-                  categoryId={p.categoryId}
+                  initiatorNickname={p.initiatorNickname}
+                  category={p.category}
+                  groupType={p.groupType}
+                  imageUrls={p.imageUrls}
                 />
-              );
-            })
+              ))
           ) : (
             <p className="text-gray-400 col-span-4 text-center">등록된 프로젝트가 없습니다.</p>
           )}
         </div>
       </section>
 
+      {/* 하단 CTA 섹션 */}
       <section className="bg-gray-50">
         <div className="flex flex-col md:flex-row items-center justify-between rounded-2xl p-10 shadow-sm max-w-6xl mx-auto gap-10">
-          {/* 왼쪽 텍스트 영역 */}
           <div className="flex-1 text-center md:text-left">
             <h1 className="text-4xl md:text-5xl font-bold leading-tight text-gray-900">
               <span className="border-l-4 border-gray-900 pl-4 block mb-6">
@@ -246,22 +203,13 @@ export default function Home() {
               <br />
               AI가 프로젝트를 구체적으로 구현해드립니다.
             </p>
-
-            {/* CTA 버튼 */}
             <button
               onClick={() => navigate('/projects')}
-              className="
-              mt-10 bg-black text-white px-8 py-3 
-              rounded-full font-semibold 
-              shadow-md hover:bg-gray-800 
-              transition-all duration-300
-            "
+              className="mt-10 bg-black text-white px-8 py-3 rounded-full font-semibold shadow-md hover:bg-gray-800 transition-all duration-300"
             >
               프로젝트 시작하기 →
             </button>
           </div>
-
-          {/* 오른쪽 이미지 영역 */}
           <div className="flex-1 flex justify-center relative">
             <img
               src={designImage}
