@@ -1,4 +1,8 @@
+import { useNavigate } from 'react-router-dom';
+
 const Footer = () => {
+  const navigate = useNavigate();
+
   return (
     <footer className="bg-white border-t text-sm text-gray-600">
       <div className="max-w-7xl mx-auto px-6 py-10 flex flex-col md:flex-row justify-between gap-10">
@@ -13,10 +17,27 @@ const Footer = () => {
           <div>
             <h3 className="font-semibold mb-2">서비스</h3>
             <ul className="space-y-1">
-              <li>프리랜서 찾기</li>
-              <li>프로젝트 찾기</li>
-              <li>프리랜서 되기</li>
-              <li>AI 매칭 서비스</li>
+              <li
+                className="cursor-pointer hover:underline"
+                onClick={() => navigate('/project/write')}
+              >
+                프로젝트 생성하기
+              </li>
+              <li
+                className="cursor-pointer hover:underline"
+                onClick={() => navigate('/projects/freelancer')}
+              >
+                프리랜서 찾기
+              </li>
+              <li
+                className="cursor-pointer hover:underline"
+                onClick={() => navigate('/projects/client')}
+              >
+                프로젝트 찾기
+              </li>
+              <li className="cursor-pointer hover:underline" onClick={() => navigate('/matching')}>
+                AI 프로젝트 제작 서비스
+              </li>
             </ul>
           </div>
           <div>
