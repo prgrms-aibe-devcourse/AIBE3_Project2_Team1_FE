@@ -48,12 +48,14 @@ const formatBytes = (b: number) => {
 };
 const extOf = (name: string) => (name.split('.').pop() || '').toLowerCase();
 
-function fileKindIcon(mime: string, name: string) {
-  if (mime.startsWith('image/')) return <Image className="w-4 h-4" />;
-  if (mime.startsWith('video/')) return <Film className="w-4 h-4" />;
-  if (mime.startsWith('audio/')) return <Music className="w-4 h-4" />;
-  if (mime === 'application/pdf') return <FileText className="w-4 h-4" />;
-  const ext = extOf(name);
+function fileKindIcon(mime?: string, name?: string) {
+  const m = mime || '';
+  const nm = name || '';
+  if (m.startsWith('image/')) return <Image className="w-4 h-4" />;
+  if (m.startsWith('video/')) return <Film className="w-4 h-4" />;
+  if (m.startsWith('audio/')) return <Music className="w-4 h-4" />;
+  if (m === 'application/pdf') return <FileText className="w-4 h-4" />;
+  const ext = extOf(nm);
   if (['txt', 'md', 'csv', 'json', 'log'].includes(ext)) return <FileText className="w-4 h-4" />;
   return <File className="w-4 h-4" />;
 }
@@ -76,14 +78,24 @@ export default function FilesView({
       const res = await filesApi.listConditional(milestoneId, etagRef.current);
       if (res.status === 200 && Array.isArray(res.data)) {
         const list = res.data as FileResponseDto[];
-        const items = list.map((f: FileResponseDto) => ({
-          id: String(f.fileId ?? f.id),
-          name: f.name,
-          url: f.downloadUrl,
-          size: f.size,
-          type: f.type,
-          createdAt: Date.parse(f.createdAt),
-        }));
+        const items = list.map((f: FileResponseDto) => {
+          const id = String(f.fileId ?? f.id);
+          return {
+            id,
+            name: f.name ?? `file-${id}`,
+            url:
+              f.downloadUrl ??
+              (typeof filesApi.getDownloadUrl === 'function'
+                ? filesApi.getDownloadUrl(Number(f.fileId ?? f.id))
+                : '#'),
+            size: Number.isFinite(f.size as number) ? (f.size as number) : 0,
+            type: f.type ?? 'application/octet-stream',
+            createdAt: isNaN(Date.parse(f.createdAt as string))
+              ? Date.now()
+              : Date.parse(f.createdAt as string),
+          };
+        });
+
         setFiles(items);
         etagRef.current = res.etag ?? etagRef.current;
       } // 304면 무시
@@ -464,7 +476,7 @@ function GridView(props: CommonViewProps) {
             className={`rounded-lg border p-3 flex flex-col gap-3 hover:shadow-sm transition outline-offset-2 ${isSel ? 'ring-2 ring-teal-500' : ''}`}
             style={{ borderColor: BORDER }}
           >
-            {f.type.startsWith('image/') && (
+            {f.type?.startsWith('image/') && f.url && (
               <img
                 src={f.url}
                 alt={f.name}
