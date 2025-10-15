@@ -5,6 +5,7 @@ import Favorite from '@/assets/Favorite.png';
 import Historical from '@/assets/Historical.png';
 import Star from '@/assets/Star Half Empty.png';
 import View from '@/assets/View.png';
+import Bookmark from '@/assets/Read.png';
 
 interface TabDashboardProps {
   activeTab: DashboardTabKey;
@@ -18,6 +19,7 @@ export default function TabDashboard({ activeTab, setActiveTab }: TabDashboardPr
     { key: 'completed', label: '완료된 프로젝트', icon: Done },
     { key: 'freelancer', label: '관심 프리랜서', icon: Favorite },
     { key: 'review', label: '내가 쓴 리뷰', icon: Star },
+    { key: 'bookmark', label: '북마크된 프로젝트', icon: Bookmark },
   ];
 
   return (

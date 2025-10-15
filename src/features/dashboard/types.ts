@@ -1,4 +1,10 @@
-export type DashboardTabKey = 'in-progress' | 'request' | 'completed' | 'freelancer' | 'review';
+export type DashboardTabKey =
+  | 'in-progress'
+  | 'request'
+  | 'completed'
+  | 'freelancer'
+  | 'review'
+  | 'bookmark';
 
 export interface RequestItem {
   id: number;
@@ -19,6 +25,12 @@ export interface FreelancerItem {
 }
 
 export interface ReviewItem {
+  id: number;
+  image: string;
+  title: string;
+}
+
+export interface BookmarkItem {
   id: number;
   image: string;
   title: string;
@@ -52,9 +64,14 @@ export interface ReviewTab {
   reviews: ReviewItem[];
 }
 
+export interface BookmarkTab {
+  tab: 'bookmark';
+  bookmarks: BookmarkItem[];
+}
 export type DashboardTabData =
   | InProgressTab
   | RequestTab
   | CompletedTab
   | FreelancerTab
-  | ReviewTab;
+  | ReviewTab
+  | BookmarkTab;
