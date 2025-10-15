@@ -7,10 +7,11 @@ interface Project {
   client?: string;
   freelancer?: string;
   status: 'OPEN' | 'IN_PROGRESS' | 'CLOSED';
+  imageUrls?: string[];
 }
 
 interface ServiceInfoProps {
-  project?: Project;
+  project: Project | null;
 }
 
 export default function ServiceInfo({ project }: ServiceInfoProps) {
@@ -67,6 +68,25 @@ export default function ServiceInfo({ project }: ServiceInfoProps) {
               <p className="font-semibold">{project.freelancer || '미정'}</p>
             </div>
           </div>
+        </div>
+
+        {/* ✅ 이미지 표시 섹션 */}
+        <div className="border-t border-gray-200 pt-6 mb-6">
+          <h2 className="font-semibold text-lg mb-4">프로젝트 이미지</h2>
+          {project.imageUrls && project.imageUrls.length > 0 ? (
+            <div className="grid grid-cols-3 gap-4">
+              {project.imageUrls.map((url, idx) => (
+                <img
+                  key={`${url}-${idx}`}
+                  src={url}
+                  alt="project"
+                  className="w-full h-48 object-cover rounded-lg border border-gray-200"
+                />
+              ))}
+            </div>
+          ) : (
+            <p className="text-gray-500 text-sm">등록된 이미지가 없습니다.</p>
+          )}
         </div>
 
         {/* 설명 */}
