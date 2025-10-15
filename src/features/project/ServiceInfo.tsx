@@ -6,7 +6,7 @@ interface Project {
   deadline: string;
   client?: string;
   freelancer?: string;
-  status: 'OPEN' | 'IN_PROGRESS' | 'CLOSED';
+  status: string;
   imageUrls?: string[];
 }
 
