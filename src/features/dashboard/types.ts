@@ -12,15 +12,22 @@ export interface RequestItem {
 }
 
 export interface ProjectItem {
-  id: number;
-  image: string;
+  projectId: number;
   title: string;
+  category: string;
+  status: string;
+  deadline: string;
+  imageUrls: string[0];
 }
 
 export interface ReviewItem {
-  id: number;
-  image: string;
-  title: string;
+  reviewId: number;
+  projectId: number;
+  projectTitle: string;
+  toUserName: string;
+  rating: number;
+  comment: string;
+  imageUrls: string[0];
 }
 
 export interface BookmarkItem {
