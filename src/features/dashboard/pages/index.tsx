@@ -1,5 +1,4 @@
 import TabContentDashboard from '@/features/dashboard/components/TabContent';
-import TabDashboard from '@/features/dashboard/components/TabDashboard';
 import { useState } from 'react';
 import useBookmarks from '../hooks/useBookmarks';
 import useInProgressProjects from '../hooks/useInProgressProjects';
@@ -7,11 +6,14 @@ import useMyReviews from '../hooks/useMyReviews';
 import useCompletedProjects from '../hooks/userCompletedProjects';
 import useReceivedProposals from '../hooks/useReceivedProposals';
 import type { DashboardTabData, DashboardTabKey } from '../types';
+import TabDashboard from '@/features/dashboard/components/TabDashboard';
+import useSentProposals from '../hooks/useSentProposals';
 
 export default function DashboardPage() {
   const [activeTab, setActiveTab] = useState<DashboardTabKey>('in-progress');
 
   const { requests, loading: proposalsLoading, error: proposalsError } = useReceivedProposals();
+  const { proposals, loading: proposalsLoading2, error: proposalsError2 } = useSentProposals();
   const { bookmarks, loading: bookmarksLoading, error: bookmarksError } = useBookmarks();
   const {
     projects: inProgressProjects,
@@ -42,7 +44,14 @@ export default function DashboardPage() {
       tab: 'review',
       reviews,
     },
-    bookmark: { tab: 'bookmark', bookmarks },
+    proposal: {
+      tab: 'proposal',
+      proposals,
+    },
+    bookmark: {
+      tab: 'bookmark',
+      bookmarks,
+    },
   };
 
   const currentData = tabData[activeTab];
@@ -58,7 +67,9 @@ export default function DashboardPage() {
             ? completedLoading
             : activeTab === 'review'
               ? reviewsLoading
-              : false;
+              : activeTab === 'proposal'
+                ? proposalsLoading2
+                : false;
 
   const showError =
     activeTab === 'request'
@@ -71,8 +82,9 @@ export default function DashboardPage() {
             ? completedError
             : activeTab === 'review'
               ? reviewsError
-              : null;
-
+              : activeTab === 'proposal'
+                ? proposalsError2
+                : null;
   return (
     <div className="flex-1 max-w-4xl w-full mx-auto py-10">
       <TabDashboard activeTab={activeTab} setActiveTab={setActiveTab} />

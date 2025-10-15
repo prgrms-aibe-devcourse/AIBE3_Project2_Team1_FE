@@ -98,6 +98,14 @@ export default function ProfileCard({
               진행 중인 의뢰 <b className="text-black">{inProgressCount ?? 0}건</b>
             </span>
           </div>
+          <div className="flex gap-4 mt-2 text-sm text-black-500">
+            <button
+              className="underline hover:text-blue-600 transition-colors"
+              onClick={() => navigate('/chat')}
+            >
+              내 채팅방 이동
+            </button>
+          </div>
         </div>
 
         {/* 모드 선택 버튼 */}

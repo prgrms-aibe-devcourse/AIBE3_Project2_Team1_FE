@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import type { DashboardTabData } from '../types';
 import BookmarkCard from './BookmarkCard';
+import ProposalCard from './ProposalCard';
 import EmptyState from './EmptyState';
 import ProjectCard from './ProjectCard';
 import RequestCard from './RequestCard';
@@ -89,6 +90,18 @@ export default function TabContentDashboard({ tabData, loading, error }: TabCont
               title={item.title}
               onClick={() => handleProjectClick(item.id)}
             />
+          ))}
+        </div>
+      );
+
+    case 'proposal':
+      if (tabData.proposals.length === 0) {
+        return <EmptyState message="제안서가 없습니다" buttonLabel="제안서 작성하기" />;
+      }
+      return (
+        <div className="flex flex-col gap-4">
+          {tabData.proposals.map((item) => (
+            <ProposalCard key={item.id} id={item.id} title={item.title} status={item.status} />
           ))}
         </div>
       );

@@ -43,6 +43,7 @@ export default function ProjectInfo({ project }: { project: Project }) {
   const navigate = useNavigate();
   const [projectDetail, setProjectDetail] = useState<ProjectDetail | null>(null);
   const [bookmarked, setBookmarked] = useState(false);
+  const [isMyProject, setIsMyProject] = useState(false);
 
   // 리뷰 상태
   const [reviews, setReviews] = useState<Review[]>([]);
@@ -61,6 +62,11 @@ export default function ProjectInfo({ project }: { project: Project }) {
         // 프로젝트 상세 정보
         const projectRes = await api.get(`/projects/${project.project_id}`);
         setProjectDetail(projectRes.data.data);
+
+        const currentUserNickname = localStorage.getItem('nickname');
+        if (currentUserNickname && currentUserNickname === projectRes.data.data.initiatorNickname) {
+          setIsMyProject(true);
+        }
 
         // 북마크 여부
         const bookmarksRes = await api.get('/bookmarks');
@@ -171,12 +177,14 @@ export default function ProjectInfo({ project }: { project: Project }) {
         </div>
 
         {/* 매칭 제안 버튼 */}
-        <button
-          onClick={goHProposal}
-          className="absolute bottom-4 right-4 bg-[#FF6B6B] rounded-[12px] px-4 py-2 text-[#F2F2F2] font-semibold hover:bg-[#ff4b4b] transition"
-        >
-          매칭 제안하기
-        </button>
+        {!isMyProject && (
+          <button
+            onClick={goHProposal}
+            className="absolute bottom-4 right-4 bg-[#FF6B6B] rounded-[12px] px-4 py-2 text-[#F2F2F2] font-semibold hover:bg-[#ff4b4b] transition"
+          >
+            매칭 제안하기
+          </button>
+        )}
       </div>
     </>
   );

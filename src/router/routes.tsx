@@ -27,6 +27,7 @@ import ChatRoomListPage from '@/features/message/ChatRoomListPage';
 import ChatRoomRoute from './ChatRoomRoute';
 
 import MatchingPage from '@/pages/MatchingPage';
+import DraftProposalPage from '@/pages/DraftProposalPage';
 // 레이아웃 없는 페이지 (로그인/회원가입 관련)
 export const noLayoutRoutes = [
   { path: '/login', element: <LoginPage /> },
@@ -40,6 +41,7 @@ export const mainRoutes = [
   { path: '/project/:projectId/client-proposal', element: <ClientProposalPage /> },
   { path: '/project/:projectId/freelancer-proposal', element: <FreelancerProposalPage /> },
   { path: '/proposal/:proposalId', element: <ProposalPage /> },
+  { path: '/proposal/:proposalId/draft', element: <DraftProposalPage /> },
   { path: '/review/write/:projectId', element: <ReviewWritePage /> },
   { path: '/projects/:groupId', element: <ProjectList /> },
   { path: '/projects/:groupId/:categoryId', element: <ProjectList /> },
