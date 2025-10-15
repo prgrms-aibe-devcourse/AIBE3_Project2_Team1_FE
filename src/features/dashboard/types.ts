@@ -39,6 +39,7 @@ export interface BookmarkItem {
 export interface ProposalItem {
   id: number;
   title: string;
+  status: string;
 }
 
 export interface DashboardSummaryData {

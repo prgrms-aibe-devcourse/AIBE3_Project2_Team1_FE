@@ -96,11 +96,12 @@ const DraftProposalPage: React.FC = () => {
       setIsSubmitting(true);
 
       const formData = new FormData();
+
+      // ✅ 기존 파일 URL + 새 파일 구분 없이 모두 서버로 전달
       const payload = {
         proposedAmount: proposal.proposedAmount,
         description: proposal.description,
         status: action === 'save' ? 'SUBMITTED' : 'DRAFT',
-        existingFileUrls: proposal.fileUrls, // 기존 파일 URL도 함께 전송
       };
 
       formData.append(
@@ -108,12 +109,15 @@ const DraftProposalPage: React.FC = () => {
         new Blob([JSON.stringify(payload)], { type: 'application/json' })
       );
 
-      // 새로 추가된 파일들만 FormData에 추가
-      files.forEach((file) => formData.append('portfolioFiles', file));
+      // ✅ 새로 업로드한 파일도 같이 추가
+      files.forEach((file) => {
+        formData.append('portfolioFiles', file);
+      });
 
       await axiosInstance.patch(`/proposals/${proposalId}`, formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
+
       if (action === 'save') {
         alert('제안서가 성공적으로 저장되었습니다.');
         navigate('/profile');

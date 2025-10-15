@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react';
 import { axiosInstance } from '@/services/axios';
 
-export interface RequestItem {
+export interface ProposalItem {
   id: number;
   title: string;
+  status: string;
 }
 
 interface SentProposal {
@@ -28,7 +29,7 @@ interface ProposalFileResponseDto {
 type ProposalStatus = 'SUBMITTED' | 'ACCEPTED' | 'REJECTED' | 'DRAFT';
 
 function useReceivedProposals() {
-  const [proposals, setProposal] = useState<RequestItem[]>([]);
+  const [proposals, setProposal] = useState<ProposalItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -41,6 +42,7 @@ function useReceivedProposals() {
         const mapped = proposals.map((p) => ({
           id: p.proposalId,
           title: `${p.description}`,
+          status: p.proposalStatus,
         }));
 
         setProposal(mapped);

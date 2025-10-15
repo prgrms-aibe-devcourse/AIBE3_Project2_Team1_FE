@@ -101,7 +101,7 @@ export default function TabContentDashboard({ tabData, loading, error }: TabCont
       return (
         <div className="flex flex-col gap-4">
           {tabData.proposals.map((item) => (
-            <ProposalCard key={item.id} id={item.id} title={item.title} />
+            <ProposalCard key={item.id} id={item.id} title={item.title} status={item.status} />
           ))}
         </div>
       );
