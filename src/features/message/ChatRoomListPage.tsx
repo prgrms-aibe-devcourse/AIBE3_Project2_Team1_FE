@@ -1,30 +1,53 @@
-import { useState, useEffect } from 'react';
-import { MessageSquare, Plus, Users, Clock } from 'lucide-react';
+import { useState, useEffect, useCallback } from 'react';
+import { MessageSquare, Clock, User } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+
+interface PeerUser {
+  userId: number;
+  nickname: string;
+  profileImageUrl?: string | null;
+}
 
 interface ChatRoom {
   chatRoomId: number;
   title: string;
   createdAt: string;
-  lastMessage?: string | null;
-  lastMessageTime?: string | null;
+  lastMessageContent?: string | null;
+  lastMessageAt?: string | null;
+  peerUser?: PeerUser | null;
+  // 추가: 상대방 정보 (백엔드에서 제공하면 주석 해제)
+  // otherUserId?: number;
+  // otherUserName?: string;
+  // otherUserProfileImage?: string;
 }
+
+const authHeaders = (): HeadersInit => {
+  const token = localStorage.getItem('accessToken');
+  return {
+    'Content-Type': 'application/json',
+    ...(token && { Authorization: `Bearer ${token}` }),
+  };
+};
 
 export default function ChatRoomListPage() {
   const [chatRooms, setChatRooms] = useState<ChatRoom[]>([]);
   const [loading, setLoading] = useState(true);
-  const [showCreateModal, setShowCreateModal] = useState(false);
-  const [newRoomName, setNewRoomName] = useState('');
-  const [creating, setCreating] = useState(false);
+  const navigate = useNavigate();
 
-  useEffect(() => {
-    void fetchChatRooms();
-  }, []);
-
-  const fetchChatRooms = async () => {
+  const fetchChatRooms = useCallback(async () => {
     try {
       setLoading(true);
-      const response = await fetch('/api/v1/chatrooms');
-      const data = await response.json();
+      const response = await fetch('/api/v1/chatrooms/my-chatrooms', {
+        headers: authHeaders(),
+      });
+      if (!response.ok) {
+        if (response.status === 401) {
+          throw new Error('인증이 필요합니다');
+        }
+        throw new Error('Failed to fetch chatrooms');
+      }
+      const result = await response.json();
+      const data: ChatRoom[] = result?.data ?? result ?? [];
       setChatRooms(data);
     } catch (error) {
       console.error('채팅방 목록 로드 실패:', error);
@@ -32,50 +55,38 @@ export default function ChatRoomListPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  const createChatRoom = async () => {
-    if (!newRoomName.trim()) {
-      alert('채팅방 이름을 입력해주세요.');
-      return;
-    }
+  useEffect(() => {
+    void fetchChatRooms();
+  }, [fetchChatRooms]);
+
+  const formatDate = (iso?: string | null, fallback?: string) => {
+    const src = iso || fallback;
+    if (!src) return '';
 
     try {
-      setCreating(true);
-      const response = await fetch('/api/v1/chatrooms', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ title: newRoomName }),
-      });
+      const date = new Date(src);
+      const now = new Date();
+      const diff = now.getTime() - date.getTime();
+      const hours = Math.floor(diff / 3600000);
+      const days = Math.floor(diff / 86400000);
 
-      if (response.ok) {
-        setShowCreateModal(false);
-        setNewRoomName('');
-        await fetchChatRooms();
-      }
-    } catch (error) {
-      console.error('채팅방 생성 실패:', error);
-      alert('채팅방 생성에 실패했습니다.');
-    } finally {
-      setCreating(false);
+      if (hours < 24) return `${hours}시간 전`;
+      if (days < 7) return `${days}일 전`;
+      return date.toLocaleDateString('ko-KR');
+    } catch {
+      return '';
     }
   };
-
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    const now = new Date();
-    const diff = now.getTime() - date.getTime();
-    const hours = Math.floor(diff / 3600000);
-    const days = Math.floor(diff / 86400000);
-
-    if (hours < 24) return `${hours}시간 전`;
-    if (days < 7) return `${days}일 전`;
-    return date.toLocaleDateString('ko-KR');
+  //  채팅방 제목 추출 (상대방 이름)
+  const getChatRoomDisplayName = (room: ChatRoom): string => {
+    if (room.peerUser?.nickname) return room.peerUser.nickname;
+    if (room.title && !room.title.startsWith('채팅방 #')) return room.title;
+    return '알 수 없는 사용자';
   };
 
-  const handleRoomClick = (roomId: number) => {
-    window.location.href = `/chat/${roomId}`;
-  };
+  const handleRoomClick = (roomId: number) => navigate(`/chat/${roomId}`);
 
   if (loading) {
     return (
@@ -94,116 +105,111 @@ export default function ChatRoomListPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-4xl mx-auto p-6">
-        {/* 헤더 */}
+        {/*  헤더 */}
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-3">
             <div
-              className="w-12 h-12 rounded-full flex items-center justify-center"
+              className="w-12 h-12 rounded-full flex items-center justify-center shadow-md"
               style={{ backgroundColor: '#E0F5F1' }}
             >
               <MessageSquare className="w-6 h-6" style={{ color: '#1ABC9C' }} />
             </div>
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">채팅방</h1>
+              <h1 className="text-2xl font-bold text-gray-900">채팅</h1>
               <p className="text-sm text-gray-500">{chatRooms.length}개의 대화</p>
             </div>
           </div>
-          <button
-            onClick={() => setShowCreateModal(true)}
-            className="flex items-center gap-2 px-4 py-2 text-white rounded-lg transition-colors font-medium"
-            style={{ backgroundColor: '#1ABC9C' }}
-          >
-            <Plus className="w-5 h-5" />새 채팅방
-          </button>
         </div>
 
-        {/* 채팅방 목록 */}
+        {/*  채팅방 목록 */}
         <div className="space-y-3">
-          {chatRooms.map((room) => (
-            <div
-              key={room.chatRoomId}
-              onClick={() => handleRoomClick(room.chatRoomId)}
-              className="bg-white rounded-lg p-4 border border-gray-200 hover:shadow-md transition-all cursor-pointer"
-            >
-              <div className="flex items-center gap-4">
-                <div
-                  className="w-14 h-14 rounded-full flex items-center justify-center flex-shrink-0"
-                  style={{ backgroundColor: '#E0F5F1' }}
-                >
-                  <Users className="w-7 h-7" style={{ color: '#1ABC9C' }} />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <h3 className="font-semibold text-gray-900 mb-1">{room.title}</h3>
-                  {/* 마지막 메시지 미리보기 */}
-                  <p className="text-sm text-gray-600 truncate">
-                    {room.lastMessage ?? '메시지가 없습니다'}
-                  </p>
-                  <div className="flex items-center gap-2 text-sm text-gray-500">
-                    <Clock className="w-4 h-4" />
-                    <span>{formatDate(room.createdAt)}</span>
+          {chatRooms.map((room) => {
+            const displayName = getChatRoomDisplayName(room);
+            const hasMessage = room.lastMessageContent && room.lastMessageContent.trim() !== '';
+
+            return (
+              <div
+                key={room.chatRoomId}
+                onClick={() => handleRoomClick(room.chatRoomId)}
+                className="bg-white rounded-xl p-4 border border-gray-200 hover:shadow-lg hover:border-[#1ABC9C] transition-all cursor-pointer"
+              >
+                <div className="flex items-center gap-4">
+                  {/*  프로필 이미지 (상대방) */}
+                  <div
+                    className="w-14 h-14 rounded-full flex items-center justify-center flex-shrink-0 shadow-sm"
+                    style={{ backgroundColor: '#E0F5F1' }}
+                  >
+                    {/* 백엔드에서 프로필 이미지 제공 시 주석 해제 */}
+                    {/* {room.otherUserProfileImage ? (
+                      <img
+                        src={room.otherUserProfileImage}
+                        alt={displayName}
+                        className="w-full h-full rounded-full object-cover"
+                      />
+                    ) : ( */}
+                    <span className="text-lg font-bold" style={{ color: '#1ABC9C' }}>
+                      {displayName[0]}
+                    </span>
+                    {/* )} */}
+                  </div>
+
+                  {/*  채팅방 정보 */}
+                  <div className="flex-1 min-w-0">
+                    {/* 상대방 이름 */}
+                    <h3 className="font-semibold text-gray-900 mb-1 truncate">{displayName}</h3>
+
+                    {/* 마지막 메시지 미리보기 */}
+                    <p
+                      className={`text-sm truncate ${
+                        hasMessage ? 'text-gray-600' : 'text-gray-400 italic'
+                      }`}
+                    >
+                      {hasMessage ? room.lastMessageContent : '메시지가 없습니다'}
+                    </p>
+
+                    {/* 시간 */}
+                    <div className="flex items-center gap-1 mt-1 text-xs text-gray-500">
+                      <Clock className="w-3 h-3" />
+                      <span>{formatDate(room.lastMessageAt, room.createdAt)}</span>
+                    </div>
+                  </div>
+
+                  {/*  오른쪽 아이콘 */}
+                  <div className="text-gray-300">
+                    <MessageSquare className="w-5 h-5" />
                   </div>
                 </div>
-
-                <div className="text-gray-400">
-                  <MessageSquare className="w-5 h-5" />
-                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
 
+          {/*  빈 상태 */}
           {chatRooms.length === 0 && (
-            <div className="bg-white rounded-lg p-12 text-center border border-gray-200">
-              <MessageSquare className="w-16 h-16 mx-auto mb-4 text-gray-300" />
-              <p className="text-gray-500 mb-4">아직 참여한 채팅방이 없습니다</p>
+            <div className="bg-white rounded-xl p-12 text-center border-2 border-dashed border-gray-300">
+              <div
+                className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4"
+                style={{ backgroundColor: '#E0F5F1' }}
+              >
+                <User className="w-8 h-8" style={{ color: '#1ABC9C' }} />
+              </div>
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">아직 채팅이 없어요</h3>
+              <p className="text-gray-500 mb-4">
+                프로젝트/프로필 상세에서 &ldquo;문의하기&rdquo;를 누르면 1:1 채팅방이 자동으로
+                생성돼요.
+              </p>
               <button
-                onClick={() => setShowCreateModal(true)}
+                onClick={() => {
+                  navigate('/projects/client');
+                }}
                 className="px-5 py-2 text-white rounded-lg transition-colors font-medium"
                 style={{ backgroundColor: '#1ABC9C' }}
               >
-                첫 채팅방 만들기
+                프로젝트 둘러보기
               </button>
             </div>
           )}
         </div>
       </div>
-
-      {/* 채팅방 생성 모달 */}
-      {showCreateModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50 backdrop-blur-sm">
-          <div className="bg-white rounded-2xl p-6 w-96 shadow-2xl">
-            <h3 className="text-lg font-bold text-gray-900 mb-4">새 채팅방 만들기</h3>
-            <input
-              type="text"
-              value={newRoomName}
-              onChange={(e) => setNewRoomName(e.target.value)}
-              placeholder="채팅방 이름을 입력하세요"
-              className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1ABC9C] mb-4"
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') void createChatRoom(); // Promise 경고 해결
-              }}
-            />
-            <div className="flex gap-2 justify-end">
-              <button
-                onClick={() => {
-                  setShowCreateModal(false);
-                  setNewRoomName('');
-                }}
-                className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
-              >
-                취소
-              </button>
-              <button
-                onClick={() => void createChatRoom()}
-                disabled={creating}
-                className="px-5 py-2 text-white rounded-lg transition-colors font-medium disabled:bg-gray-300"
-                style={{ backgroundColor: creating ? undefined : '#1ABC9C' }}
-              >
-                {creating ? '생성 중...' : '생성하기'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
