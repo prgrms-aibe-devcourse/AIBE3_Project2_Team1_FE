@@ -16,6 +16,7 @@ export interface ProjectItem {
 
 export interface ReviewItem {
   reviewId: number;
+  projectId: number;
   projectTitle: string;
   toUserName: string;
   rating: number;

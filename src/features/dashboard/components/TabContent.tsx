@@ -22,6 +22,10 @@ export default function TabContentDashboard({ tabData, loading, error }: TabCont
     navigate(`/project/${id}`);
   };
 
+  const handleReviewWriteClick = (projectId: number) => {
+    navigate(`/review/write/${projectId}`);
+  };
+
   switch (tabData.tab) {
     case 'request':
       if (tabData.requests.length === 0) {
@@ -62,10 +66,11 @@ export default function TabContentDashboard({ tabData, loading, error }: TabCont
           {tabData.reviews.map((item) => (
             <ReviewCard
               key={item.reviewId}
-              image={item.imageUrls?.[0] ?? ''} // 없으면 빈 문자열
+              image={item.imageUrls?.[0] ?? null} // 이미지 없으면 null
               title={item.projectTitle}
               comment={item.comment}
               rating={item.rating}
+              onWriteClick={() => handleReviewWriteClick(item.projectId)}
             />
           ))}
         </div>
@@ -78,7 +83,12 @@ export default function TabContentDashboard({ tabData, loading, error }: TabCont
       return (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
           {tabData.bookmarks.map((item) => (
-            <BookmarkCard key={item.id} image={item.image} title={item.title} />
+            <BookmarkCard
+              key={item.id}
+              image={item.image}
+              title={item.title}
+              onClick={() => handleProjectClick(item.id)}
+            />
           ))}
         </div>
       );
