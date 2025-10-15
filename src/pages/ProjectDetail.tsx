@@ -1,11 +1,11 @@
-import { useState, useEffect } from 'react';
-import { useParams, useSearchParams, useNavigate } from 'react-router-dom';
-import ProjectInfo from '../features/project/ProjectInfo';
-import ServiceInfo from '../features/project/ServiceInfo';
-import ProjectReview from '../features/project/ProjectReview';
 import { categoryGroups } from '@/features/project/constants/categories';
-import api from '../features/project/api';
 import axios from 'axios';
+import { useEffect, useState } from 'react';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
+import api from '../features/project/api';
+import ProjectInfo from '../features/project/ProjectInfo';
+import ProjectReview from '../features/project/ProjectReview';
+import ServiceInfo from '../features/project/ServiceInfo';
 
 interface ProjectDetailResponse {
   projectId: number;
@@ -204,7 +204,7 @@ export default function ProjectDetail() {
               status:
                 project.status === 'OPEN' ||
                 project.status === 'IN_PROGRESS' ||
-                project.status === 'CLOSED'
+                project.status === 'COMPLETED'
                   ? project.status
                   : 'OPEN',
               imageUrls: project.imageUrls || [],

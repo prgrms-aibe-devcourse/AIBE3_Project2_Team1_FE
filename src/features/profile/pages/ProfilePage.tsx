@@ -2,11 +2,11 @@ import DashboardPage from '@/features/dashboard/pages';
 import ProfileCard from '@/features/profile/components/ProfileCard';
 import type { ProfileResponseDto, UserResponseDto } from '@/features/profile/profile';
 import { getMyProfile, getMyUser } from '@/features/profile/profile';
-import type { Mode } from '@/features/profile/types';
 import { useEffect, useState } from 'react';
+import type { Role } from '../types';
 
 export default function ProfilePage() {
-  const [mode, setMode] = useState<Mode>('client');
+  const [role, setRole] = useState<Role>('client');
   const [user, setUser] = useState<UserResponseDto | null>(null);
   const [profile, setProfile] = useState<ProfileResponseDto | null>(null);
   const [loading, setLoading] = useState(true);
@@ -46,8 +46,8 @@ export default function ProfilePage() {
   return (
     <div className="min-h-screen flex flex-col bg-gray-50">
       <ProfileCard
-        mode={mode}
-        setMode={setMode}
+        role={role}
+        setRole={setRole}
         name={user.data.name}
         email={user.data.email}
         title={profile?.data.title ?? '제목이 없습니다.'}
