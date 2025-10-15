@@ -2,13 +2,15 @@ import axios from 'axios';
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 
-interface Review {
+export interface Review {
   reviewId: number;
   targetNickname: string;
   rating: number;
   comment: string;
   createdDate: string;
   images: string[];
+  averageRating?: number; // 평균 별점
+  reviewCount?: number; // 리뷰 개수
 }
 
 export default function ServiceInfo() {
@@ -18,7 +20,7 @@ export default function ServiceInfo() {
   const [sortType, setSortType] = useState<'latest' | 'rating'>('latest');
   const [loading, setLoading] = useState(true);
 
-  // ✅ 리뷰 불러오기
+  // 리뷰 불러오기
   useEffect(() => {
     const fetchReviews = async () => {
       try {
@@ -37,17 +39,17 @@ export default function ServiceInfo() {
     fetchReviews();
   }, [projectId]);
 
-  // ⭐ 평균 별점
+  // 평균 별점
   const averageRating = useMemo(() => {
     if (reviews.length === 0) return '0.0';
     const total = reviews.reduce((acc, r) => acc + r.rating, 0);
     return (total / reviews.length).toFixed(1);
   }, [reviews]);
 
-  // 🖼️ 모든 리뷰의 이미지 모아보기
+  // 모든 리뷰의 이미지 모아보기
   const allPhotos = useMemo(() => reviews.flatMap((r) => r.images || []), [reviews]);
 
-  // 🔄 정렬된 리뷰
+  // 정렬된 리뷰
   const sortedReviews = useMemo(() => {
     const sorted = [...reviews];
     if (sortType === 'latest') {
@@ -73,7 +75,7 @@ export default function ServiceInfo() {
           <span className="text-gray-500 text-sm">({reviews.length}개의 리뷰)</span>
         </div>
 
-        {/* ➕ 리뷰 작성 버튼 */}
+        {/* 리뷰 작성 버튼 */}
         <button
           onClick={() => navigate(`/review/write/${projectId}`)}
           className="bg-teal-500 hover:bg-teal-600 text-white px-4 py-2 rounded-md text-sm transition"
