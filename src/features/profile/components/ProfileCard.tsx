@@ -45,12 +45,6 @@ export default function ProfileCard({
             >
               프로필 수정
             </button>
-            <button
-              onClick={() => navigate('/chat')}
-              className="px-3 py-1 rounded-full bg-gray-200 text-gray-600 text-sm hover:bg-gray-300"
-            >
-              채팅방 이동
-            </button>
           </div>
 
           <p className="text-gray-500 text-sm">{email}</p>
@@ -68,6 +62,9 @@ export default function ProfileCard({
             <span>
               진행 중인 의뢰 <b className="text-black">{inProgressCount ?? 0}건</b>
             </span>
+          </div>
+          <div className="flex gap-4 mt-2 text-sm text-black-500">
+            <button onClick={() => navigate('/chat')}>내 채팅방 이동</button>
           </div>
         </div>
 
