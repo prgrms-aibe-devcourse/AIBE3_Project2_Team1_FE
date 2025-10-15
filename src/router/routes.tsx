@@ -15,6 +15,7 @@ import ReviewWritePage from '@/features/review/ReviewWritePage';
 
 import ClientProposalPage from '@/pages/ClientProposal';
 import FreelancerProposalPage from '@/pages/FreelancerProposal';
+import ProposalPage from '@/pages/ProposalPage';
 import Home from '@/pages/Home';
 import OverviewPage from '@/pages/OverviewPage';
 import ProjectDetail from '@/pages/ProjectDetail';
@@ -38,6 +39,7 @@ export const mainRoutes = [
   { path: '/', element: <Home /> },
   { path: '/project/:projectId/client-proposal', element: <ClientProposalPage /> },
   { path: '/project/:projectId/freelancer-proposal', element: <FreelancerProposalPage /> },
+  { path: '/proposal/:proposalId', element: <ProposalPage /> },
   { path: '/review/write', element: <ReviewWritePage /> },
   { path: '/projects/:groupId', element: <ProjectList /> },
   { path: '/projects/:groupId/:categoryId', element: <ProjectList /> },
