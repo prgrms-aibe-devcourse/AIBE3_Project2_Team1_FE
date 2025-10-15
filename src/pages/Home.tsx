@@ -38,14 +38,16 @@ interface Project {
 
 interface ProjectApiResponse {
   projectId: number;
-  clientNickname: string;
-  freelancerNickname?: string;
+  initiatorNickname: string;
+  participantNickname?: string;
   title: string;
   description: string;
   budget: number;
   deadline: string;
   category: string;
+  groupType: string;
   status: string;
+  imageUrls?: { id: number; fileUrl: string }[];
 }
 
 export default function Home() {
@@ -62,10 +64,10 @@ export default function Home() {
             project_id: p.projectId,
             title: p.title,
             budget: p.budget,
-            author: p.clientNickname,
+            author: p.initiatorNickname,
             rating: 4.6,
             reviews: 120,
-            groupId: 'client',
+            groupId: p.groupType.toLowerCase(),
             categoryId: p.category || 'IT',
           })) || [];
 
@@ -78,18 +80,18 @@ export default function Home() {
       .then((res) => {
         const projects = (res.data?.data || []) as ProjectApiResponse[];
 
-        const allProjects = projects.map((p) => ({
-          project_id: p.projectId,
-          title: p.title,
-          budget: p.budget,
-          author: p.clientNickname,
-          rating: 4.8,
-          reviews: 85,
-          groupId: p.freelancerNickname ? 'freelancer' : 'client',
-          categoryId: p.category || 'IT',
-        }));
-
-        const freelancerProjects = allProjects.filter((p) => p.groupId === 'freelancer');
+        const freelancerProjects = projects
+          .filter((p) => p.groupType === 'FREELANCER')
+          .map((p) => ({
+            project_id: p.projectId,
+            title: p.title,
+            budget: p.budget,
+            author: p.initiatorNickname,
+            rating: 4.8,
+            reviews: 85,
+            groupId: 'freelancer',
+            categoryId: p.category || 'IT',
+          }));
 
         const shuffled = freelancerProjects.sort(() => Math.random() - 0.5).slice(0, 4);
 
