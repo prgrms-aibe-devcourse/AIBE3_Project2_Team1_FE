@@ -74,7 +74,7 @@ const DraftProposalPage: React.FC = () => {
     if (!window.confirm('이 파일을 삭제하시겠습니까?')) return;
 
     try {
-      await axiosInstance.delete(`/files?fileUrl=${encodeURIComponent(fileUrl)}`);
+      await axiosInstance.delete(`/proposals?fileUrl=${encodeURIComponent(fileUrl)}`);
 
       setProposal((prev) => ({
         ...prev,
@@ -109,7 +109,7 @@ const DraftProposalPage: React.FC = () => {
         new Blob([JSON.stringify(payload)], { type: 'application/json' })
       );
 
-      // ✅ 새로 업로드한 파일도 같이 추가
+      // ✅ 새로 업로드한 파일 추가
       files.forEach((file) => {
         formData.append('portfolioFiles', file);
       });
