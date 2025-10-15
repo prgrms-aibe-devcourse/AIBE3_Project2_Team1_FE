@@ -40,7 +40,9 @@ const Header = () => {
           <div className="flex items-center space-x-2">
             {user?.nickname ? (
               <>
-                <span className="font-medium">{user.nickname}님</span>
+                <Link to="/profile" className="font-medium hover:text-rose-400">
+                  {user.nickname}님
+                </Link>
                 <span className="text-gray-300">|</span>
                 <button onClick={handleLogout} className="hover:text-rose-400">
                   로그아웃

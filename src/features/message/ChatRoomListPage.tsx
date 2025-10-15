@@ -199,7 +199,7 @@ export default function ChatRoomListPage() {
               </p>
               <button
                 onClick={() => {
-                  navigate('/projects');
+                  navigate('/projects/client');
                 }}
                 className="px-5 py-2 text-white rounded-lg transition-colors font-medium"
                 style={{ backgroundColor: '#1ABC9C' }}

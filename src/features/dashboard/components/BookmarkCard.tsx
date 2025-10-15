@@ -1,10 +1,10 @@
-interface ProjectCardProps {
-  image?: string;
+interface BookmarkCardProps {
+  image: string;
   title: string;
   onClick?: () => void;
 }
 
-const ProjectCard = ({ image, title, onClick }: ProjectCardProps) => {
+const BookmarkCard = ({ image, title, onClick }: BookmarkCardProps) => {
   return (
     <button
       onClick={onClick}
@@ -13,15 +13,11 @@ const ProjectCard = ({ image, title, onClick }: ProjectCardProps) => {
                  hover:shadow-md hover:border-teal-400 transition cursor-pointer"
     >
       <div className="w-full h-[120px] bg-gray-200 flex items-center justify-center">
-        {image ? (
-          <img src={image} alt={title} className="object-cover w-full h-full" />
-        ) : (
-          <span className="text-gray-500 text-sm">No Image</span>
-        )}
+        <img src={image} alt={title} className="object-cover w-full h-full" />
       </div>
       <p className="py-2 text-sm font-medium text-gray-700">{title}</p>
     </button>
   );
 };
 
-export default ProjectCard;
+export default BookmarkCard;

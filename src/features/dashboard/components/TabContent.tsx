@@ -1,9 +1,11 @@
-import RequestCard from './RequestCard';
-import ProjectCard from './ProjectCard';
-import FreelancerCard from './FreelancerCard';
-import ReviewCard from './ReviewCard';
-import EmptyState from './EmptyState';
+import { useNavigate } from 'react-router-dom';
 import type { DashboardTabData } from '../types';
+import BookmarkCard from './BookmarkCard';
+import ProposalCard from './ProposalCard';
+import EmptyState from './EmptyState';
+import ProjectCard from './ProjectCard';
+import RequestCard from './RequestCard';
+import ReviewCard from './ReviewCard';
 
 interface TabContentDashboardProps {
   tabData: DashboardTabData;
@@ -12,8 +14,18 @@ interface TabContentDashboardProps {
 }
 
 export default function TabContentDashboard({ tabData, loading, error }: TabContentDashboardProps) {
+  const navigate = useNavigate();
+
   if (loading) return <EmptyState message="불러오는 중..." />;
   if (error) return <EmptyState message={error} />;
+
+  const handleProjectClick = (id: number) => {
+    navigate(`/project/${id}`);
+  };
+
+  const handleReviewWriteClick = (projectId: number) => {
+    navigate(`/review/write/${projectId}`);
+  };
 
   switch (tabData.tab) {
     case 'request':
@@ -36,19 +48,12 @@ export default function TabContentDashboard({ tabData, loading, error }: TabCont
       return (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
           {tabData.projects.map((item) => (
-            <ProjectCard key={item.id} image={item.image} title={item.title} />
-          ))}
-        </div>
-      );
-
-    case 'freelancer':
-      if (tabData.freelancers.length === 0) {
-        return <EmptyState message="프리랜서가 없습니다" buttonLabel="프리랜서 찾기" />;
-      }
-      return (
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-          {tabData.freelancers.map((item) => (
-            <FreelancerCard key={item.id} image={item.image} name={item.name} info={item.info} />
+            <ProjectCard
+              key={item.projectId}
+              image={item.imageUrls?.[0] ?? ''} // 없으면 빈 문자열
+              title={item.title}
+              onClick={() => handleProjectClick(item.projectId)}
+            />
           ))}
         </div>
       );
@@ -60,7 +65,43 @@ export default function TabContentDashboard({ tabData, loading, error }: TabCont
       return (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
           {tabData.reviews.map((item) => (
-            <ReviewCard key={item.id} image={item.image} title={item.title} />
+            <ReviewCard
+              key={item.reviewId}
+              image={item.imageUrls?.[0] ?? null} // 이미지 없으면 null
+              title={item.projectTitle}
+              comment={item.comment}
+              rating={item.rating}
+              onWriteClick={() => handleReviewWriteClick(item.projectId)}
+            />
+          ))}
+        </div>
+      );
+
+    case 'bookmark':
+      if (tabData.bookmarks.length === 0) {
+        return <EmptyState message="북마크가 없습니다" />;
+      }
+      return (
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+          {tabData.bookmarks.map((item) => (
+            <BookmarkCard
+              key={item.id}
+              image={item.image}
+              title={item.title}
+              onClick={() => handleProjectClick(item.id)}
+            />
+          ))}
+        </div>
+      );
+
+    case 'proposal':
+      if (tabData.proposals.length === 0) {
+        return <EmptyState message="제안서가 없습니다" buttonLabel="제안서 작성하기" />;
+      }
+      return (
+        <div className="flex flex-col gap-4">
+          {tabData.proposals.map((item) => (
+            <ProposalCard key={item.id} id={item.id} title={item.title} status={item.status} />
           ))}
         </div>
       );

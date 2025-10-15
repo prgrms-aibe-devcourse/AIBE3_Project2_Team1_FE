@@ -1,53 +1,122 @@
+import axios from 'axios';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import favoriteImg from '../../assets/images/Favorite.png';
 import starImg from '../../assets/images/fluent-color_star-16.png';
 import bookmarkEmptyImg from '../../assets/images/material-symbols_bookmark-outline.png';
 import bookmarkFullImg from '../../assets/images/material-symbols_bookmark.png';
-import { useState } from 'react';
+import api from '../project/api';
 
 interface Project {
   project_id: number;
   title: string;
+  description: string;
   budget: number;
   author: string;
-  rating: number;
-  reviews: number;
+  rating: number; // 기존 값 대신 API에서 계산 가능
+  reviews: number; // 기존 값 대신 API에서 계산 가능
   groupId: string;
   categoryId: string;
 }
 
-interface Profile {
-  profile_id: number;
-  user_id: number;
+interface ProjectDetail {
+  projectId: number;
+  initiatorNickname: string;
+  participantNickname: string;
   title: string;
   description: string;
-  skills: string[];
-  hourly_rate: number;
-  imageUrl?: string;
+  budget: number;
+  deadline: string;
+  category: string;
+  status: string;
 }
 
-interface Favorite {
-  favorite: number;
+interface Review {
+  reviewId: number;
+  targetNickname: string;
+  rating: number;
+  comment: string;
+  createdDate: string;
+  images: string[];
 }
 
-interface ProjectInfoProps {
-  project: Project;
-  profile: Profile;
-  favorite: Favorite;
-}
-
-export default function ProjectInfo({ project, profile, favorite }: ProjectInfoProps) {
+export default function ProjectInfo({ project }: { project: Project }) {
   const navigate = useNavigate();
+  const [projectDetail, setProjectDetail] = useState<ProjectDetail | null>(null);
   const [bookmarked, setBookmarked] = useState(false);
+  const [isMyProject, setIsMyProject] = useState(false);
 
-  const toggleBookmark = () => {
-    setBookmarked((prev) => !prev); // true ↔ false 토글
+  // 리뷰 상태
+  const [reviews, setReviews] = useState<Review[]>([]);
+  const [loadingReviews, setLoadingReviews] = useState(true);
+
+  // 평균 별점
+  const averageRating = useMemo(() => {
+    if (reviews.length === 0) return 0;
+    const total = reviews.reduce((acc, r) => acc + r.rating, 0);
+    return (total / reviews.length).toFixed(1);
+  }, [reviews]);
+
+  useEffect(() => {
+    const fetchProjectAndBookmark = async () => {
+      try {
+        // 프로젝트 상세 정보
+        const projectRes = await api.get(`/projects/${project.project_id}`);
+        setProjectDetail(projectRes.data.data);
+
+        const currentUserNickname = localStorage.getItem('nickname');
+        if (currentUserNickname && currentUserNickname === projectRes.data.data.initiatorNickname) {
+          setIsMyProject(true);
+        }
+
+        // 북마크 여부
+        const bookmarksRes = await api.get('/bookmarks');
+        const isBookmarked = bookmarksRes.data.data.some(
+          (b: { projectId: number }) => b.projectId === project.project_id
+        );
+        setBookmarked(isBookmarked);
+
+        // 리뷰 불러오기
+        const reviewsRes = await axios.get(`/api/v1/reviews/project/${project.project_id}`);
+        setReviews(reviewsRes.data.data || []);
+      } catch (err) {
+        console.error('데이터 로드 실패:', err);
+      } finally {
+        setLoadingReviews(false);
+      }
+    };
+
+    fetchProjectAndBookmark();
+  }, [project.project_id]);
+
+  const toggleBookmark = async () => {
+    try {
+      if (bookmarked) {
+        await api.delete(`/bookmarks/${project.project_id}`);
+      } else {
+        await api.post(`/bookmarks/${project.project_id}`);
+      }
+      setBookmarked((prev) => !prev);
+    } catch (err) {
+      console.error('북마크 처리 실패:', err);
+    }
   };
-  const goHome = () => {
-    navigate('/');
+
+  const goChatRoom = async () => {
+    try {
+      const creatorRes = await api.get(`/projects/${project.project_id}/creator-id`);
+      const targetUserId = creatorRes.data.data;
+      const res = await api.post('/chatrooms/direct', {
+        targetUserId,
+        title: project.author,
+      });
+      const roomId = res.data.data.chatRoomId;
+      navigate(`/chat/${roomId}`);
+    } catch (err) {
+      console.error('채팅방 이동 실패:', err);
+    }
   };
+
   const goHProposal = () => {
-    console.log(project.groupId);
     if (project.groupId === 'client') {
       navigate(`/project/${project.project_id}/client-proposal`);
     } else {
@@ -55,11 +124,14 @@ export default function ProjectInfo({ project, profile, favorite }: ProjectInfoP
     }
   };
 
+  if (!projectDetail)
+    return <div className="p-6 text-center text-gray-500">프로젝트 정보를 불러오는 중...</div>;
+
   return (
     <>
-      {/* 프로젝트 제목 */}
+      {/* 제목 + 북마크 */}
       <div className="max-w-6xl mx-auto flex items-center justify-between p-3">
-        <h2 className="text-2xl font-bold">{project.title}</h2>
+        <h2 className="text-2xl font-bold">{projectDetail.title}</h2>
         <button onClick={toggleBookmark}>
           <img
             src={bookmarked ? bookmarkFullImg : bookmarkEmptyImg}
@@ -70,66 +142,49 @@ export default function ProjectInfo({ project, profile, favorite }: ProjectInfoP
       </div>
 
       <div className="p-6 max-w-6xl mx-auto bg-white rounded-[20px] border-[3px] border-[#1ABC9C] relative">
-        {/* 프로필 */}
-        <div className="flex items-center gap-4 mb-4">
-          {/* 프로필 이미지 */}
-          {profile.imageUrl ? (
-            <img
-              src={profile.imageUrl}
-              alt="프로필"
-              className="w-12 h-12 rounded-full object-cover border border-gray-300"
-            />
-          ) : (
-            <div className="w-12 h-12 rounded-full bg-gray-300 flex items-center justify-center text-xs text-gray-600">
-              없음
-            </div>
-          )}
-
-          {/* 프로필 제목 + 즐겨찾기 */}
-          <div className="flex items-center gap-3">
-            <div className="text-lg font-semibold">{profile.title}</div>
-            <div className="flex items-center gap-0.5">
-              <img src={favoriteImg} alt="favorite" className="w-7 h-5" />
-              <span className="text-[#666666] text-sm">{favorite.favorite}</span>
-            </div>
+        {/* 작성자 정보 + 문의하기 */}
+        <div className="flex items-center gap-4 mb-2">
+          <div className="text-[22px] font-semibold text-gray-800">
+            {projectDetail.initiatorNickname}
           </div>
 
-          {/* 문의하기 버튼 */}
           <button
-            onClick={goHome}
+            onClick={goChatRoom}
             className="ml-auto bg-[#D9D9D9] rounded-[12px] px-4 py-2 text-[#2C2C2C] font-semibold hover:bg-[#c5c5c5] transition"
           >
             문의하기
           </button>
         </div>
 
+        {/* 설명 */}
+        <p className="text-[18px] text-gray-700 mb-2">{projectDetail.description}</p>
+
+        {/* 기본 정보 */}
+        <div className="space-y-2 mb-6 text-gray-600">
+          <div>카테고리: {projectDetail.category}</div>
+        </div>
+
         {/* 리뷰 */}
         <div className="flex items-center gap-1 mb-4">
           <img src={starImg} alt="star" className="w-6 h-6" />
-          <span>
-            {project.rating.toFixed(1)} ({project.reviews})
-          </span>
+          {loadingReviews ? (
+            <span>리뷰 로딩중...</span>
+          ) : (
+            <span>
+              {averageRating} ({reviews.length})
+            </span>
+          )}
         </div>
 
-        {/* 스킬 목록 */}
-        <div>
-          <h3 className="font-semibold mb-2">보유 스킬</h3>
-          <div className="flex gap-2 flex-wrap">
-            {profile.skills.map((skill, idx) => (
-              <span key={idx} className="px-2 py-1 bg-gray-100 rounded text-sm text-gray-700">
-                {skill}
-              </span>
-            ))}
-          </div>
-        </div>
-
-        {/* 매칭 제안하기 버튼 */}
-        <button
-          onClick={goHProposal}
-          className="absolute bottom-4 right-4 bg-[#FF6B6B] rounded-[12px] px-4 py-2 text-[#F2F2F2] font-semibold hover:bg-[#ff4b4b] transition"
-        >
-          매칭 제안하기
-        </button>
+        {/* 매칭 제안 버튼 */}
+        {!isMyProject && (
+          <button
+            onClick={goHProposal}
+            className="absolute bottom-4 right-4 bg-[#FF6B6B] rounded-[12px] px-4 py-2 text-[#F2F2F2] font-semibold hover:bg-[#ff4b4b] transition"
+          >
+            매칭 제안하기
+          </button>
+        )}
       </div>
     </>
   );

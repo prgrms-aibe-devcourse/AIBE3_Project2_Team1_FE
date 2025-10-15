@@ -1,20 +1,23 @@
-export type Mode = 'client' | 'freelancer';
+export type Role = 'client' | 'freelancer';
 
 export interface ProfileCardProps {
-  mode: Mode;
-  setMode: (m: Mode) => void;
+  role: Role;
+  setRole: (m: Role) => void;
   name?: string;
   email?: string;
-  bio?: string;
+  title?: string;
+  skills?: string;
   completedCount?: number;
   inProgressCount?: number;
+  profileImgUrl?: string | null;
 }
 
 export interface ProfileInfo {
   name: string;
   email: string;
-  bio?: string;
+  description?: string;
+  skills?: string;
   completedCount: number;
   inProgressCount: number;
-  mode: Mode;
+  role: Role;
 }

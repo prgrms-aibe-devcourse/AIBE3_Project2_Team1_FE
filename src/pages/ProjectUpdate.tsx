@@ -1,28 +1,20 @@
-import { useState } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 import api from '../features/project/api';
 import { categoryGroups } from '../features/project/constants/categories';
 import type { CategoryId } from '../features/project/constants/categories';
-import { AxiosError } from 'axios';
+import axios from 'axios';
 
-export default function WritePage() {
+export default function ProjectUpdate() {
+  const { projectId } = useParams<{ projectId: string }>();
   const navigate = useNavigate();
-  const location = useLocation();
-
-  // AiRecommendPage에서 전달된 추천 프로젝트
-  const chosenProject = location.state?.chosenProject as
-    | { title: string; description: string; budget: number; deadline: string; category: string }
-    | undefined;
-
   const role: 'client' | 'freelancer' = 'freelancer';
 
-  const [category, setCategory] = useState<CategoryId | ''>(
-    (chosenProject?.category as CategoryId) || ''
-  );
-  const [content, setContent] = useState(chosenProject?.description || '');
-  const [title, setTitle] = useState(chosenProject?.title || '');
-  const [budget, setBudget] = useState(chosenProject?.budget?.toString() || '');
-  const [deadline, setDeadline] = useState(chosenProject?.deadline || '');
+  const [category, setCategory] = useState<CategoryId | ''>('');
+  const [content, setContent] = useState('');
+  const [title, setTitle] = useState('');
+  const [budget, setBudget] = useState('');
+  const [deadline, setDeadline] = useState('');
   const [images, setImages] = useState<File[]>([]);
   const [uploadedImageUrls, setUploadedImageUrls] = useState<string[]>([]);
   const [uploading, setUploading] = useState(false);
@@ -30,7 +22,27 @@ export default function WritePage() {
   const currentGroup = categoryGroups.find((g) => g.groupId === role);
   const categories = currentGroup ? currentGroup.categories : [];
 
-  /** 이미지 파일 선택 */
+  useEffect(() => {
+    const fetchProject = async () => {
+      try {
+        const res = await api.get(`/projects/${projectId}`);
+        const data = res.data?.data ?? res.data;
+        setTitle(data.title || '');
+        setContent(data.description || '');
+        setBudget(data.budget?.toString() || '');
+        setDeadline(data.deadline || '');
+        setCategory(data.category || '');
+      } catch (err) {
+        console.error('프로젝트 불러오기 실패:', err);
+        alert('프로젝트 정보를 불러오지 못했습니다.');
+        navigate(-1);
+      }
+    };
+
+    if (projectId) fetchProject();
+  }, [projectId, navigate]);
+
+  /** 이미지 선택 */
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files) return;
     const selectedFiles = Array.from(e.target.files);
@@ -49,7 +61,7 @@ export default function WritePage() {
 
     try {
       setUploading(true);
-      const res = await api.post('/files/images', formData); // ← FormData로 전송 (headers 자동 설정)
+      const res = await api.post('/files/images', formData);
       const urls = res.data?.data || res.data;
       setUploadedImageUrls(urls);
       alert('이미지 업로드 완료!');
@@ -61,76 +73,65 @@ export default function WritePage() {
     }
   };
 
-  /** 업로드된 이미지 삭제 */
+  /** 이미지 삭제 */
   const handleImageDelete = async (url: string) => {
     try {
       await api.delete('/files/images', {
-        params: { url }, // ✅ 서버 요구사항: query param 으로 전달
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded', // ✅ JSON 금지
-        },
+        params: { url },
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
       });
-
       setUploadedImageUrls((prev) => prev.filter((u) => u !== url));
       alert('이미지가 삭제되었습니다.');
     } catch (err) {
-      console.error('❌ 이미지 삭제 실패:', err);
+      console.error('이미지 삭제 실패:', err);
       alert('이미지 삭제 중 오류가 발생했습니다.');
     }
   };
 
-  /** 프로젝트 등록 */
-  const handleSubmit = async () => {
+  /** 수정 요청 */
+  const handleUpdate = async () => {
     if (!title || !content || !category) {
       alert('모든 필드를 입력해주세요.');
       return;
     }
 
-    const parsedBudget = Number(budget);
-
-    // dto 객체를 JSON 문자열로 변환
-    const dto = JSON.stringify({
-      title,
-      description: content,
-      budget: parsedBudget,
-      deadline, // yyyy-MM-dd 형식 그대로
-      category,
-    });
-
-    const formData = new FormData();
-    formData.append('dto', new Blob([dto], { type: 'application/json' }));
-
-    // 이미지가 있다면 추가
-    images.forEach((img) => formData.append('images', img));
-
     try {
-      const res = await api.post('/projects', formData, {
+      const dto = JSON.stringify({
+        title,
+        description: content,
+        budget: Number(budget),
+        deadline,
+        category,
+      });
+
+      const formData = new FormData();
+
+      formData.append('dto', new Blob([dto], { type: 'application/json' }));
+
+      images.forEach((file) => formData.append('images', file));
+
+      const res = await api.put(`/projects/${projectId}`, formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
 
-      const createdProjectId = res.data?.data?.projectId;
-
-      console.log('✅ 등록 성공:', res.data);
-      alert('등록 완료!');
-      navigate(`/project/${createdProjectId}`);
+      console.log('수정 완료:', res.data);
+      alert('프로젝트가 수정되었습니다!');
+      navigate(`/project/${projectId}`);
     } catch (err: unknown) {
-      console.error('❌ 등록 실패:', err);
-
-      let message = '서버 오류';
-
-      if (typeof err === 'object' && err !== null && 'response' in err) {
-        const axiosErr = err as AxiosError<{ message?: string }>;
-        message = axiosErr.response?.data?.message || message;
+      console.error('수정 실패:', err);
+      if (axios.isAxiosError(err)) {
+        alert(`수정 실패: ${err.response?.data?.message || '서버 오류'}`);
+      } else {
+        alert('서버 연결 오류가 발생했습니다.');
       }
-
-      alert(`프로젝트 등록 중 오류가 발생했습니다: ${message}`);
     }
   };
 
   return (
     <div className="min-h-screen flex flex-col items-center py-10">
       <div className="w-[1000px] bg-white rounded-[20px] shadow-md p-8">
-        {/* 제목 */}
+        <h2 className="text-2xl font-bold mb-6 text-gray-800">프로젝트 수정</h2>
+
         <input
           type="text"
           placeholder="프로젝트 제목을 입력하세요"
@@ -139,7 +140,6 @@ export default function WritePage() {
           className="w-full border border-gray-300 rounded-[12px] px-3 py-2 mb-3"
         />
 
-        {/* 예산 */}
         <input
           type="number"
           placeholder="예산"
@@ -148,7 +148,6 @@ export default function WritePage() {
           className="w-full border border-gray-300 rounded-[12px] px-3 py-2 mb-3"
         />
 
-        {/* 마감일 */}
         <input
           type="date"
           value={deadline}
@@ -156,7 +155,6 @@ export default function WritePage() {
           className="w-full border border-gray-300 rounded-[12px] px-3 py-2 mb-3"
         />
 
-        {/* 카테고리 */}
         <select
           value={category}
           onChange={(e) => setCategory(e.target.value as CategoryId)}
@@ -172,7 +170,6 @@ export default function WritePage() {
             ))}
         </select>
 
-        {/* 내용 */}
         <textarea
           placeholder="내용을 입력하세요."
           value={content}
@@ -180,7 +177,6 @@ export default function WritePage() {
           className="w-full h-48 border border-gray-200 rounded-xl bg-gray-100 p-4 text-sm mb-6 resize-none focus:outline-none focus:ring-2 focus:ring-gray-300"
         />
 
-        {/* 이미지 업로드 */}
         <div className="mb-6">
           <label className="block mb-2 font-medium">프로젝트 이미지 업로드</label>
           <input
@@ -201,7 +197,6 @@ export default function WritePage() {
             {uploading ? '업로드 중...' : '이미지 업로드'}
           </button>
 
-          {/* 업로드된 이미지 목록 */}
           {uploadedImageUrls.length > 0 && (
             <div className="mt-4 grid grid-cols-4 gap-3">
               {uploadedImageUrls.map((url) => (
@@ -223,13 +218,18 @@ export default function WritePage() {
           )}
         </div>
 
-        {/* 등록 버튼 */}
-        <div className="flex justify-end">
+        <div className="flex justify-end gap-3">
           <button
-            onClick={handleSubmit}
-            className="bg-emerald-500 hover:bg-emerald-600 text-white px-6 py-2 rounded-[15px] font-semibold text-[18px]"
+            onClick={() => navigate(-1)}
+            className="px-6 py-2 rounded-[12px] font-medium bg-gray-200 hover:bg-gray-300 text-gray-800"
           >
-            등록
+            취소
+          </button>
+          <button
+            onClick={handleUpdate}
+            className="px-6 py-2 rounded-[12px] font-semibold bg-emerald-500 hover:bg-emerald-600 text-white"
+          >
+            수정 완료
           </button>
         </div>
       </div>

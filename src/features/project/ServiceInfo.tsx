@@ -6,26 +6,15 @@ interface Project {
   deadline: string;
   client?: string;
   freelancer?: string;
-  status: 'OPEN' | 'IN_PROGRESS' | 'CLOSED';
+  status: string;
+  imageUrls?: string[];
 }
 
 interface ServiceInfoProps {
-  project?: Project; // project가 아직 로딩 중일 수도 있으므로 optional
+  project: Project | null;
 }
 
 export default function ServiceInfo({ project }: ServiceInfoProps) {
-  // project prop 예시:
-  // {
-  //   title: "로고 디자인 의뢰",
-  //   description: "스타트업 로고를 만들어 주세요!",
-  //   category: "DESIGN",
-  //   budget: 300000,
-  //   deadline: "2025-10-20",
-  //   client: "이해민",
-  //   freelancer: "김수민",
-  //   status: "OPEN"
-  // }
-
   if (!project) {
     return <div className="text-center text-gray-500 py-10">프로젝트 정보를 불러오는 중...</div>;
   }
@@ -79,6 +68,25 @@ export default function ServiceInfo({ project }: ServiceInfoProps) {
               <p className="font-semibold">{project.freelancer || '미정'}</p>
             </div>
           </div>
+        </div>
+
+        {/* ✅ 이미지 표시 섹션 */}
+        <div className="border-t border-gray-200 pt-6 mb-6">
+          <h2 className="font-semibold text-lg mb-4">프로젝트 이미지</h2>
+          {project.imageUrls && project.imageUrls.length > 0 ? (
+            <div className="grid grid-cols-3 gap-4">
+              {project.imageUrls.map((url, idx) => (
+                <img
+                  key={`${url}-${idx}`}
+                  src={url}
+                  alt="project"
+                  className="w-full h-48 object-cover rounded-lg border border-gray-200"
+                />
+              ))}
+            </div>
+          ) : (
+            <p className="text-gray-500 text-sm">등록된 이미지가 없습니다.</p>
+          )}
         </div>
 
         {/* 설명 */}

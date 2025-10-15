@@ -1,8 +1,8 @@
 import type { DashboardTabKey } from '../types';
 
 import Done from '@/assets/Done.png';
-import Favorite from '@/assets/Favorite.png';
 import Historical from '@/assets/Historical.png';
+import Bookmark from '@/assets/Read.png';
 import Star from '@/assets/Star Half Empty.png';
 import View from '@/assets/View.png';
 
@@ -16,8 +16,9 @@ export default function TabDashboard({ activeTab, setActiveTab }: TabDashboardPr
     { key: 'in-progress', label: '진행 중인 프로젝트', icon: Historical },
     { key: 'request', label: '매칭 요청', icon: View },
     { key: 'completed', label: '완료된 프로젝트', icon: Done },
-    { key: 'freelancer', label: '관심 프리랜서', icon: Favorite },
     { key: 'review', label: '내가 쓴 리뷰', icon: Star },
+    { key: 'bookmark', label: '북마크된 프로젝트', icon: Bookmark },
+    { key: 'proposal', label: '내가 쓴 제안서', icon: View },
   ];
 
   return (
@@ -32,7 +33,7 @@ export default function TabDashboard({ activeTab, setActiveTab }: TabDashboardPr
               : 'text-gray-500'
           }`}
         >
-          <img src={tab.icon} alt={tab.label} className="w-5 h-5" />
+          <img src={tab.icon} alt={tab.label} className="w-4 h-4" />
           <span>{tab.label}</span>
         </button>
       ))}
