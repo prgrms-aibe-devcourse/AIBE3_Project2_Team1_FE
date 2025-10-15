@@ -1,4 +1,10 @@
-export type DashboardTabKey = 'in-progress' | 'request' | 'completed' | 'freelancer' | 'review';
+export type DashboardTabKey =
+  | 'in-progress'
+  | 'request'
+  | 'completed'
+  | 'freelancer'
+  | 'review'
+  | 'proposal';
 
 export interface RequestItem {
   id: number;
@@ -21,6 +27,11 @@ export interface FreelancerItem {
 export interface ReviewItem {
   id: number;
   image: string;
+  title: string;
+}
+
+export interface ProposalItem {
+  id: number;
   title: string;
 }
 
@@ -52,9 +63,15 @@ export interface ReviewTab {
   reviews: ReviewItem[];
 }
 
+export interface ProposalTab {
+  tab: 'proposal';
+  proposals: ProposalItem[];
+}
+
 export type DashboardTabData =
   | InProgressTab
   | RequestTab
   | CompletedTab
   | FreelancerTab
-  | ReviewTab;
+  | ReviewTab
+  | ProposalTab;

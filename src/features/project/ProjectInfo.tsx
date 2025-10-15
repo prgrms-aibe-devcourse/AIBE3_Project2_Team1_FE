@@ -33,12 +33,18 @@ export default function ProjectInfo({ project }: { project: Project }) {
   const navigate = useNavigate();
   const [projectDetail, setProjectDetail] = useState<ProjectDetail | null>(null);
   const [bookmarked, setBookmarked] = useState(false);
+  const [isMyProject, setIsMyProject] = useState(false);
 
   useEffect(() => {
     const fetchProjectAndBookmark = async () => {
       try {
         const projectRes = await api.get(`/projects/${project.project_id}`);
         setProjectDetail(projectRes.data.data);
+
+        const currentUserNickname = localStorage.getItem('nickname');
+        if (currentUserNickname && currentUserNickname === projectRes.data.data.initiatorNickname) {
+          setIsMyProject(true);
+        }
 
         const bookmarksRes = await api.get('/bookmarks');
         const isBookmarked = bookmarksRes.data.data.some(
@@ -121,12 +127,14 @@ export default function ProjectInfo({ project }: { project: Project }) {
             {projectDetail.initiatorNickname}
           </div>
 
-          <button
-            onClick={goChatRoom}
-            className="ml-auto bg-[#D9D9D9] rounded-[12px] px-4 py-2 text-[#2C2C2C] font-semibold hover:bg-[#c5c5c5] transition"
-          >
-            문의하기
-          </button>
+          {!isMyProject && (
+            <button
+              onClick={goChatRoom}
+              className="ml-auto bg-[#D9D9D9] rounded-[12px] px-4 py-2 text-[#2C2C2C] font-semibold hover:bg-[#c5c5c5] transition"
+            >
+              문의하기
+            </button>
+          )}
         </div>
 
         {/* 설명 */}
@@ -146,12 +154,14 @@ export default function ProjectInfo({ project }: { project: Project }) {
         </div>
 
         {/* 매칭 제안 버튼 */}
-        <button
-          onClick={goHProposal}
-          className="absolute bottom-4 right-4 bg-[#FF6B6B] rounded-[12px] px-4 py-2 text-[#F2F2F2] font-semibold hover:bg-[#ff4b4b] transition"
-        >
-          매칭 제안하기
-        </button>
+        {!isMyProject && (
+          <button
+            onClick={goHProposal}
+            className="absolute bottom-4 right-4 bg-[#FF6B6B] rounded-[12px] px-4 py-2 text-[#F2F2F2] font-semibold hover:bg-[#ff4b4b] transition"
+          >
+            매칭 제안하기
+          </button>
+        )}
       </div>
     </>
   );

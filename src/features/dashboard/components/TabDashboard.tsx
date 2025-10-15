@@ -18,6 +18,7 @@ export default function TabDashboard({ activeTab, setActiveTab }: TabDashboardPr
     { key: 'completed', label: '완료된 프로젝트', icon: Done },
     { key: 'freelancer', label: '관심 프리랜서', icon: Favorite },
     { key: 'review', label: '내가 쓴 리뷰', icon: Star },
+    { key: 'proposal', label: '내가 쓴 제안서', icon: View },
   ];
 
   return (
@@ -32,7 +33,7 @@ export default function TabDashboard({ activeTab, setActiveTab }: TabDashboardPr
               : 'text-gray-500'
           }`}
         >
-          <img src={tab.icon} alt={tab.label} className="w-5 h-5" />
+          <img src={tab.icon} alt={tab.label} className="w-4 h-4" />
           <span>{tab.label}</span>
         </button>
       ))}

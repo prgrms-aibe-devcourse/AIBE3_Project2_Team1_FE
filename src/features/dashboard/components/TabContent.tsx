@@ -3,6 +3,7 @@ import ProjectCard from './ProjectCard';
 import FreelancerCard from './FreelancerCard';
 import ReviewCard from './ReviewCard';
 import EmptyState from './EmptyState';
+import ProposalCard from './ProposalCard';
 import type { DashboardTabData } from '../types';
 
 interface TabContentDashboardProps {
@@ -61,6 +62,18 @@ export default function TabContentDashboard({ tabData, loading, error }: TabCont
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
           {tabData.reviews.map((item) => (
             <ReviewCard key={item.id} image={item.image} title={item.title} />
+          ))}
+        </div>
+      );
+
+    case 'proposal':
+      if (tabData.proposals.length === 0) {
+        return <EmptyState message="제안서가 없습니다" buttonLabel="제안서 작성하기" />;
+      }
+      return (
+        <div className="flex flex-col gap-4">
+          {tabData.proposals.map((item) => (
+            <ProposalCard key={item.id} id={item.id} title={item.title} />
           ))}
         </div>
       );

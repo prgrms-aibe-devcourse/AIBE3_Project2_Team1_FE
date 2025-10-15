@@ -64,7 +64,12 @@ export default function ProfileCard({
             </span>
           </div>
           <div className="flex gap-4 mt-2 text-sm text-black-500">
-            <button onClick={() => navigate('/chat')}>내 채팅방 이동</button>
+            <button
+              className="underline hover:text-blue-600 transition-colors"
+              onClick={() => navigate('/chat')}
+            >
+              내 채팅방 이동
+            </button>
           </div>
         </div>
 
