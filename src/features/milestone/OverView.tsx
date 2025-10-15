@@ -12,28 +12,27 @@ interface Member {
   name: string;
   role: string;
   avatar: string | null;
-  serverId?: number; // 서버 memberId (있으면 서버에 존재하는 항목)
+  serverId?: number; // 서버 member PK
 }
 
-type OverviewViewProps = { milestoneId: number };
+type OverviewViewProps = { milestoneId?: number }; // ← optional
 
 export default function OverView({ milestoneId }: OverviewViewProps) {
   const [activeTab, setActiveTab] = useState('overview');
 
-  // 2초 폴링 + 포커스 복귀 시 즉시 갱신 트리거
-  const [refreshTick, setRefreshTick] = useState(0);
-  useEffect(() => {
-    const tick = () => setRefreshTick((t) => t + 1);
-    const id = window.setInterval(tick, 2000);
-    const onFocus = () => tick();
-    window.addEventListener('focus', onFocus);
-    document.addEventListener('visibilitychange', onFocus);
-    return () => {
-      clearInterval(id);
-      window.removeEventListener('focus', onFocus);
-      document.removeEventListener('visibilitychange', onFocus);
-    };
-  }, []);
+  const DEFAULT_MID = 1 as const; //테스트 기본 값
+  const mid = Number(milestoneId ?? DEFAULT_MID);
+
+  /* 폴링 제거: 탭별 tick만 유지하고 액션 성공시만 증가 */
+  const [filesTick, setFilesTick] = useState(0); // [ADDED]
+  const [kanbanTick, setKanbanTick] = useState(0); // [ADDED]
+  const [calendarTick, setCalendarTick] = useState(0); // [ADDED]
+  const onChanged = (scope: 'files' | 'kanban' | 'calendar') => {
+    // [ADDED]
+    if (scope === 'files') setFilesTick((t) => t + 1);
+    if (scope === 'kanban') setKanbanTick((t) => t + 1);
+    if (scope === 'calendar') setCalendarTick((t) => t + 1);
+  };
 
   const [editMode, setEditMode] = useState(false);
   const [description, setDescription] = useState('프로젝트의 상세 내용을 적습니다.');
@@ -44,12 +43,13 @@ export default function OverView({ milestoneId }: OverviewViewProps) {
   ]);
   const fileInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
 
-  // 🔹 서버에서 상세/팀원 로딩 (초기 + refreshTick 시 재로딩)
+  //  서버에서 상세/팀원 로딩
   useEffect(() => {
     let mounted = true;
     (async () => {
       try {
-        const d = await milestoneApi.get(Number(milestoneId));
+        // [CHANGED] mid 사용
+        const d = await milestoneApi.get(mid);
         if (!mounted) return;
         setProjectTitle(d.title ?? '');
         setDescription(d.description ?? '');
@@ -57,15 +57,16 @@ export default function OverView({ milestoneId }: OverviewViewProps) {
         console.error('[Overview] 상세 로딩 실패:', e);
       }
       try {
-        const list = await teamApi.list(Number(milestoneId));
+        // [CHANGED] 팀원 필드 동기화: BE { id, name, role, imageUrl }
+        const list = await teamApi.list(mid);
         if (!mounted) return;
         setMembers(
           list.map((m) => ({
-            id: String(m.memberId),
-            serverId: m.memberId,
+            id: String(m.id), // [CHANGED]
+            serverId: m.id, // [CHANGED]
             name: m.name,
             role: m.role,
-            avatar: m.avatarUrl ?? null,
+            avatar: m.imageUrl ?? null, // [CHANGED]
           }))
         );
       } catch (e) {
@@ -75,11 +76,11 @@ export default function OverView({ milestoneId }: OverviewViewProps) {
     return () => {
       mounted = false;
     };
-  }, [milestoneId, refreshTick]);
+  }, [mid]); // [CHANGED] milestoneId → mid
 
   const addMember = () => {
     const newMember: Member = {
-      id: Date.now().toString(), // 로컬에서만 임시 id
+      id: `local-${Date.now()}`, // [CHANGED] 로컬과 서버 id 충돌 방지 위해 prefix
       name: `팀원 ${members.length + 1}`,
       role: '',
       avatar: null,
@@ -111,7 +112,8 @@ export default function OverView({ milestoneId }: OverviewViewProps) {
   const saveDescription = () => {
     (async () => {
       try {
-        await milestoneApi.update(Number(milestoneId), { description });
+        // [CHANGED] mid 사용
+        await milestoneApi.update(mid, { description });
         setEditMode(false);
       } catch (e) {
         alert('설명 저장 실패');
@@ -124,33 +126,36 @@ export default function OverView({ milestoneId }: OverviewViewProps) {
     (async () => {
       try {
         // 서버 기준 목록 가져오기
-        const server = await teamApi.list(Number(milestoneId));
-        const serverMap = new Map(server.map((s) => [s.memberId, s]));
+        // [CHANGED] id 키 사용
+        const server = await teamApi.list(mid);
+        const serverMap = new Map<number, (typeof server)[number]>(server.map((s) => [s.id, s]));
 
         // 화면 목록을 순회하며 upsert
         for (const m of members) {
-          const idNum = Number(m.id);
-          const isServerItem = Number.isInteger(idNum) && serverMap.has(idNum);
+          const serverId = typeof m.serverId === 'number' ? m.serverId : undefined; // [CHANGED]
+          const isServerItem = serverId !== undefined && serverMap.has(serverId); // [CHANGED]
+
           if (isServerItem) {
-            const base = serverMap.get(idNum)!;
+            const base = serverMap.get(serverId!)!;
             if (base.name !== m.name || base.role !== m.role) {
-              await teamApi.update(Number(milestoneId), idNum, { name: m.name, role: m.role });
+              await teamApi.update(mid, serverId!, { name: m.name, role: m.role });
             }
-            serverMap.delete(idNum);
+            serverMap.delete(serverId!);
           } else {
-            const created = await teamApi.create(Number(milestoneId), {
+            const created = await teamApi.create(mid, {
               name: m.name,
               role: m.role,
             });
-            // 로컬 id를 서버 id로 치환
-            m.id = String(created.memberId);
-            m.serverId = created.memberId;
+            // [CHANGED] 생성 응답도 id/imageUrl 기준
+            m.id = String(created.id);
+            m.serverId = created.id;
+            if (created.imageUrl && !m.avatar) m.avatar = created.imageUrl;
           }
         }
 
         // 남은 서버 항목은 화면에서 삭제된 것 → 서버도 삭제
         for (const [memberId] of serverMap) {
-          await teamApi.remove(Number(milestoneId), memberId);
+          await teamApi.remove(mid, memberId); // [CHANGED]
         }
 
         alert('팀원 정보가 저장되었습니다.');
@@ -164,7 +169,8 @@ export default function OverView({ milestoneId }: OverviewViewProps) {
   const saveProjectTitle = () => {
     (async () => {
       try {
-        await milestoneApi.update(Number(milestoneId), { title: projectTitle });
+        // [CHANGED] mid 사용
+        await milestoneApi.update(mid, { title: projectTitle });
         setIsTitleEditing(false);
       } catch (e) {
         alert('제목 저장 실패');
@@ -289,13 +295,13 @@ export default function OverView({ milestoneId }: OverviewViewProps) {
                   <div className="flex-1 min-w-0">
                     <input
                       value={member.name}
-                      onChange={(e) => updateMember(member.id, 'name', e.target.value)}
+                      onChange={(e) => updateMember(member.id, 'name' as const, e.target.value)}
                       className="w-full bg-transparent border-0 px-0 py-1 text-sm font-medium focus:outline-none"
                       placeholder="이름"
                     />
                     <input
                       value={member.role}
-                      onChange={(e) => updateMember(member.id, 'role', e.target.value)}
+                      onChange={(e) => updateMember(member.id, 'role' as const, e.target.value)}
                       className="w-full bg-transparent border-0 px-0 py-1 text-sm text-gray-600 focus:outline-none"
                       placeholder="역할"
                     />
@@ -323,17 +329,29 @@ export default function OverView({ milestoneId }: OverviewViewProps) {
             </div>
           </div>
         </section>
-
         {/* 칸반/캘린더/파일 탭 */}
-        <section className={activeTab === 'kanban' ? '' : 'hidden'}></section>
         <section className={activeTab === 'kanban' ? '' : 'hidden'}>
-          <KanbanView refreshTick={refreshTick} />
+          <KanbanView
+            milestoneId={mid}
+            refreshTick={activeTab === 'kanban' ? kanbanTick : undefined}
+            onChanged={() => onChanged('kanban')}
+          />
         </section>
+
         <section className={activeTab === 'calendar' ? '' : 'hidden'}>
-          <CalendarView refreshTick={refreshTick} />
+          <CalendarView
+            milestoneId={mid}
+            refreshTick={activeTab === 'calendar' ? calendarTick : undefined}
+            onChanged={() => onChanged('calendar')}
+          />
         </section>
+
         <section className={activeTab === 'files' ? '' : 'hidden'}>
-          <FilesView refreshTick={refreshTick} />
+          <FilesView
+            milestoneId={mid}
+            refreshTick={activeTab === 'files' ? filesTick : undefined}
+            onChanged={() => onChanged('files')}
+          />
         </section>
       </div>
     </>

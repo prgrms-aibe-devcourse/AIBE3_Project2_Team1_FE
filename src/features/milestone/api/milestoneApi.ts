@@ -1,4 +1,4 @@
-import axiosInstance from '@/services/axios.ts';
+import axiosInstance from '../../../services/axios.ts';
 
 const BASE = '/milestones';
 
@@ -34,10 +34,19 @@ export interface FileResponseDto {
   createdAt: string;
 }
 export interface TeamMemberDto {
-  memberId: number;
+  id: number;
   name: string;
   role: string;
-  avatarUrl?: string | null;
+  imageUrl?: string | null;
+}
+//ETag 조건부 GET 유틸
+async function getWithEtag<T>(url: string, etag?: string) {
+  const { data, status, headers } = await axiosInstance.get<T>(url, {
+    // 200(변경됨), 304(변경없음)만 성공으로 간주
+    validateStatus: (s) => s === 200 || s === 304,
+    headers: etag ? { 'If-None-Match': etag } : undefined,
+  });
+  return { status, data: data as T, etag: headers?.etag as string | undefined };
 }
 
 // ===== 마일스톤 =====
@@ -64,6 +73,10 @@ export const kanbanApi = {
   async list(milestoneId: number) {
     const { data } = await axiosInstance.get<KanbanCardResponse[]>(`${BASE}/${milestoneId}/cards`);
     return data;
+  },
+  // [ADD] ETag 조건부 GET
+  async listConditional(milestoneId: number, etag?: string) {
+    return getWithEtag<KanbanCardResponse[]>(`${BASE}/${milestoneId}/cards`, etag);
   },
 
   // POST /api/v1/milestones/{milestoneId}/cards  body: { title, columnId }
@@ -98,6 +111,10 @@ export const calendarApi = {
       `${BASE}/${milestoneId}/events`
     );
     return data;
+  },
+  // [ADD] ETag 조건부 GET
+  async listConditional(milestoneId: number, etag?: string) {
+    return getWithEtag<CalendarEventResponse[]>(`${BASE}/${milestoneId}/cards`, etag);
   },
 
   // POST /api/v1/milestones/{milestoneId}/events  body: { title, date }
@@ -134,17 +151,32 @@ export const filesApi = {
     const { data } = await axiosInstance.get<FileResponseDto[]>(`${BASE}/${milestoneId}/files`);
     return data;
   },
+  // [ADD] ETag 조건부 GET
+  async listConditional(milestoneId: number, etag?: string) {
+    return getWithEtag<FileResponseDto[]>(`${BASE}/${milestoneId}/cards`, etag);
+  },
 
   // POST /api/v1/milestones/{milestoneId}/files  (multipart)
-  async upload(milestoneId: number, fileList: File[]) {
+  async upload(milestoneId: number, file: File): Promise<FileResponseDto> {
     const form = new FormData();
-    fileList.forEach((f) => form.append('files', f));
-    // axios는 FormData일 때 Content-Type에 boundary를 자동 세팅하므로 헤더 지정 불필요
-    const { data } = await axiosInstance.post<FileResponseDto[]>(
+    form.append('file', file); // 서버 @RequestParam("file") 이름과 일치해야 함
+
+    const { data } = await axiosInstance.post<FileResponseDto>(
       `${BASE}/${milestoneId}/files`,
-      form
+      form as FormData
     );
+
     return data;
+  },
+
+  // 여러 개 업로드: 단일 업로드를 반복 호출(순차)
+  async uploadManySequential(milestoneId: number, files: File[]): Promise<FileResponseDto[]> {
+    const results: FileResponseDto[] = [];
+    for (const f of files) {
+      const dto = await filesApi.upload(milestoneId, f);
+      results.push(dto);
+    }
+    return results;
   },
 
   // DELETE /api/v1/milestones/{milestoneId}/files/{fileId}
@@ -154,7 +186,6 @@ export const filesApi = {
 
   // 파일 다운로드 URL 생성 (다운로드는 브라우저 navigation로 처리)
   getDownloadUrl(fileId: number) {
-    // axiosInstance.baseURL이 '/api/v1' 이므로, 여기엔 전체 경로를 그대로 사용
     return `/api/v1/milestones/files/download/${fileId}`;
   },
 };

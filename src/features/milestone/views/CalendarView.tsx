@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import DateScrollPicker from '../components/DateScrollPicker';
 import { calendarApi, type CalendarEventResponse } from '../api/milestoneApi';
 
@@ -25,13 +25,16 @@ const fmt = (date: Date) => {
 export default function CalendarView({
   milestoneId = 1,
   refreshTick,
+  onChanged,
 }: {
   milestoneId?: number;
   refreshTick?: number;
+  onChanged?: () => void;
 }) {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState<Date | null>(new Date());
   const [events, setEvents] = useState<EventItem[]>([]);
+  const etagRef = useRef<string | undefined>(undefined);
 
   // 일정 추가 모달
   const [showAddModal, setShowAddModal] = useState(false);
@@ -58,28 +61,41 @@ export default function CalendarView({
 
   const handleDateClick = (date: Date) => {
     setSelectedDate(date);
+    openAddModalFor(date);
+  };
+
+  const openAddModalFor = (date: Date) => {
+    setPickerDate(date);
+    setNewEventTitle('');
+    setShowAddModal(true);
   };
 
   const fetchEvents = useCallback(async () => {
     try {
-      const list = await calendarApi.list(milestoneId);
-      const mapped: EventItem[] = list.map((d: CalendarEventResponse) => ({
-        id: String(d.eventId ?? d.id),
-        title: d.title,
-        date: d.date,
-      }));
-      setEvents(mapped);
+      const res = await calendarApi.listConditional(milestoneId!, etagRef.current);
+      if (res.status === 200 && Array.isArray(res.data)) {
+        const list = res.data as CalendarEventResponse[];
+        setEvents(
+          list.map((e) => ({
+            id: String(e.eventId ?? e.id),
+            title: e.title,
+            date: e.date,
+          }))
+        );
+        etagRef.current = res.etag ?? etagRef.current;
+      }
     } catch (e) {
       console.error('일정 목록 로드 실패', e);
     }
   }, [milestoneId]);
+
   useEffect(() => {
     void fetchEvents();
   }, [fetchEvents]); // 최초 1회
   useEffect(() => {
-    if (refreshTick !== undefined) return;
+    if (refreshTick === undefined) return; // 변할 때마다 갱신
     void fetchEvents();
-  }, [refreshTick]); // 준실시간
+  }, [refreshTick, fetchEvents]); // 준실시간
 
   const openAddModal = () => {
     if (!selectedDate) return;
@@ -99,6 +115,7 @@ export default function CalendarView({
       setSelectedDate(pickerDate);
       setNewEventTitle('');
       setShowAddModal(false);
+      onChanged?.();
     } catch (e) {
       console.error('일정 추가 실패', e);
     }
@@ -134,6 +151,7 @@ export default function CalendarView({
       setSelectedDate(editPickerDate);
       setShowEditModal(false);
       setEditingEvent(null);
+      onChanged?.();
     } catch (e) {
       console.error('일정 편집 실패', e);
     }
@@ -144,6 +162,7 @@ export default function CalendarView({
     try {
       await calendarApi.remove(milestoneId, Number(id));
       setEvents((prev) => prev.filter((e) => e.id !== id));
+      onChanged?.();
     } catch (e) {
       console.error('일정 삭제 실패', e);
     }

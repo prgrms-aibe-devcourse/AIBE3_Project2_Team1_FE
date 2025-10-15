@@ -1,9 +1,10 @@
-import { useParams, Navigate } from 'react-router-dom';
-import { useEffect, useState } from 'react';
 import OverView from '../OverView.tsx';
+import { Navigate, useParams } from 'react-router-dom';
+import { useEffect, useState } from 'react';
 import { milestoneApi } from '@/features/milestone/api/milestoneApi.ts';
 
 export default function MilestonePage() {
+  // return <OverView />;
   //  URL에서 milestoneId 추출: /milestone/123 → "123"
   const { milestoneId } = useParams<{ milestoneId: string }>();
 

@@ -17,8 +17,6 @@ import {
   FileText,
   ChevronDown,
   ChevronUp,
-  Eye,
-  Pencil,
 } from 'lucide-react';
 
 import { filesApi, type FileResponseDto } from '../api/milestoneApi';
@@ -64,11 +62,43 @@ function fileKindIcon(mime: string, name: string) {
 export default function FilesView({
   milestoneId = 1,
   refreshTick,
+  onChanged,
 }: {
-  milestoneId?: number; // 마일스톤 ID (어떤 마일스톤의 파일인지)
-  refreshTick?: number; // 5초마다 갱신용
+  milestoneId?: number;
+  refreshTick?: number;
+  onChanged?: () => void;
 }) {
   const [files, setFiles] = useState<FileItem[]>([]);
+  const etagRef = useRef<string | undefined>(undefined); // [ADDED]
+
+  const fetchFiles = useCallback(async () => {
+    try {
+      const res = await filesApi.listConditional(milestoneId, etagRef.current);
+      if (res.status === 200 && Array.isArray(res.data)) {
+        const list = res.data as FileResponseDto[];
+        const items = list.map((f: FileResponseDto) => ({
+          id: String(f.fileId ?? f.id),
+          name: f.name,
+          url: f.downloadUrl,
+          size: f.size,
+          type: f.type,
+          createdAt: Date.parse(f.createdAt),
+        }));
+        setFiles(items);
+        etagRef.current = res.etag ?? etagRef.current;
+      } // 304면 무시
+    } catch (e) {
+      console.error('파일 조회 실패:', e);
+    }
+  }, [milestoneId]);
+
+  useEffect(() => {
+    void fetchFiles();
+  }, [fetchFiles]);
+  useEffect(() => {
+    if (refreshTick !== undefined) void fetchFiles();
+  }, [refreshTick, fetchFiles]);
+
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [query, setQuery] = useState('');
   const [sortKey, setSortKey] = useState<SortKey>('createdAt');
@@ -78,8 +108,6 @@ export default function FilesView({
   const [showPreview, setShowPreview] = useState<FileItem | null>(null);
 
   const [selected, setSelected] = useState<Set<string>>(new Set());
-  const [renameId, setRenameId] = useState<string | null>(null);
-  const [renameValue, setRenameValue] = useState<string>('');
 
   //키보드 단축키
   useEffect(() => {
@@ -90,7 +118,6 @@ export default function FilesView({
       }
       if (e.key === 'Escape') {
         setSelected(new Set());
-        setRenameId(null);
       }
     };
     window.addEventListener('keydown', onKey);
@@ -147,40 +174,6 @@ export default function FilesView({
   const clearSelection = () => setSelected(new Set());
   const selectAll = () => setSelected(new Set(filtered.map((f) => f.id)));
 
-  // 서버에서 파일 목록 가져오기
-  const fetchFiles = useCallback(async () => {
-    try {
-      console.log(' 파일 목록 조회:', milestoneId);
-      const serverFiles: FileResponseDto[] = await filesApi.list(milestoneId);
-
-      const items: FileItem[] = serverFiles.map((f) => ({
-        id: String(f.fileId ?? f.id),
-        name: f.name,
-        url: f.downloadUrl,
-        size: f.size,
-        type: f.type,
-        createdAt: new Date(f.createdAt).getTime(),
-      }));
-
-      setFiles(items);
-      console.log(' 파일 목록 업데이트:', items.length, '개');
-    } catch (e) {
-      console.error('파일 목록 조회 실패:', e);
-    }
-  }, [milestoneId]);
-
-  // 컴포넌트 마운트 시 파일 목록 로드
-  useEffect(() => {
-    void fetchFiles();
-  }, [fetchFiles]);
-
-  // refreshTick 변경 시 자동 갱신
-  useEffect(() => {
-    if (refreshTick !== undefined) {
-      void fetchFiles();
-    }
-  }, [refreshTick, fetchFiles]);
-
   // 파일 업로드
   const uploadFiles = useCallback(
     async (fileList: FileList | null) => {
@@ -235,12 +228,13 @@ export default function FilesView({
 
         console.log(' 전체 업로드 완료:', filesArr.length, '개');
         alert(`${filesArr.length}개 파일 업로드 완료!`);
+        onChanged?.();
       } catch (e) {
         console.error('파일 업로드 실패:', e);
         alert(`업로드 실패: ${e instanceof Error ? e.message : '알 수 없는 오류'}`);
       }
     },
-    [milestoneId, fetchFiles]
+    [milestoneId, fetchFiles, onChanged]
   );
 
   // 파일 삭제
@@ -269,28 +263,14 @@ export default function FilesView({
 
         console.log('✅ 전체 삭제 완료:', targets.length, '개');
         alert(`${targets.length}개 파일 삭제 완료!`);
+        onChanged?.();
       } catch (e) {
         console.error('❌ 파일 삭제 실패:', e);
         alert(`삭제 실패: ${e instanceof Error ? e.message : '알 수 없는 오류'}`);
       }
     },
-    [files, milestoneId]
+    [files, milestoneId, onChanged]
   );
-
-  const startRename = (f: FileItem) => {
-    setRenameId(f.id);
-    setRenameValue(f.name);
-  };
-  const commitRename = () => {
-    if (!renameId) return;
-    const newName = renameValue.trim();
-    if (!newName) {
-      setRenameId(null);
-      return;
-    }
-    setFiles((prev) => prev.map((f) => (f.id === renameId ? { ...f, name: newName } : f)));
-    setRenameId(null);
-  };
 
   const onChangeSortKey = (e: React.ChangeEvent<HTMLSelectElement>) => {
     setSortKey(e.target.value as SortKey);
@@ -406,11 +386,6 @@ export default function FilesView({
           onToggle={toggleOne}
           onPreview={setShowPreview}
           onDelete={(id) => onDelete(id)}
-          onStartRename={startRename}
-          renameId={renameId}
-          renameValue={renameValue}
-          setRenameValue={setRenameValue}
-          onCommitRename={commitRename}
         />
       ) : (
         <ListView
@@ -419,11 +394,6 @@ export default function FilesView({
           onToggle={toggleOne}
           onPreview={setShowPreview}
           onDelete={(id) => onDelete(id)}
-          onStartRename={startRename}
-          renameId={renameId}
-          renameValue={renameValue}
-          setRenameValue={setRenameValue}
-          onCommitRename={commitRename}
         />
       )}
 
@@ -462,26 +432,10 @@ type CommonViewProps = {
   onToggle: (id: string, multi?: boolean, rangeIds?: string[]) => void;
   onPreview: (f: FileItem) => void;
   onDelete: (id: string) => void;
-  onStartRename: (f: FileItem) => void;
-  renameId: string | null;
-  renameValue: string;
-  setRenameValue: (v: string) => void;
-  onCommitRename: () => void;
 };
 
 function GridView(props: CommonViewProps) {
-  const {
-    files,
-    onPreview,
-    onDelete,
-    onToggle,
-    selected,
-    onStartRename,
-    renameId,
-    renameValue,
-    setRenameValue,
-    onCommitRename,
-  } = props;
+  const { files, onDelete, onToggle, selected } = props;
 
   const lastClicked = useRef<number | null>(null);
   const handleItemClick = (idx: number, e: React.MouseEvent) => {
@@ -502,7 +456,6 @@ function GridView(props: CommonViewProps) {
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
       {files.map((f, idx) => {
         const isSel = selected.has(f.id);
-        const isRenaming = renameId === f.id;
         return (
           <div
             key={f.id}
@@ -511,41 +464,6 @@ function GridView(props: CommonViewProps) {
             className={`rounded-lg border p-3 flex flex-col gap-3 hover:shadow-sm transition outline-offset-2 ${isSel ? 'ring-2 ring-teal-500' : ''}`}
             style={{ borderColor: BORDER }}
           >
-            <div className="flex items-center gap-2">
-              {fileKindIcon(f.type, f.name)}
-              <div className="min-w-0 flex-1">
-                {isRenaming ? (
-                  <input
-                    value={renameValue}
-                    onChange={(e) => setRenameValue(e.target.value)}
-                    onBlur={onCommitRename}
-                    onKeyDown={(e) => e.key === 'Enter' && onCommitRename()}
-                    autoFocus
-                    className="w-full px-1 py-0.5 rounded border focus:outline-none focus:ring-2 focus:ring-teal-500"
-                    style={{ borderColor: BORDER }}
-                  />
-                ) : (
-                  <div className="font-medium truncate">{f.name}</div>
-                )}
-                <div className="text-xs text-gray-500">
-                  {formatBytes(f.size)} · {new Date(f.createdAt).toLocaleDateString()}
-                </div>
-              </div>
-              {!isRenaming && (
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onStartRename(f);
-                  }}
-                  className="p-1 rounded border hover:bg-gray-50"
-                  style={{ borderColor: BORDER }}
-                  title="이름 변경"
-                >
-                  <Pencil className="w-3.5 h-3.5" />
-                </button>
-              )}
-            </div>
-
             {f.type.startsWith('image/') && (
               <img
                 src={f.url}
@@ -555,18 +473,7 @@ function GridView(props: CommonViewProps) {
                 loading="lazy"
               />
             )}
-
-            <div className="flex items-center gap-2 mt-auto">
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onPreview(f);
-                }}
-                className="px-2 py-1 rounded border text-xs hover:bg-gray-50 flex items-center gap-1"
-                style={{ borderColor: BORDER }}
-              >
-                <Eye className="w-3.5 h-3.5" /> 미리보기
-              </button>
+            <div className="flex items-center gap-2">
               <a
                 href={f.url}
                 download={f.name}
@@ -595,18 +502,7 @@ function GridView(props: CommonViewProps) {
 }
 
 function ListView(props: CommonViewProps) {
-  const {
-    files,
-    onPreview,
-    onDelete,
-    onToggle,
-    selected,
-    onStartRename,
-    renameId,
-    renameValue,
-    setRenameValue,
-    onCommitRename,
-  } = props;
+  const { files, onDelete, onToggle, selected } = props;
 
   const lastClicked = useRef<number | null>(null);
   const handleRowClick = (idx: number, e: React.MouseEvent) => {
@@ -637,7 +533,6 @@ function ListView(props: CommonViewProps) {
         <tbody>
           {files.map((f, idx) => {
             const isSel = selected.has(f.id);
-            const isRenaming = renameId === f.id;
             return (
               <tr
                 key={f.id}
@@ -649,19 +544,7 @@ function ListView(props: CommonViewProps) {
                   <div className="flex items-center gap-2">
                     {fileKindIcon(f.type, f.name)}
                     <div className="min-w-0">
-                      {isRenaming ? (
-                        <input
-                          value={renameValue}
-                          onChange={(e) => setRenameValue(e.target.value)}
-                          onBlur={onCommitRename}
-                          onKeyDown={(e) => e.key === 'Enter' && onCommitRename()}
-                          autoFocus
-                          className="px-1 py-0.5 rounded border focus:outline-none focus:ring-2 focus:ring-teal-500"
-                          style={{ borderColor: BORDER }}
-                        />
-                      ) : (
-                        <span className="font-medium truncate">{f.name}</span>
-                      )}
+                      <span className="font-medium truncate">{f.name}</span>
                       <span className="ml-2 text-xs text-gray-500">.{extOf(f.name)}</span>
                     </div>
                   </div>
@@ -670,28 +553,6 @@ function ListView(props: CommonViewProps) {
                 <td className="px-3 py-2">{new Date(f.createdAt).toLocaleString()}</td>
                 <td className="px-3 py-2">
                   <div className="flex items-center gap-2 justify-end">
-                    {!isRenaming && (
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onStartRename(f);
-                        }}
-                        className="px-2 py-1 rounded border text-xs hover:bg-gray-50 flex items-center gap-1"
-                        style={{ borderColor: BORDER }}
-                      >
-                        <Pencil className="w-3.5 h-3.5" /> 이름 변경
-                      </button>
-                    )}
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onPreview(f);
-                      }}
-                      className="px-2 py-1 rounded border text-xs hover:bg-gray-50 flex items-center gap-1"
-                      style={{ borderColor: BORDER }}
-                    >
-                      <Eye className="w-3.5 h-3.5" /> 미리보기
-                    </button>
                     <a
                       href={f.url}
                       download={f.name}
