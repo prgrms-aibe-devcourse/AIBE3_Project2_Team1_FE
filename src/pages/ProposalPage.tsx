@@ -1,6 +1,7 @@
 import { useParams } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { axiosInstance } from '@/services/axios';
+import { useNavigate } from 'react-router-dom';
 
 interface ProposalData {
   fileUrls: string[];
@@ -12,6 +13,8 @@ const ProposalPage = () => {
   const { proposalId } = useParams();
   const [proposal, setProposal] = useState<ProposalData | null>(null);
   const [loading, setLoading] = useState(true);
+
+  const navigate = useNavigate();
 
   const handleSingleDownload = async (fileUrl: string) => {
     try {
@@ -38,6 +41,7 @@ const ProposalPage = () => {
         proposalStatus: 'ACCEPTED',
       });
       alert('매칭을 수락했습니다!');
+      navigate('/profile');
     } catch (err) {
       console.error(err);
       alert('매칭 수락에 실패했습니다.');
@@ -50,6 +54,7 @@ const ProposalPage = () => {
         proposalStatus: 'REJECTED',
       });
       alert('매칭을 거절했습니다.');
+      navigate('/profile');
     } catch (err) {
       console.error(err);
       alert('매칭 거절에 실패했습니다.');
