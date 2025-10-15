@@ -21,7 +21,7 @@ export default function OverView({ milestoneId }: OverviewViewProps) {
   const [activeTab, setActiveTab] = useState('overview');
 
   const DEFAULT_MID = 1 as const; //테스트 기본 값
-  const mid = Number(milestoneId ?? DEFAULT_MID);
+  const mid = Number(milestoneId ?? (import.meta.env.DEV ? DEFAULT_MID : undefined));
 
   /* 폴링 제거: 탭별 tick만 유지하고 액션 성공시만 증가 */
   const [filesTick, setFilesTick] = useState(0); // [ADDED]

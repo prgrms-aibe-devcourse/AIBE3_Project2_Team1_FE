@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-
+const BASE_URL = import.meta.env.VITE_API_BASE_URL ?? '/api/v1';
 export interface Message {
   messageId: number;
   senderUserId: number;
@@ -41,7 +41,7 @@ export function useChatRoom(roomId: number): UseChatRoomReturn {
   const fetchMessages = useCallback(async () => {
     try {
       setLoading(true);
-      const res = await fetch(`/api/v1/messages/${roomId}`, {
+      const res = await fetch(`${BASE_URL}/messages/${roomId}`, {
         headers: authHeaders(),
       });
       if (!res.ok) throw new Error('Failed to fetch messages');
@@ -70,8 +70,8 @@ export function useChatRoom(roomId: number): UseChatRoomReturn {
   useEffect(() => {
     const token = localStorage.getItem('accessToken');
     const url = token
-      ? `/api/v1/sse/connect?chatRoomId=${roomId}&token=${encodeURIComponent(token)}`
-      : `/api/v1/sse/connect?chatRoomId=${roomId}`;
+      ? `${BASE_URL}/sse/connect?chatRoomId=${roomId}&token=${encodeURIComponent(token)}`
+      : `${BASE_URL}/sse/connect?chatRoomId=${roomId}`;
 
     const es = new EventSource(url);
 
@@ -127,7 +127,7 @@ export function useChatRoom(roomId: number): UseChatRoomReturn {
     async (content: string) => {
       if (!content.trim()) throw new Error('메시지 내용이 비어있습니다');
 
-      const res = await fetch('/api/v1/messages', {
+      const res = await fetch('${BASE_URL}/messages', {
         method: 'POST',
         headers: authHeaders(), // 수정!
         body: JSON.stringify({
@@ -143,7 +143,7 @@ export function useChatRoom(roomId: number): UseChatRoomReturn {
   // 메시지 삭제
   const deleteMessage = useCallback(async (messageId: number) => {
     try {
-      const response = await fetch(`/api/v1/messages/${messageId}`, {
+      const response = await fetch(`${BASE_URL}/messages/${messageId}`, {
         method: 'DELETE',
         headers: authHeaders(),
       });

@@ -186,7 +186,7 @@ export const filesApi = {
 
   // 파일 다운로드 URL 생성 (다운로드는 브라우저 navigation로 처리)
   getDownloadUrl(fileId: number) {
-    return `/api/v1/milestones/files/download/${fileId}`;
+    return `/milestones/files/download/${fileId}`;
   },
 };
 

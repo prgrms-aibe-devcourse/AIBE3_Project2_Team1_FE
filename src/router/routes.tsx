@@ -11,7 +11,7 @@ import ReviewWritePage from '@/features/review/ReviewWritePage';
 import ClientProposalPage from '@/pages/ClientProposal';
 import FreelancerProposalPage from '@/pages/FreelancerProposal';
 import Home from '@/pages/Home';
-import OverviewPage from '@/pages/OverviewPage';
+import OverviewPage from '@/pages/OverviewPage'; //테스트 용
 import ProjectList from '@/pages/ProjectList';
 import ProjectDetail from '@/pages/ProjectDetail';
 import ProjectWrite from '@/pages/ProjectWrite';
@@ -19,6 +19,7 @@ import ProjectWrite from '@/pages/ProjectWrite';
 import ChatRoomListPage from '@/features/message/ChatRoomListPage';
 import ChatRoomRoute from './ChatRoomRoute';
 import ProfilePage from '@/features/profile/pages/ProfilePage.tsx';
+import MilestonePage from '@/features/milestone/pages/MilestonePage.tsx';
 
 // 레이아웃 없는 페이지 (로그인/회원가입 관련)
 export const noLayoutRoutes = [
@@ -38,7 +39,8 @@ export const mainRoutes = [
   { path: '/project/:projectId', element: <ProjectDetail /> },
   { path: '/project/write', element: <ProjectWrite /> },
   { path: '/profile', element: <ProfilePage /> },
-  { path: '/overview', element: <OverviewPage /> },
+  { path: '/overview', element: <OverviewPage /> }, //테스트 용
+  { path: '/milestone/:milestoneId', element: <MilestonePage /> },
   { path: '/chat', element: <ChatRoomListPage /> },
   { path: '/chat/:roomId', element: <ChatRoomRoute /> },
   { path: '/admin/dashboard', element: <AdminDashboardPage /> },

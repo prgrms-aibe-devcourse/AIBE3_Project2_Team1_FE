@@ -219,7 +219,7 @@ export default function FilesView({
           formData.append('file', file);
 
           // 백엔드로 전송 (백엔드가 S3 업로드 + DB 저장!)
-          const res = await fetch(`/api/v1/milestones/${milestoneId}/files`, {
+          const res = await fetch(`/milestones/${milestoneId}/files`, {
             method: 'POST',
             body: formData,
             credentials: 'include',
