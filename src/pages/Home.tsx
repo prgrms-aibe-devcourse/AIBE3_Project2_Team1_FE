@@ -204,7 +204,7 @@ export default function Home() {
               AI가 프로젝트를 구체적으로 구현해드립니다.
             </p>
             <button
-              onClick={() => navigate('/projects')}
+              onClick={() => navigate('/matching')}
               className="mt-10 bg-black text-white px-8 py-3 rounded-full font-semibold shadow-md hover:bg-gray-800 transition-all duration-300"
             >
               프로젝트 시작하기 →
