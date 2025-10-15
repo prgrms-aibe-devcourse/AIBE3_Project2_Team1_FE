@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
 import { axiosInstance } from '@/services/axios';
+import { useEffect, useState } from 'react';
 
 export interface BookmarkItem {
   id: number;
@@ -32,7 +32,7 @@ export default function useBookmarks() {
 
         const projectPromises = bookmarkList.map(async (b) => {
           try {
-            const projectRes = await axiosInstance.get(`/api/v1/projects/${b.projectId}`);
+            const projectRes = await axiosInstance.get(`/projects/${b.projectId}`);
             const project = projectRes.data.data;
 
             return {

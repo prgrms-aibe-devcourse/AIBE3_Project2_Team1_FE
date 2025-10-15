@@ -29,6 +29,12 @@ export const updateUser = async (data: UserUpdateRequestDto): Promise<UserDto> =
   return res.data;
 };
 
+// Role 수정
+export const updateUserMode = async (mode: 'CLIENT' | 'FREELANCER') => {
+  const res = await axiosInstance.put(`/users/mode?mode=${mode}`);
+  return res.data;
+};
+
 // 비밀번호 변경
 export const changePassword = async (data: UserPasswordChangeRequestDto): Promise<void> => {
   await axiosInstance.patch('/users/info/password', data);

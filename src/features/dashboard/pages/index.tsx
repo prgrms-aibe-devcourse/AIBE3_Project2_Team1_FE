@@ -1,13 +1,13 @@
 import TabContentDashboard from '@/features/dashboard/components/TabContent';
-import TabDashboard from '@/features/dashboard/components/TabDashboard';
 import { useState } from 'react';
 import useBookmarks from '../hooks/useBookmarks';
 import useInProgressProjects from '../hooks/useInProgressProjects';
-import type { DashboardTabKey, DashboardTabData } from '../types';
-import useReceivedProposals from '../hooks/useReceivedProposals';
-import useSentProposals from '../hooks/useSentProposals';
 import useMyReviews from '../hooks/useMyReviews';
 import useCompletedProjects from '../hooks/userCompletedProjects';
+import useReceivedProposals from '../hooks/useReceivedProposals';
+import type { DashboardTabData, DashboardTabKey } from '../types';
+import TabDashboard from '@/features/dashboard/components/TabDashboard';
+import useSentProposals from '../hooks/useSentProposals';
 
 export default function DashboardPage() {
   const [activeTab, setActiveTab] = useState<DashboardTabKey>('in-progress');
@@ -48,7 +48,10 @@ export default function DashboardPage() {
       tab: 'proposal',
       proposals,
     },
-    bookmark: { tab: 'bookmark', bookmarks },
+    bookmark: {
+      tab: 'bookmark',
+      bookmarks,
+    },
   };
 
   const currentData = tabData[activeTab];
@@ -56,33 +59,32 @@ export default function DashboardPage() {
   const showLoading =
     activeTab === 'request'
       ? proposalsLoading
-      : activeTab === 'proposal'
-        ? proposalsLoading2
-        : activeTab === 'bookmark'
-          ? bookmarksLoading
-          : activeTab === 'in-progress'
-            ? inProgressLoading
-            : activeTab === 'completed'
-              ? completedLoading
-              : activeTab === 'review'
-                ? reviewsLoading
+      : activeTab === 'bookmark'
+        ? bookmarksLoading
+        : activeTab === 'in-progress'
+          ? inProgressLoading
+          : activeTab === 'completed'
+            ? completedLoading
+            : activeTab === 'review'
+              ? reviewsLoading
+              : activeTab === 'proposal'
+                ? proposalsLoading2
                 : false;
 
   const showError =
     activeTab === 'request'
       ? proposalsError
-      : activeTab === 'proposal'
-        ? proposalsError2
-        : activeTab === 'bookmark'
-          ? bookmarksError
-          : activeTab === 'in-progress'
-            ? inProgressError
-            : activeTab === 'completed'
-              ? completedError
-              : activeTab === 'review'
-                ? reviewsError
+      : activeTab === 'bookmark'
+        ? bookmarksError
+        : activeTab === 'in-progress'
+          ? inProgressError
+          : activeTab === 'completed'
+            ? completedError
+            : activeTab === 'review'
+              ? reviewsError
+              : activeTab === 'proposal'
+                ? proposalsError2
                 : null;
-
   return (
     <div className="flex-1 max-w-4xl w-full mx-auto py-10">
       <TabDashboard activeTab={activeTab} setActiveTab={setActiveTab} />

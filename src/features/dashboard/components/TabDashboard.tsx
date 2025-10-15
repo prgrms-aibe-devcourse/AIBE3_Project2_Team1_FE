@@ -2,9 +2,9 @@ import type { DashboardTabKey } from '../types';
 
 import Done from '@/assets/Done.png';
 import Historical from '@/assets/Historical.png';
+import Bookmark from '@/assets/Read.png';
 import Star from '@/assets/Star Half Empty.png';
 import View from '@/assets/View.png';
-import Bookmark from '@/assets/Read.png';
 
 interface TabDashboardProps {
   activeTab: DashboardTabKey;

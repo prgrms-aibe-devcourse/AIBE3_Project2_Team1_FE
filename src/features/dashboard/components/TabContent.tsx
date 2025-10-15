@@ -1,11 +1,11 @@
 import { useNavigate } from 'react-router-dom';
-import RequestCard from './RequestCard';
-import ProjectCard from './ProjectCard';
-import ReviewCard from './ReviewCard';
-import BookmarkCard from './BookmarkCard';
-import EmptyState from './EmptyState';
-import ProposalCard from './ProposalCard';
 import type { DashboardTabData } from '../types';
+import BookmarkCard from './BookmarkCard';
+import ProposalCard from './ProposalCard';
+import EmptyState from './EmptyState';
+import ProjectCard from './ProjectCard';
+import RequestCard from './RequestCard';
+import ReviewCard from './ReviewCard';
 
 interface TabContentDashboardProps {
   tabData: DashboardTabData;
@@ -84,7 +84,12 @@ export default function TabContentDashboard({ tabData, loading, error }: TabCont
       return (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
           {tabData.bookmarks.map((item) => (
-            <BookmarkCard key={item.id} image={item.image} title={item.title} />
+            <BookmarkCard
+              key={item.id}
+              image={item.image}
+              title={item.title}
+              onClick={() => handleProjectClick(item.id)}
+            />
           ))}
         </div>
       );

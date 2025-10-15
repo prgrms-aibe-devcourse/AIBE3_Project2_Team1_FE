@@ -10,6 +10,7 @@ export interface UserResponseDto {
     phoneNumber: string;
     birth: string; // YYYY-MM-DD
     email: string;
+    role: 'CLIENT' | 'FREELANCER';
     ProfileImgUrl: string | null;
   };
 }

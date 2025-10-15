@@ -47,7 +47,7 @@ export default function ProjectCard({
       {/* 제목 */}
       <p className="text-sm font-semibold mb-1 truncate">{title || '프로젝트 제목'}</p>
 
-      {/* 평점 + 리뷰 (임시 하드코딩) */}
+      {/* 평점 + 리뷰 */}
       <div className="flex items-center text-xs text-gray-500 mb-1 gap-1">
         <img src={starImg} alt="star" className="w-4 h-4" />
         <span>4.8</span>
