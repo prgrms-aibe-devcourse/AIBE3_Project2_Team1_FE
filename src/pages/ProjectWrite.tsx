@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import api from '../features/project/api';
 import { categoryGroups } from '../features/project/constants/categories';
 import type { CategoryId } from '../features/project/constants/categories';
@@ -7,13 +7,22 @@ import { AxiosError } from 'axios';
 
 export default function WritePage() {
   const navigate = useNavigate();
+  const location = useLocation();
+
+  // AiRecommendPage에서 전달된 추천 프로젝트
+  const chosenProject = location.state?.chosenProject as
+    | { title: string; description: string; budget: number; deadline: string; category: string }
+    | undefined;
+
   const role: 'client' | 'freelancer' = 'freelancer';
 
-  const [category, setCategory] = useState<CategoryId | ''>('');
-  const [content, setContent] = useState('');
-  const [title, setTitle] = useState('');
-  const [budget, setBudget] = useState('');
-  const [deadline, setDeadline] = useState('');
+  const [category, setCategory] = useState<CategoryId | ''>(
+    (chosenProject?.category as CategoryId) || ''
+  );
+  const [content, setContent] = useState(chosenProject?.description || '');
+  const [title, setTitle] = useState(chosenProject?.title || '');
+  const [budget, setBudget] = useState(chosenProject?.budget?.toString() || '');
+  const [deadline, setDeadline] = useState(chosenProject?.deadline || '');
   const [images, setImages] = useState<File[]>([]);
   const [uploadedImageUrls, setUploadedImageUrls] = useState<string[]>([]);
   const [uploading, setUploading] = useState(false);

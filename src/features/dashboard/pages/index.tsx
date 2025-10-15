@@ -3,11 +3,13 @@ import TabDashboard from '@/features/dashboard/components/TabDashboard';
 import TabContentDashboard from '@/features/dashboard/components/TabContent';
 import type { DashboardTabKey, DashboardTabData } from '../types';
 import useReceivedProposals from '../hooks/useReceivedProposals';
+import useBookmarks from '../hooks/useBookmarks';
 
 export default function DashboardPage() {
   const [activeTab, setActiveTab] = useState<DashboardTabKey>('in-progress');
 
   const { requests, loading: proposalsLoading, error: proposalsError } = useReceivedProposals();
+  const { bookmarks, loading: bookmarksLoading, error: bookmarksError } = useBookmarks();
 
   const tabData: Record<DashboardTabKey, DashboardTabData> = {
     'in-progress': {
@@ -30,12 +32,19 @@ export default function DashboardPage() {
       tab: 'review',
       reviews: [{ id: 4, image: '/sample4.jpg', title: '리뷰 제목' }],
     },
+    bookmark: { tab: 'bookmark', bookmarks },
   };
 
   const currentData = tabData[activeTab];
 
-  const showLoading = activeTab === 'request' ? proposalsLoading : false;
-  const showError = activeTab === 'request' ? proposalsError : null;
+  const showLoading =
+    activeTab === 'request'
+      ? proposalsLoading
+      : activeTab === 'bookmark'
+        ? bookmarksLoading
+        : false;
+  const showError =
+    activeTab === 'request' ? proposalsError : activeTab === 'bookmark' ? bookmarksError : null;
 
   return (
     <div className="flex-1 max-w-4xl w-full mx-auto py-10">
