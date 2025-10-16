@@ -1,19 +1,39 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Pencil, Check } from 'lucide-react';
+
 import TabNavigation from './components/TabNavigation';
 import KanbanView from './views/KanbanView.tsx';
 import CalendarView from './views/CalendarView';
 import FilesView from '@/features/milestone/views/FilesView.tsx';
+import { milestoneApi, teamApi } from '@/features/milestone/api/milestoneApi';
 
 interface Member {
   id: string;
   name: string;
   role: string;
   avatar: string | null;
+  serverId?: number; // 서버 member PK
 }
 
-export default function OverviewView() {
+type OverviewViewProps = { milestoneId?: number }; // ← optional
+
+export default function OverView({ milestoneId }: OverviewViewProps) {
   const [activeTab, setActiveTab] = useState('overview');
+
+  const DEFAULT_MID = 1 as const; //테스트 기본 값
+  const mid = Number(milestoneId ?? (import.meta.env.DEV ? DEFAULT_MID : undefined));
+
+  /* 폴링 제거: 탭별 tick만 유지하고 액션 성공시만 증가 */
+  const [filesTick, setFilesTick] = useState(0); // [ADDED]
+  const [kanbanTick, setKanbanTick] = useState(0); // [ADDED]
+  const [calendarTick, setCalendarTick] = useState(0); // [ADDED]
+  const onChanged = (scope: 'files' | 'kanban' | 'calendar') => {
+    // [ADDED]
+    if (scope === 'files') setFilesTick((t) => t + 1);
+    if (scope === 'kanban') setKanbanTick((t) => t + 1);
+    if (scope === 'calendar') setCalendarTick((t) => t + 1);
+  };
+
   const [editMode, setEditMode] = useState(false);
   const [description, setDescription] = useState('프로젝트의 상세 내용을 적습니다.');
   const [projectTitle, setProjectTitle] = useState('프로젝트 제목');
@@ -23,17 +43,53 @@ export default function OverviewView() {
   ]);
   const fileInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
 
+  //  서버에서 상세/팀원 로딩
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      try {
+        // [CHANGED] mid 사용
+        const d = await milestoneApi.get(mid);
+        if (!mounted) return;
+        setProjectTitle(d.title ?? '');
+        setDescription(d.description ?? '');
+      } catch (e) {
+        console.error('[Overview] 상세 로딩 실패:', e);
+      }
+      try {
+        // [CHANGED] 팀원 필드 동기화: BE { id, name, role, imageUrl }
+        const list = await teamApi.list(mid);
+        if (!mounted) return;
+        setMembers(
+          list.map((m) => ({
+            id: String(m.id), // [CHANGED]
+            serverId: m.id, // [CHANGED]
+            name: m.name,
+            role: m.role,
+            avatar: m.imageUrl ?? null, // [CHANGED]
+          }))
+        );
+      } catch (e) {
+        console.error('[Overview] 팀원 로딩 실패:', e);
+      }
+    })();
+    return () => {
+      mounted = false;
+    };
+  }, [mid]); // [CHANGED] milestoneId → mid
+
   const addMember = () => {
     const newMember: Member = {
-      id: Date.now().toString(),
+      id: `local-${Date.now()}`, // [CHANGED] 로컬과 서버 id 충돌 방지 위해 prefix
       name: `팀원 ${members.length + 1}`,
       role: '',
       avatar: null,
     };
-    setMembers([...members, newMember]);
+    setMembers((prev) => [...prev, newMember]);
   };
+
   const deleteMember = (memberId: string) => {
-    setMembers(members.filter((m) => m.id !== memberId));
+    setMembers((prev) => prev.filter((m) => m.id !== memberId));
   };
 
   const handleAvatarChange = (memberId: string, e: React.ChangeEvent<HTMLInputElement>) => {
@@ -42,30 +98,85 @@ export default function OverviewView() {
 
     const reader = new FileReader();
     reader.onload = () => {
-      setMembers(
-        members.map((m) => (m.id === memberId ? { ...m, avatar: reader.result as string } : m))
+      setMembers((prev) =>
+        prev.map((m) => (m.id === memberId ? { ...m, avatar: reader.result as string } : m))
       );
     };
     reader.readAsDataURL(file);
   };
 
   const updateMember = (memberId: string, field: keyof Member, value: string) => {
-    setMembers(members.map((m) => (m.id === memberId ? { ...m, [field]: value } : m)));
+    setMembers((prev) => prev.map((m) => (m.id === memberId ? { ...m, [field]: value } : m)));
   };
+
   const saveDescription = () => {
-    // TODO: API 연동 시 저장 로직 추가
-    console.log('저장:', description);
-    setEditMode(false);
+    (async () => {
+      try {
+        // [CHANGED] mid 사용
+        await milestoneApi.update(mid, { description });
+        setEditMode(false);
+      } catch (e) {
+        alert('설명 저장 실패');
+        console.error(e);
+      }
+    })();
   };
 
   const saveMembers = () => {
-    // TODO: API 연동 시 저장 로직 추가
-    console.log('팀원 저장:', members);
-    alert('팀원 정보가 저장되었습니다.');
+    (async () => {
+      try {
+        // 서버 기준 목록 가져오기
+        // [CHANGED] id 키 사용
+        const server = await teamApi.list(mid);
+        const serverMap = new Map<number, (typeof server)[number]>(server.map((s) => [s.id, s]));
+
+        // 화면 목록을 순회하며 upsert
+        for (const m of members) {
+          const serverId = typeof m.serverId === 'number' ? m.serverId : undefined; // [CHANGED]
+          const isServerItem = serverId !== undefined && serverMap.has(serverId); // [CHANGED]
+
+          if (isServerItem) {
+            const base = serverMap.get(serverId!)!;
+            if (base.name !== m.name || base.role !== m.role) {
+              await teamApi.update(mid, serverId!, { name: m.name, role: m.role });
+            }
+            serverMap.delete(serverId!);
+          } else {
+            const created = await teamApi.create(mid, {
+              name: m.name,
+              role: m.role,
+            });
+            // [CHANGED] 생성 응답도 id/imageUrl 기준
+            m.id = String(created.id);
+            m.serverId = created.id;
+            if (created.imageUrl && !m.avatar) m.avatar = created.imageUrl;
+          }
+        }
+
+        // 남은 서버 항목은 화면에서 삭제된 것 → 서버도 삭제
+        for (const [memberId] of serverMap) {
+          await teamApi.remove(mid, memberId); // [CHANGED]
+        }
+
+        alert('팀원 정보가 저장되었습니다.');
+      } catch (e) {
+        alert('팀원 저장 실패');
+        console.error(e);
+      }
+    })();
   };
+
   const saveProjectTitle = () => {
-    console.log('프로젝트 제목 저장:', projectTitle);
-    setIsTitleEditing(false);
+    (async () => {
+      try {
+        // [CHANGED] mid 사용
+        await milestoneApi.update(mid, { title: projectTitle });
+        setIsTitleEditing(false);
+      } catch (e) {
+        alert('제목 저장 실패');
+        console.error(e);
+      }
+    })();
   };
 
   return (
@@ -82,7 +193,7 @@ export default function OverviewView() {
                   onChange={(e) => setProjectTitle(e.target.value)}
                   className="text-2xl font-bold text-gray-900 border-b-2 border-teal-500 focus:outline-none flex-1"
                   autoFocus
-                  onKeyPress={(e) => {
+                  onKeyDown={(e) => {
                     if (e.key === 'Enter') {
                       saveProjectTitle();
                     }
@@ -111,12 +222,14 @@ export default function OverviewView() {
           </div>
         </div>
       </div>
+
       {/* 탭 네비게이션 */}
       <TabNavigation activeTab={activeTab} onTabChange={setActiveTab} />
 
       {/* 컨텐츠 */}
       <div className="max-w-7xl mx-auto px-4 py-8">
-        {activeTab === 'overview' && (
+        {/* 개요 탭 */}
+        <section className={activeTab === 'overview' ? '' : 'hidden'}>
           <div className="space-y-8">
             <section className="bg-white rounded-lg border border-gray-200 p-6">
               <div className="flex items-center justify-between mb-4">
@@ -138,6 +251,8 @@ export default function OverviewView() {
                 <p className="text-gray-600">{description}</p>
               )}
             </section>
+
+            {/* 팀원 */}
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-xl font-bold text-gray-900">팀원</h2>
               <div className="flex gap-2">
@@ -180,13 +295,13 @@ export default function OverviewView() {
                   <div className="flex-1 min-w-0">
                     <input
                       value={member.name}
-                      onChange={(e) => updateMember(member.id, 'name', e.target.value)}
+                      onChange={(e) => updateMember(member.id, 'name' as const, e.target.value)}
                       className="w-full bg-transparent border-0 px-0 py-1 text-sm font-medium focus:outline-none"
                       placeholder="이름"
                     />
                     <input
                       value={member.role}
-                      onChange={(e) => updateMember(member.id, 'role', e.target.value)}
+                      onChange={(e) => updateMember(member.id, 'role' as const, e.target.value)}
                       className="w-full bg-transparent border-0 px-0 py-1 text-sm text-gray-600 focus:outline-none"
                       placeholder="역할"
                     />
@@ -213,13 +328,31 @@ export default function OverviewView() {
               ))}
             </div>
           </div>
-        )}
+        </section>
+        {/* 칸반/캘린더/파일 탭 */}
+        <section className={activeTab === 'kanban' ? '' : 'hidden'}>
+          <KanbanView
+            milestoneId={mid}
+            refreshTick={activeTab === 'kanban' ? kanbanTick : undefined}
+            onChanged={() => onChanged('kanban')}
+          />
+        </section>
 
-        {activeTab === 'kanban' && <KanbanView />}
+        <section className={activeTab === 'calendar' ? '' : 'hidden'}>
+          <CalendarView
+            milestoneId={mid}
+            refreshTick={activeTab === 'calendar' ? calendarTick : undefined}
+            onChanged={() => onChanged('calendar')}
+          />
+        </section>
 
-        {activeTab === 'calendar' && <CalendarView />}
-
-        {activeTab === 'files' && <FilesView />}
+        <section className={activeTab === 'files' ? '' : 'hidden'}>
+          <FilesView
+            milestoneId={mid}
+            refreshTick={activeTab === 'files' ? filesTick : undefined}
+            onChanged={() => onChanged('files')}
+          />
+        </section>
       </div>
     </>
   );

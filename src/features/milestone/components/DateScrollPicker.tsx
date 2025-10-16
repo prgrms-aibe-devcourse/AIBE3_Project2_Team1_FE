@@ -61,6 +61,8 @@ function ScrollColumn({
   const containerRef = useRef<HTMLDivElement | null>(null);
   const firstItemRef = useRef<HTMLButtonElement | null>(null);
   const itemHeightRef = useRef<number>(36); // fallback
+  const isSyncingRef = useRef(false); // 프로그램적 스크롤 중 플래그
+  const rafIdRef = useRef<number | null>(null);
 
   // 아이템 실제 높이 측정 (첫 렌더)
   useEffect(() => {
@@ -75,19 +77,39 @@ function ScrollColumn({
     const el = containerRef.current;
     if (!el) return;
     const idx = Math.max(0, list.indexOf(value));
-    el.scrollTo({ top: idx * itemHeightRef.current, behavior: 'smooth' });
+    const targetTop = idx * itemHeightRef.current;
+
+    // 프로그램적 스크롤임을 표시하고 onScroll 무시
+    isSyncingRef.current = true;
+    el.scrollTo({ top: targetTop, behavior: 'auto' });
+    requestAnimationFrame(() => {
+      isSyncingRef.current = false;
+    });
   }, [value, list]);
 
   // 스크롤 → 값 동기화
   const onScroll = useCallback(() => {
+    if (isSyncingRef.current) return;
+    if (rafIdRef.current !== null) return;
     const el = containerRef.current;
     if (!el) return;
-    const raw = el.scrollTop / itemHeightRef.current;
-    const idx = Math.round(raw);
-    const clamped = Math.min(Math.max(idx, 0), list.length - 1);
-    const next = list[clamped];
-    if (next !== value) onChange(next);
+    rafIdRef.current = requestAnimationFrame(() => {
+      rafIdRef.current = null;
+      const raw = el.scrollTop / itemHeightRef.current;
+      const idx = Math.round(raw);
+      const clamped = Math.min(Math.max(idx, 0), list.length - 1);
+      const next = list[clamped];
+      if (next !== value) onChange(next);
+    });
   }, [value, onChange, list]);
+  useEffect(() => {
+    const el = containerRef.current;
+    return () => {
+      if (rafIdRef.current && el) {
+        cancelAnimationFrame(rafIdRef.current);
+      }
+    };
+  }, []);
 
   return (
     <div className="flex-1">
@@ -95,8 +117,9 @@ function ScrollColumn({
       <div
         ref={containerRef}
         onScroll={onScroll}
-        className="h-40 overflow-y-auto border border-gray-200 rounded-md snap-y snap-mandatory"
-        style={{ scrollBehavior: 'smooth' }}
+        className="h-40 overflow-y-auto border border-gray-200 rounded-md snap-y snap-mandatory
+                   will-change-scroll"
+        style={{ WebkitOverflowScrolling: 'touch' }}
       >
         {list.map((item, i) => (
           <button

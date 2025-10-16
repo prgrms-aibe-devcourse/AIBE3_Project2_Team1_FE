@@ -118,7 +118,7 @@ export default function ChatRoomPage() {
     if (!confirm('정말 채팅방을 나가시겠습니까?')) return;
 
     try {
-      const response = await fetch(`/api/v1/chatrooms/${roomId}/leave`, {
+      const response = await fetch(`/chatrooms/${roomId}/leave`, {
         method: 'POST',
         headers: {
           Authorization: 'Bearer ' + localStorage.getItem('accessToken'),

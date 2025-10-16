@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, useMemo, useCallback } from 'react';
+
 import {
   Upload,
   X,
@@ -16,9 +17,9 @@ import {
   FileText,
   ChevronDown,
   ChevronUp,
-  Eye,
-  Pencil,
 } from 'lucide-react';
+
+import { filesApi, type FileResponseDto } from '../api/milestoneApi';
 
 /* ===== Design Tokens ===== */
 const PRIMARY = '#1ABC9C';
@@ -38,7 +39,6 @@ type FileItem = {
 type SortKey = 'name' | 'size' | 'createdAt';
 
 /* ===== Utils ===== */
-const id = () => Math.random().toString(36).slice(2, 10);
 const formatBytes = (b: number) => {
   if (b === 0) return '0 B';
   const k = 1024,
@@ -48,19 +48,69 @@ const formatBytes = (b: number) => {
 };
 const extOf = (name: string) => (name.split('.').pop() || '').toLowerCase();
 
-function fileKindIcon(mime: string, name: string) {
-  if (mime.startsWith('image/')) return <Image className="w-4 h-4" />;
-  if (mime.startsWith('video/')) return <Film className="w-4 h-4" />;
-  if (mime.startsWith('audio/')) return <Music className="w-4 h-4" />;
-  if (mime === 'application/pdf') return <FileText className="w-4 h-4" />;
-  const ext = extOf(name);
+function fileKindIcon(mime?: string, name?: string) {
+  const m = mime || '';
+  const nm = name || '';
+  if (m.startsWith('image/')) return <Image className="w-4 h-4" />;
+  if (m.startsWith('video/')) return <Film className="w-4 h-4" />;
+  if (m.startsWith('audio/')) return <Music className="w-4 h-4" />;
+  if (m === 'application/pdf') return <FileText className="w-4 h-4" />;
+  const ext = extOf(nm);
   if (['txt', 'md', 'csv', 'json', 'log'].includes(ext)) return <FileText className="w-4 h-4" />;
   return <File className="w-4 h-4" />;
 }
 
 /* ===== Main ===== */
-export default function FilesView() {
+export default function FilesView({
+  milestoneId = 1,
+  refreshTick,
+  onChanged,
+}: {
+  milestoneId?: number;
+  refreshTick?: number;
+  onChanged?: () => void;
+}) {
   const [files, setFiles] = useState<FileItem[]>([]);
+  const etagRef = useRef<string | undefined>(undefined); // [ADDED]
+
+  const fetchFiles = useCallback(async () => {
+    try {
+      const res = await filesApi.listConditional(milestoneId, etagRef.current);
+      if (res.status === 200 && Array.isArray(res.data)) {
+        const list = res.data as FileResponseDto[];
+        const items = list.map((f: FileResponseDto) => {
+          const id = String(f.fileId ?? f.id);
+          return {
+            id,
+            name: f.name ?? `file-${id}`,
+            url:
+              f.downloadUrl ??
+              (typeof filesApi.getDownloadUrl === 'function'
+                ? filesApi.getDownloadUrl(Number(f.fileId ?? f.id))
+                : '#'),
+            size: Number.isFinite(f.size as number) ? (f.size as number) : 0,
+            type: f.type ?? 'application/octet-stream',
+            createdAt: isNaN(Date.parse(f.createdAt as string))
+              ? Date.now()
+              : Date.parse(f.createdAt as string),
+          };
+        });
+
+        setFiles(items);
+        etagRef.current = res.etag ?? etagRef.current;
+      } // 304면 무시
+    } catch (e) {
+      console.error('파일 조회 실패:', e);
+    }
+  }, [milestoneId]);
+
+  useEffect(() => {
+    void fetchFiles();
+  }, [fetchFiles]);
+  useEffect(() => {
+    if (refreshTick !== undefined) void fetchFiles();
+  }, [refreshTick, fetchFiles]);
+
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [query, setQuery] = useState('');
   const [sortKey, setSortKey] = useState<SortKey>('createdAt');
@@ -70,9 +120,8 @@ export default function FilesView() {
   const [showPreview, setShowPreview] = useState<FileItem | null>(null);
 
   const [selected, setSelected] = useState<Set<string>>(new Set());
-  const [renameId, setRenameId] = useState<string | null>(null);
-  const [renameValue, setRenameValue] = useState<string>('');
 
+  //키보드 단축키
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'a') {
@@ -81,13 +130,13 @@ export default function FilesView() {
       }
       if (e.key === 'Escape') {
         setSelected(new Set());
-        setRenameId(null);
       }
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   }, [files]);
 
+  // 정렬/ 필터링
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
     const arr = q ? files.filter((f) => f.name.toLowerCase().includes(q)) : files.slice();
@@ -137,45 +186,103 @@ export default function FilesView() {
   const clearSelection = () => setSelected(new Set());
   const selectAll = () => setSelected(new Set(filtered.map((f) => f.id)));
 
-  const filesRef = useRef<FileItem[]>([]);
-  useEffect(() => {
-    filesRef.current = files;
-  }, [files]);
+  // 파일 업로드
+  const uploadFiles = useCallback(
+    async (fileList: FileList | null) => {
+      if (!fileList || fileList.length === 0) {
+        console.log(' 업로드할 파일 없음');
+        return;
+      }
 
-  const onDelete = useCallback((ids: string | string[]) => {
-    const delIds = new Set(Array.isArray(ids) ? ids : [ids]);
-    setFiles((prev) => {
-      // ← 괄호 수정
-      prev.forEach((file) => {
-        if (delIds.has(file.id)) {
-          URL.revokeObjectURL(file.url);
+      const filesArr = Array.from(fileList);
+
+      if (filesArr.length > 10) {
+        alert('최대 10개까지 업로드 가능합니다.');
+        return;
+      }
+
+      for (const f of filesArr) {
+        if (f.size > 10 * 1024 * 1024) {
+          alert(`파일 크기는 10MB를 초과할 수 없습니다: ${f.name}`);
+          return;
         }
-      });
-      return prev.filter((file) => !delIds.has(file.id));
-    });
-    setSelected(new Set());
-  }, []);
-  useEffect(() => {
-    // ← 괄호 수정
-    return () => {
-      filesRef.current.forEach((file) => URL.revokeObjectURL(file.url));
-    };
-  }, []);
+      }
 
-  const startRename = (f: FileItem) => {
-    setRenameId(f.id);
-    setRenameValue(f.name);
-  };
-  const commitRename = () => {
-    if (!renameId) return;
-    const newName = renameValue.trim();
-    if (!newName) {
-      setRenameId(null);
-      return;
-    }
-    setFiles((prev) => prev.map((f) => (f.id === renameId ? { ...f, name: newName } : f)));
-    setRenameId(null);
-  };
+      try {
+        console.log(' 파일 업로드 시작:', filesArr.length, '개');
+
+        // 한 번에 하나씩 업로드
+        for (const file of filesArr) {
+          console.log('업로드 중:', file.name);
+
+          const formData = new FormData();
+          formData.append('file', file);
+
+          // 백엔드로 전송 (백엔드가 S3 업로드 + DB 저장!)
+          const res = await fetch(`/milestones/${milestoneId}/files`, {
+            method: 'POST',
+            body: formData,
+            credentials: 'include',
+          });
+
+          if (!res.ok) {
+            const text = await res.text().catch(() => '');
+            throw new Error(`업로드 실패: ${res.status} ${text}`);
+          }
+
+          const dto: FileResponseDto = await res.json();
+          console.log(' 업로드 완료:', dto);
+        }
+
+        // 업로드 완료 후 목록 새로고침
+        await fetchFiles();
+        setShowFileModal(false);
+
+        console.log(' 전체 업로드 완료:', filesArr.length, '개');
+        alert(`${filesArr.length}개 파일 업로드 완료!`);
+        onChanged?.();
+      } catch (e) {
+        console.error('파일 업로드 실패:', e);
+        alert(`업로드 실패: ${e instanceof Error ? e.message : '알 수 없는 오류'}`);
+      }
+    },
+    [milestoneId, fetchFiles, onChanged]
+  );
+
+  // 파일 삭제
+  const onDelete = useCallback(
+    async (ids: string | string[]) => {
+      const delIds = Array.isArray(ids) ? ids : [ids];
+      const targets = files.filter((f) => delIds.includes(f.id));
+
+      if (targets.length === 0) return;
+
+      const confirm = window.confirm(`정말 ${targets.length}개 파일을 삭제하시겠습니까?`);
+      if (!confirm) return;
+
+      try {
+        console.log('🗑️ 파일 삭제 시작:', targets.length, '개');
+
+        for (const f of targets) {
+          console.log('🗑️ 삭제 중:', f.name);
+          // 백엔드 API 호출 (S3 삭제 + DB 삭제 자동!)
+          await filesApi.remove(milestoneId, Number(f.id));
+          console.log('✅ 삭제 완료:', f.name);
+        }
+
+        setFiles((prev) => prev.filter((f) => !delIds.includes(f.id)));
+        setSelected(new Set());
+
+        console.log('✅ 전체 삭제 완료:', targets.length, '개');
+        alert(`${targets.length}개 파일 삭제 완료!`);
+        onChanged?.();
+      } catch (e) {
+        console.error('❌ 파일 삭제 실패:', e);
+        alert(`삭제 실패: ${e instanceof Error ? e.message : '알 수 없는 오류'}`);
+      }
+    },
+    [files, milestoneId, onChanged]
+  );
 
   const onChangeSortKey = (e: React.ChangeEvent<HTMLSelectElement>) => {
     setSortKey(e.target.value as SortKey);
@@ -291,11 +398,6 @@ export default function FilesView() {
           onToggle={toggleOne}
           onPreview={setShowPreview}
           onDelete={(id) => onDelete(id)}
-          onStartRename={startRename}
-          renameId={renameId}
-          renameValue={renameValue}
-          setRenameValue={setRenameValue}
-          onCommitRename={commitRename}
         />
       ) : (
         <ListView
@@ -304,19 +406,11 @@ export default function FilesView() {
           onToggle={toggleOne}
           onPreview={setShowPreview}
           onDelete={(id) => onDelete(id)}
-          onStartRename={startRename}
-          renameId={renameId}
-          renameValue={renameValue}
-          setRenameValue={setRenameValue}
-          onCommitRename={commitRename}
         />
       )}
 
       {showFileModal && (
-        <FileModal
-          onClose={() => setShowFileModal(false)}
-          onUpload={(items) => setFiles((prev) => [...items, ...prev])}
-        />
+        <FileModal onClose={() => setShowFileModal(false)} onUpload={uploadFiles} />
       )}
       {showPreview && <PreviewModal file={showPreview} onClose={() => setShowPreview(null)} />}
     </div>
@@ -350,26 +444,10 @@ type CommonViewProps = {
   onToggle: (id: string, multi?: boolean, rangeIds?: string[]) => void;
   onPreview: (f: FileItem) => void;
   onDelete: (id: string) => void;
-  onStartRename: (f: FileItem) => void;
-  renameId: string | null;
-  renameValue: string;
-  setRenameValue: (v: string) => void;
-  onCommitRename: () => void;
 };
 
 function GridView(props: CommonViewProps) {
-  const {
-    files,
-    onPreview,
-    onDelete,
-    onToggle,
-    selected,
-    onStartRename,
-    renameId,
-    renameValue,
-    setRenameValue,
-    onCommitRename,
-  } = props;
+  const { files, onDelete, onToggle, selected } = props;
 
   const lastClicked = useRef<number | null>(null);
   const handleItemClick = (idx: number, e: React.MouseEvent) => {
@@ -390,7 +468,6 @@ function GridView(props: CommonViewProps) {
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
       {files.map((f, idx) => {
         const isSel = selected.has(f.id);
-        const isRenaming = renameId === f.id;
         return (
           <div
             key={f.id}
@@ -399,42 +476,7 @@ function GridView(props: CommonViewProps) {
             className={`rounded-lg border p-3 flex flex-col gap-3 hover:shadow-sm transition outline-offset-2 ${isSel ? 'ring-2 ring-teal-500' : ''}`}
             style={{ borderColor: BORDER }}
           >
-            <div className="flex items-center gap-2">
-              {fileKindIcon(f.type, f.name)}
-              <div className="min-w-0 flex-1">
-                {isRenaming ? (
-                  <input
-                    value={renameValue}
-                    onChange={(e) => setRenameValue(e.target.value)}
-                    onBlur={onCommitRename}
-                    onKeyDown={(e) => e.key === 'Enter' && onCommitRename()}
-                    autoFocus
-                    className="w-full px-1 py-0.5 rounded border focus:outline-none focus:ring-2 focus:ring-teal-500"
-                    style={{ borderColor: BORDER }}
-                  />
-                ) : (
-                  <div className="font-medium truncate">{f.name}</div>
-                )}
-                <div className="text-xs text-gray-500">
-                  {formatBytes(f.size)} · {new Date(f.createdAt).toLocaleDateString()}
-                </div>
-              </div>
-              {!isRenaming && (
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onStartRename(f);
-                  }}
-                  className="p-1 rounded border hover:bg-gray-50"
-                  style={{ borderColor: BORDER }}
-                  title="이름 변경"
-                >
-                  <Pencil className="w-3.5 h-3.5" />
-                </button>
-              )}
-            </div>
-
-            {f.type.startsWith('image/') && (
+            {f.type?.startsWith('image/') && f.url && (
               <img
                 src={f.url}
                 alt={f.name}
@@ -443,18 +485,7 @@ function GridView(props: CommonViewProps) {
                 loading="lazy"
               />
             )}
-
-            <div className="flex items-center gap-2 mt-auto">
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onPreview(f);
-                }}
-                className="px-2 py-1 rounded border text-xs hover:bg-gray-50 flex items-center gap-1"
-                style={{ borderColor: BORDER }}
-              >
-                <Eye className="w-3.5 h-3.5" /> 미리보기
-              </button>
+            <div className="flex items-center gap-2">
               <a
                 href={f.url}
                 download={f.name}
@@ -483,18 +514,7 @@ function GridView(props: CommonViewProps) {
 }
 
 function ListView(props: CommonViewProps) {
-  const {
-    files,
-    onPreview,
-    onDelete,
-    onToggle,
-    selected,
-    onStartRename,
-    renameId,
-    renameValue,
-    setRenameValue,
-    onCommitRename,
-  } = props;
+  const { files, onDelete, onToggle, selected } = props;
 
   const lastClicked = useRef<number | null>(null);
   const handleRowClick = (idx: number, e: React.MouseEvent) => {
@@ -525,7 +545,6 @@ function ListView(props: CommonViewProps) {
         <tbody>
           {files.map((f, idx) => {
             const isSel = selected.has(f.id);
-            const isRenaming = renameId === f.id;
             return (
               <tr
                 key={f.id}
@@ -537,19 +556,7 @@ function ListView(props: CommonViewProps) {
                   <div className="flex items-center gap-2">
                     {fileKindIcon(f.type, f.name)}
                     <div className="min-w-0">
-                      {isRenaming ? (
-                        <input
-                          value={renameValue}
-                          onChange={(e) => setRenameValue(e.target.value)}
-                          onBlur={onCommitRename}
-                          onKeyDown={(e) => e.key === 'Enter' && onCommitRename()}
-                          autoFocus
-                          className="px-1 py-0.5 rounded border focus:outline-none focus:ring-2 focus:ring-teal-500"
-                          style={{ borderColor: BORDER }}
-                        />
-                      ) : (
-                        <span className="font-medium truncate">{f.name}</span>
-                      )}
+                      <span className="font-medium truncate">{f.name}</span>
                       <span className="ml-2 text-xs text-gray-500">.{extOf(f.name)}</span>
                     </div>
                   </div>
@@ -558,28 +565,6 @@ function ListView(props: CommonViewProps) {
                 <td className="px-3 py-2">{new Date(f.createdAt).toLocaleString()}</td>
                 <td className="px-3 py-2">
                   <div className="flex items-center gap-2 justify-end">
-                    {!isRenaming && (
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onStartRename(f);
-                        }}
-                        className="px-2 py-1 rounded border text-xs hover:bg-gray-50 flex items-center gap-1"
-                        style={{ borderColor: BORDER }}
-                      >
-                        <Pencil className="w-3.5 h-3.5" /> 이름 변경
-                      </button>
-                    )}
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onPreview(f);
-                      }}
-                      className="px-2 py-1 rounded border text-xs hover:bg-gray-50 flex items-center gap-1"
-                      style={{ borderColor: BORDER }}
-                    >
-                      <Eye className="w-3.5 h-3.5" /> 미리보기
-                    </button>
                     <a
                       href={f.url}
                       download={f.name}
@@ -615,28 +600,17 @@ function FileModal({
   onUpload,
 }: {
   onClose: () => void;
-  onUpload: (items: FileItem[]) => void;
+  onUpload: (files: FileList | null) => Promise<void>;
 }) {
   const uploadRef = useRef<HTMLInputElement | null>(null);
   const dropRef = useRef<HTMLDivElement | null>(null);
   const [dragOver, setDragOver] = useState(false);
 
   const handleFiles = useCallback(
-    (fileList: FileList | null) => {
-      if (!fileList || fileList.length === 0) return;
-      const arr = Array.from(fileList);
-      const items: FileItem[] = arr.map((file) => ({
-        id: id(),
-        name: file.name,
-        url: URL.createObjectURL(file),
-        size: file.size,
-        type: file.type || 'application/octet-stream',
-        createdAt: Date.now(),
-      }));
-      onUpload(items);
-      onClose();
+    async (fileList: FileList | null) => {
+      await onUpload(fileList);
     },
-    [onUpload, onClose]
+    [onUpload]
   );
 
   useEffect(() => {
@@ -682,8 +656,11 @@ function FileModal({
             ref={uploadRef}
             type="file"
             multiple
+            accept="image/*"
             className="flex-1 text-sm"
-            onChange={(e) => handleFiles(e.target.files)}
+            onChange={(e) => {
+              void handleFiles(e.target.files);
+            }}
           />
         </div>
 
@@ -698,7 +675,9 @@ function FileModal({
           <button
             className="px-3 py-2 text-sm rounded-md text-white"
             style={{ background: PRIMARY }}
-            onClick={() => handleFiles(uploadRef.current?.files || null)}
+            onClick={() => {
+              void handleFiles(uploadRef.current?.files || null);
+            }}
           >
             추가
           </button>
