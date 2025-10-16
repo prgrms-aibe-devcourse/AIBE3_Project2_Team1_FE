@@ -221,30 +221,54 @@ export default function ProjectDetail() {
       {/* 탭 내용 */}
       <div className="max-w-6xl mx-auto p-4">
         {activeTab === 'service' ? (
-          <ServiceInfo
-            project={{
-              projectId: project.projectId,
-              title: project.title,
-              description: project.description,
-              category: getCategoryName(project.category),
-              budget: project.budget,
-              deadline: project.deadline,
-              client: project.initiatorNickname,
-              freelancer: project.participantNickname,
-              status:
-                project.status === 'OPEN' ||
-                project.status === 'IN_PROGRESS' ||
-                project.status === 'COMPLETED'
-                  ? project.status
-                  : 'OPEN',
-              imageUrls: project.imageUrls || [],
-              status: project.status,
-              // ServiceInfo expects ProjectImage[] (objects with id and fileUrl).
-              // The API returns string[] (URLs) so map them to ProjectImage objects here.
-              imageUrls: project.imageUrls ?? [],
-            }}
-            currentUserId={currentUserNickname ?? undefined}
-          />
+          (() => {
+            // normalize status once
+            const normalizedStatus =
+              project.status === 'OPEN' ||
+              project.status === 'IN_PROGRESS' ||
+              project.status === 'COMPLETED'
+                ? project.status
+                : 'OPEN';
+
+            // Map API image URL strings or objects to ProjectImage objects expected by ServiceInfo
+            const mappedImages: ProjectImage[] = (project.imageUrls ?? []).map((item, idx) => {
+              // item can be a string (url) or an object { id, fileUrl }
+              if (!item) return { id: idx + 1, fileUrl: '' };
+              if (typeof item === 'string') {
+                return { id: idx + 1, fileUrl: item };
+              }
+
+              // item is an object-like value; use safe type guards without `any`
+              if (typeof item === 'object' && item !== null) {
+                const obj = item as { id?: unknown; fileUrl?: unknown };
+                const id = typeof obj.id === 'number' ? obj.id : idx + 1;
+                const fileUrl =
+                  typeof obj.fileUrl === 'string' ? obj.fileUrl : String(obj.fileUrl ?? '');
+                return { id, fileUrl };
+              }
+
+              // fallback for unexpected types
+              return { id: idx + 1, fileUrl: String(item) };
+            });
+
+            return (
+              <ServiceInfo
+                project={{
+                  projectId: project.projectId,
+                  title: project.title,
+                  description: project.description,
+                  category: getCategoryName(project.category),
+                  budget: project.budget,
+                  deadline: project.deadline,
+                  client: project.initiatorNickname,
+                  freelancer: project.participantNickname,
+                  status: normalizedStatus,
+                  imageUrls: mappedImages,
+                }}
+                currentUserId={currentUserNickname ?? undefined}
+              />
+            );
+          })()
         ) : (
           <ProjectReview />
         )}
