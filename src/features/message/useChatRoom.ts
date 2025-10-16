@@ -27,15 +27,13 @@ interface UseChatRoomReturn {
   refreshMessages: () => Promise<void>;
 }
 
-/*
-function authHeaders(): HeadersInit {
-  const token = localStorage.getItem('accessToken');
-  return {
-    'Content-Type': 'application/json',
-    ...(token && { Authorization: `Bearer ${token}` }),
-  };
-}
-*/
+// function authHeaders(): HeadersInit {
+//   const token = localStorage.getItem('accessToken');
+//   return {
+//     'Content-Type': 'application/json',
+//     ...(token && { Authorization: `Bearer ${token}` }),
+//   };
+// }
 
 export function useChatRoom(roomId: number): UseChatRoomReturn {
   const [messages, setMessages] = useState<Message[]>([]);
@@ -137,24 +135,68 @@ export function useChatRoom(roomId: number): UseChatRoomReturn {
   }, [fetchMessages]);
 
   // 메시지 전송 (Authorization 헤더 추가)
+
   const sendMessage = useCallback(
     async (content: string) => {
-      if (!content.trim()) throw new Error('메시지 내용이 비어있습니다');
+      if (!content.trim()) return;
 
-      await axiosInstance.post(`/messages`, {
-        chatRoomId: roomId,
+      const userId = Number(localStorage.getItem('userId')) || 0;
+      const userName = localStorage.getItem('nickname') || '나';
+
+      const tempMessage: Message = {
+        messageId: Date.now(),
+        senderUserId: userId,
+        senderName: userName,
         content: content.trim(),
-      });
+        createdAt: new Date().toISOString(),
+      };
+
+      setMessages((prev) => [...prev, tempMessage]);
+
+      try {
+        await axiosInstance.post('/messages', {
+          chatRoomId: roomId,
+          content: content.trim(),
+        });
+      } catch (error: unknown) {
+        setMessages((prev) => prev.filter((m) => m.messageId !== tempMessage.messageId));
+
+        if (axios.isAxiosError(error)) {
+          console.error('Axios 에러:', error.response?.data || error.message);
+        } else {
+          console.error('일반 에러:', error);
+        }
+
+        alert('메시지 전송 중 오류가 발생했습니다.');
+      }
     },
     [roomId]
   );
+
   // 메시지 삭제
   const deleteMessage = useCallback(async (messageId: number) => {
     try {
       await axiosInstance.delete(`/messages/${messageId}`);
+
+      // 성공 시 메시지 목록에서 제거
       setMessages((prev) => prev.filter((m) => m.messageId !== messageId));
-    } catch (error) {
-      console.error('메시지 삭제 실패:', error);
+    } catch (error: unknown) {
+      if (axios.isAxiosError(error)) {
+        console.error('Axios 에러:', error.response?.data || error.message);
+
+        if (error.response?.status === 401) {
+          alert('인증이 필요합니다. 다시 로그인해주세요.');
+        } else {
+          alert('메시지 삭제 중 오류가 발생했습니다.');
+        }
+      } else if (error instanceof Error) {
+        console.error('일반 에러:', error.message);
+        alert('예상치 못한 오류가 발생했습니다.');
+      } else {
+        console.error('알 수 없는 에러:', error);
+        alert('알 수 없는 오류가 발생했습니다.');
+      }
+
       throw error;
     }
   }, []);
