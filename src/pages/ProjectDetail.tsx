@@ -59,7 +59,6 @@ export default function ProjectDetail() {
         const res = await api.get('/users/info');
         const nickname = res?.data?.data?.nickname ?? null;
         setCurrentUserNickname(nickname);
-        if (nickname) localStorage.setItem('nickname', nickname);
       } catch {
         setCurrentUserNickname(null);
       }
@@ -160,34 +159,29 @@ export default function ProjectDetail() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* 상단 카테고리 경로 */}
       <div className="w-full max-w-6xl mx-auto px-4 py-6">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
-          <div className="flex gap-2 flex-wrap">
-            <button
-              onClick={() =>
-                navigate(`/projects/${type === 'freelancer' ? 'freelancer' : 'client'}`)
-              }
-              className="px-2 font-semibold text-[24px] text-[#666666] hover:underline hover:decoration-[#666666]"
-            >
-              {type === 'freelancer' ? '프리랜서' : '클라이언트'}
-            </button>
-            <span className="mx-1 text-[28px] text-[#666666]">›</span>
-            <button
-              onClick={() => {
-                const groupId = type === 'freelancer' ? 'freelancer' : 'client';
-                const categoryId = category || 'all';
-                navigate(`/projects/${groupId}/${categoryId}`);
-              }}
-              className="px-2 font-semibold text-[24px] text-[#666666] hover:underline hover:decoration-[#666666]"
-            >
-              {getCategoryName(project.category || category)}
-            </button>
-          </div>
+        <div className="flex gap-2 flex-wrap">
+          <button
+            onClick={() => navigate(`/projects/${type === 'freelancer' ? 'freelancer' : 'client'}`)}
+            className="px-2 font-semibold text-[24px] text-[#666666] hover:underline hover:decoration-[#666666]"
+          >
+            {type === 'freelancer' ? '프리랜서' : '클라이언트'}
+          </button>
+          <span className="mx-1 text-[28px] text-[#666666]">›</span>
+          <button
+            onClick={() => {
+              const groupId = type === 'freelancer' ? 'freelancer' : 'client';
+              const categoryId = category || 'all';
+              navigate(`/projects/${groupId}/${categoryId}`);
+            }}
+            className="px-2 font-semibold text-[24px] text-[#666666] hover:underline hover:decoration-[#666666]"
+          >
+            {getCategoryName(project.category || category)}
+          </button>
         </div>
       </div>
 
-      {/* 프로젝트 정보 영역 */}
+      {/* 프로젝트 정보 */}
       <ProjectInfo
         project={{
           project_id: project.projectId,
@@ -202,7 +196,7 @@ export default function ProjectDetail() {
         }}
       />
 
-      {/* 탭 영역 */}
+      {/* 탭 */}
       <div className="flex gap-4 p-4 max-w-6xl mx-auto font-medium text-[20px]">
         <button
           className={`py-2 rounded ${
@@ -237,6 +231,13 @@ export default function ProjectDetail() {
               deadline: project.deadline,
               client: project.initiatorNickname,
               freelancer: project.participantNickname,
+              status:
+                project.status === 'OPEN' ||
+                project.status === 'IN_PROGRESS' ||
+                project.status === 'COMPLETED'
+                  ? project.status
+                  : 'OPEN',
+              imageUrls: project.imageUrls || [],
               status: project.status,
               // ServiceInfo expects ProjectImage[] (objects with id and fileUrl).
               // The API returns string[] (URLs) so map them to ProjectImage objects here.
@@ -287,7 +288,7 @@ export default function ProjectDetail() {
         <div className="max-w-6xl mx-auto flex justify-center gap-6 mt-8 mb-32 px-6">
           <button
             onClick={() => navigate(`/project/${projectId}/update`)}
-            className="px-8 py-3 text-lg font-semibold text-white rounded-xl shadow-md transition-all duration-200 bg-[#1ABC9C] hover:bg-[#1EB194] active:scale-95"
+            className="px-8 py-3 text-lg font-semibold text-white rounded-xl shadow-md bg-[#1ABC9C] hover:bg-[#1EB194]"
           >
             프로젝트 수정
           </button>
@@ -295,11 +296,7 @@ export default function ProjectDetail() {
             onClick={handleDelete}
             disabled={deleting}
             className={`px-8 py-3 text-lg font-semibold text-white rounded-xl shadow-md transition-all duration-200
-        ${
-          deleting
-            ? 'bg-gray-400 cursor-not-allowed'
-            : 'bg-[#ff5b5b] hover:bg-[#ff3b3b] active:scale-95'
-        }`}
+              ${deleting ? 'bg-gray-400 cursor-not-allowed' : 'bg-[#ff5b5b] hover:bg-[#ff3b3b]'}`}
           >
             {deleting ? '삭제 중...' : '프로젝트 삭제'}
           </button>

@@ -7,6 +7,7 @@ interface ProfileForm {
   description: string;
   hourlyRate: number;
   skills: string;
+  visibility: 'PUBLIC' | 'PRIVATE' | undefined;
 }
 
 const UserEditPage: React.FC = () => {
@@ -15,6 +16,7 @@ const UserEditPage: React.FC = () => {
     description: '',
     hourlyRate: 0,
     skills: '',
+    visibility: undefined,
   });
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
@@ -30,6 +32,7 @@ const UserEditPage: React.FC = () => {
           description: data?.description ?? '',
           hourlyRate: data?.hourlyRate ?? 0,
           skills: data?.skills ?? '',
+          visibility: data?.visibility ?? 'PUBLIC',
         });
       } catch (error: unknown) {
         if (axios.isAxiosError(error)) {
@@ -49,10 +52,16 @@ const UserEditPage: React.FC = () => {
 
   const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
-
     setForm((prev) => ({
       ...prev,
       [name]: name === 'hourlyRate' ? Number(value) : value,
+    }));
+  };
+
+  const handleVisibilityChange = (value: 'PUBLIC' | 'PRIVATE') => {
+    setForm((prev) => ({
+      ...prev,
+      visibility: value,
     }));
   };
 
@@ -68,6 +77,7 @@ const UserEditPage: React.FC = () => {
         description: form.description,
         hourlyRate: form.hourlyRate,
         skills: form.skills,
+        visibility: form.visibility,
       });
       setSuccessMessage('프로필이 성공적으로 수정되었습니다.');
     } catch (error: unknown) {
@@ -134,6 +144,34 @@ const UserEditPage: React.FC = () => {
               className="w-80 border rounded-md px-3 py-2 outline-none focus:ring focus:ring-gray-300"
               required
             />
+          </div>
+
+          <div>
+            <label className="block text-sm text-gray-600 mb-1">공개 설정</label>
+            <div className="flex gap-3">
+              <button
+                type="button"
+                onClick={() => handleVisibilityChange('PUBLIC')}
+                className={`px-4 py-2 rounded-md border transition ${
+                  form.visibility === 'PUBLIC'
+                    ? 'bg-rose-400 text-white border-rose-400'
+                    : 'border-gray-300 text-gray-700 hover:bg-gray-100'
+                }`}
+              >
+                공개
+              </button>
+              <button
+                type="button"
+                onClick={() => handleVisibilityChange('PRIVATE')}
+                className={`px-4 py-2 rounded-md border transition ${
+                  form.visibility === 'PRIVATE'
+                    ? 'bg-rose-400 text-white border-rose-400'
+                    : 'border-gray-300 text-gray-700 hover:bg-gray-100'
+                }`}
+              >
+                비공개
+              </button>
+            </div>
           </div>
 
           {errorMessage && <p className="text-red-500 text-sm mt-1">{errorMessage}</p>}

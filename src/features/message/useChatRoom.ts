@@ -1,4 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
+import axios from 'axios';
+import { axiosInstance } from '@/services/axios';
 
 export interface Message {
   messageId: number;
@@ -41,26 +43,35 @@ export function useChatRoom(roomId: number): UseChatRoomReturn {
   const fetchMessages = useCallback(async () => {
     try {
       setLoading(true);
-      const res = await fetch(`/api/v1/messages/${roomId}`, {
-        headers: authHeaders(),
-      });
-      if (!res.ok) throw new Error('Failed to fetch messages');
 
-      // CommonResponse 적용 + 필드 매핑(createDate → createdAt)
-      const json = await res.json();
-      const rawList: ServerMessage[] = json?.data ?? json ?? [];
+      //  axiosInstance는 기본적으로 baseURL과 Authorization 헤더를 포함
+      const res = await axiosInstance.get(`/messages/${roomId}`);
+
+      //  CommonResponse 구조 대응
+      const rawList: ServerMessage[] = res.data?.data ?? res.data ?? [];
+
       const mapped: Message[] = rawList.map((m: ServerMessage) => ({
         messageId: m.messageId,
         senderUserId: m.senderUserId,
         senderName: m.senderName,
         content: m.content,
-        // ?? 연산자로 두 필드명 모두 대응
         createdAt: m.createDate ?? m.createdAt ?? '',
       }));
+
       setMessages(mapped);
-    } catch (error) {
-      console.error('메시지 로드 실패:', error);
-      throw error;
+    } catch (error: unknown) {
+      if (axios.isAxiosError(error)) {
+        console.error('메시지 로드 실패 (AxiosError):', error.response?.data || error.message);
+
+        if (error.response?.status === 401) {
+          alert('인증이 필요합니다.');
+        } else {
+          alert('메시지 로드 중 오류가 발생했습니다.');
+        }
+      } else {
+        console.error('메시지 로드 실패 (UnknownError):', error);
+        alert('알 수 없는 오류가 발생했습니다.');
+      }
     } finally {
       setLoading(false);
     }
@@ -68,10 +79,11 @@ export function useChatRoom(roomId: number): UseChatRoomReturn {
 
   // SSE 연결
   useEffect(() => {
+    const baseURL = axiosInstance.defaults.baseURL || '';
     const token = localStorage.getItem('accessToken');
     const url = token
-      ? `/api/v1/sse/connect?chatRoomId=${roomId}&token=${encodeURIComponent(token)}`
-      : `/api/v1/sse/connect?chatRoomId=${roomId}`;
+      ? `${baseURL}/sse/connect?chatRoomId=${roomId}&token=${encodeURIComponent(token)}`
+      : `${baseURL}/sse/connect?chatRoomId=${roomId}`;
 
     const es = new EventSource(url);
 
@@ -127,7 +139,7 @@ export function useChatRoom(roomId: number): UseChatRoomReturn {
     async (content: string) => {
       if (!content.trim()) throw new Error('메시지 내용이 비어있습니다');
 
-      const res = await fetch('/api/v1/messages', {
+      const res = await fetch('/messages', {
         method: 'POST',
         headers: authHeaders(), // 수정!
         body: JSON.stringify({
@@ -143,7 +155,7 @@ export function useChatRoom(roomId: number): UseChatRoomReturn {
   // 메시지 삭제
   const deleteMessage = useCallback(async (messageId: number) => {
     try {
-      const response = await fetch(`/api/v1/messages/${messageId}`, {
+      const response = await fetch(`/messages/${messageId}`, {
         method: 'DELETE',
         headers: authHeaders(),
       });

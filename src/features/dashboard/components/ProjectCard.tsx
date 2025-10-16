@@ -1,5 +1,5 @@
 interface ProjectCardProps {
-  image: string;
+  image?: string;
   title: string;
   onClick?: () => void;
 }
@@ -13,7 +13,11 @@ const ProjectCard = ({ image, title, onClick }: ProjectCardProps) => {
                  hover:shadow-md hover:border-teal-400 transition cursor-pointer"
     >
       <div className="w-full h-[120px] bg-gray-200 flex items-center justify-center">
-        <img src={image} alt={title} className="object-cover w-full h-full" />
+        {image ? (
+          <img src={image} alt={title} className="object-cover w-full h-full" />
+        ) : (
+          <span className="text-gray-500 text-sm">No Image</span>
+        )}
       </div>
       <p className="py-2 text-sm font-medium text-gray-700">{title}</p>
     </button>

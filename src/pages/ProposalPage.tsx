@@ -13,6 +13,7 @@ const ProposalPage = () => {
   const { proposalId } = useParams();
   const [proposal, setProposal] = useState<ProposalData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isMyProposal, setIsMyProposal] = useState(false);
 
   const navigate = useNavigate();
 
@@ -74,6 +75,12 @@ const ProposalPage = () => {
           proposedAmount: data.proposedAmount,
           description: data.description,
         });
+
+        // ✅ 현재 로그인 유저 닉네임과 비교
+        const currentUser = Number(localStorage.getItem('userId'));
+        if (currentUser === data.senderId) {
+          setIsMyProposal(true);
+        }
       } catch (err) {
         console.error('제안서 불러오기 실패:', err);
       } finally {
@@ -150,21 +157,23 @@ const ProposalPage = () => {
             )}
           </div>
 
-          {/* 버튼 영역 */}
-          <div className="flex justify-end gap-3 mt-4">
-            <button
-              onClick={handleReject}
-              className="px-6 py-3  bg-red-400 hover:bg-red-500 text-white font-semibold rounded-lg transition-colors"
-            >
-              매칭 거절
-            </button>
-            <button
-              onClick={handleAccept}
-              className="px-6 py-3 bg-green-400 hover:bg-green-500 text-white font-semibold rounded-lg transition-colors"
-            >
-              매칭 수락
-            </button>
-          </div>
+          {/* ✅ 내가 만든 제안서가 아닐 때만 버튼 보이게 */}
+          {!isMyProposal && (
+            <div className="flex justify-end gap-3 mt-4">
+              <button
+                onClick={handleReject}
+                className="px-6 py-3 bg-red-400 hover:bg-red-500 text-white font-semibold rounded-lg transition-colors"
+              >
+                매칭 거절
+              </button>
+              <button
+                onClick={handleAccept}
+                className="px-6 py-3 bg-green-400 hover:bg-green-500 text-white font-semibold rounded-lg transition-colors"
+              >
+                매칭 수락
+              </button>
+            </div>
+          )}
         </div>
       </main>
     </div>

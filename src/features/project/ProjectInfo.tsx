@@ -1,8 +1,9 @@
+import axios from 'axios';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import starImg from '../../assets/images/fluent-color_star-16.png';
 import bookmarkEmptyImg from '../../assets/images/material-symbols_bookmark-outline.png';
 import bookmarkFullImg from '../../assets/images/material-symbols_bookmark.png';
-import { useState, useEffect } from 'react';
 import api from '../project/api';
 
 interface Project {
@@ -11,8 +12,8 @@ interface Project {
   description: string;
   budget: number;
   author: string;
-  rating: number;
-  reviews: number;
+  rating: number; // 기존 값 대신 API에서 계산 가능
+  reviews: number; // 기존 값 대신 API에서 계산 가능
   groupId: string;
   categoryId: string;
 }
@@ -29,24 +30,58 @@ interface ProjectDetail {
   status: string;
 }
 
+interface Review {
+  reviewId: number;
+  targetNickname: string;
+  rating: number;
+  comment: string;
+  createdDate: string;
+  images: string[];
+}
+
 export default function ProjectInfo({ project }: { project: Project }) {
   const navigate = useNavigate();
   const [projectDetail, setProjectDetail] = useState<ProjectDetail | null>(null);
   const [bookmarked, setBookmarked] = useState(false);
+  const [isMyProject, setIsMyProject] = useState(false);
+
+  // 리뷰 상태
+  const [reviews, setReviews] = useState<Review[]>([]);
+  const [loadingReviews, setLoadingReviews] = useState(true);
+
+  // 평균 별점
+  const averageRating = useMemo(() => {
+    if (reviews.length === 0) return 0;
+    const total = reviews.reduce((acc, r) => acc + r.rating, 0);
+    return (total / reviews.length).toFixed(1);
+  }, [reviews]);
 
   useEffect(() => {
     const fetchProjectAndBookmark = async () => {
       try {
+        // 프로젝트 상세 정보
         const projectRes = await api.get(`/projects/${project.project_id}`);
         setProjectDetail(projectRes.data.data);
 
+        const currentUserNickname = localStorage.getItem('nickname');
+        if (currentUserNickname && currentUserNickname === projectRes.data.data.initiatorNickname) {
+          setIsMyProject(true);
+        }
+
+        // 북마크 여부
         const bookmarksRes = await api.get('/bookmarks');
         const isBookmarked = bookmarksRes.data.data.some(
           (b: { projectId: number }) => b.projectId === project.project_id
         );
         setBookmarked(isBookmarked);
+
+        // 리뷰 불러오기
+        const reviewsRes = await axios.get(`/api/v1/reviews/project/${project.project_id}`);
+        setReviews(reviewsRes.data.data || []);
       } catch (err) {
         console.error('데이터 로드 실패:', err);
+      } finally {
+        setLoadingReviews(false);
       }
     };
 
@@ -66,22 +101,14 @@ export default function ProjectInfo({ project }: { project: Project }) {
     }
   };
 
-  //const goHome = () => navigate('/');
-
   const goChatRoom = async () => {
     try {
-      // 1. 프로젝트 생성자 ID 조회
       const creatorRes = await api.get(`/projects/${project.project_id}/creator-id`);
       const targetUserId = creatorRes.data.data;
-
-      // 2. 채팅방 생성 요청
       const res = await api.post('/chatrooms/direct', {
         targetUserId,
-        title: project.author, // 혹은 project.title
+        title: project.author,
       });
-      console.log(res);
-
-      // 3. 채팅방으로 이동
       const roomId = res.data.data.chatRoomId;
       navigate(`/chat/${roomId}`);
     } catch (err) {
@@ -140,18 +167,24 @@ export default function ProjectInfo({ project }: { project: Project }) {
         {/* 리뷰 */}
         <div className="flex items-center gap-1 mb-4">
           <img src={starImg} alt="star" className="w-6 h-6" />
-          <span>
-            {project.rating.toFixed(1)} ({project.reviews})
-          </span>
+          {loadingReviews ? (
+            <span>리뷰 로딩중...</span>
+          ) : (
+            <span>
+              {averageRating} ({reviews.length})
+            </span>
+          )}
         </div>
 
         {/* 매칭 제안 버튼 */}
-        <button
-          onClick={goHProposal}
-          className="absolute bottom-4 right-4 bg-[#FF6B6B] rounded-[12px] px-4 py-2 text-[#F2F2F2] font-semibold hover:bg-[#ff4b4b] transition"
-        >
-          매칭 제안하기
-        </button>
+        {!isMyProject && (
+          <button
+            onClick={goHProposal}
+            className="absolute bottom-4 right-4 bg-[#FF6B6B] rounded-[12px] px-4 py-2 text-[#F2F2F2] font-semibold hover:bg-[#ff4b4b] transition"
+          >
+            매칭 제안하기
+          </button>
+        )}
       </div>
     </>
   );

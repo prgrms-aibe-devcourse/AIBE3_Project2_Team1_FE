@@ -1,7 +1,13 @@
-import type { ReviewRequestDto, CommonResponse } from '../types/types';
-import axiosInstance from '@/services/axios';
+import axios from 'axios';
 
-export const postReview = async (dto: ReviewRequestDto) => {
-  const response = await axiosInstance.post<CommonResponse<string>>('/reviews', dto);
-  return response.data;
-};
+export interface ReviewRequest {
+  projectId: number;
+  rating: number;
+  comment: string;
+  images: string[];
+}
+
+export const postReview = (data: ReviewRequest) =>
+  axios.post('/api/v1/reviews', data, {
+    headers: { 'Content-Type': 'application/json' },
+  });

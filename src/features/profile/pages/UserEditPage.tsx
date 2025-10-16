@@ -88,8 +88,6 @@ const UserEditPage: React.FC = () => {
       birthDate: form.birth, // 서버 필드명에 맞춤
     };
 
-    console.log('업데이트 데이터:', updateData); // 요청 확인용
-
     try {
       await updateMyUser(updateData);
       setSuccessMessage('프로필이 성공적으로 수정되었습니다.');

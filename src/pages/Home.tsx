@@ -1,18 +1,18 @@
+import { categoryGroups } from '@/features/project/constants/categories';
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import api from '../features/project/api';
-import ProjectCard from '../features/project/ProjectCard';
 import circleChartImg from '../assets/images/Circle Chart.png';
 import codeImg from '../assets/images/Code.png';
 import debtImg from '../assets/images/Debt.png';
 import designImg from '../assets/images/Design.png';
+import designImage from '../assets/images/digital design program interface.png';
 import languageImg from '../assets/images/Language.png';
 import illustrationImg from '../assets/images/Rectangle.png';
 import rocketImg from '../assets/images/Rocket.png';
 import videoCallImg from '../assets/images/Video Call.png';
 import xBoxControllerImg from '../assets/images/Xbox Controller.png';
-import { categoryGroups } from '@/features/project/constants/categories';
-import designImage from '../assets/images/digital design program interface.png';
+import api from '../features/project/api';
+import ProjectCard from '../features/project/ProjectCard';
 
 const categoryIcons: Record<string, string> = {
   VIDEO: videoCallImg,
