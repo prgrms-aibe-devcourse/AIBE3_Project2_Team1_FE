@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { Pencil } from 'lucide-react';
 import KanbanCard from '../components/KanbanCard';
 import { CardModal, ColumnModal } from '../components/CardModal';
+import { kanbanApi } from '../api/milestoneApi.ts';
 
 interface Card {
   id: string;
@@ -14,7 +15,15 @@ interface Column {
   color: string;
 }
 
-export default function KanbanView() {
+export default function KanbanView({
+  milestoneId = 1,
+  refreshTick,
+  onChanged,
+}: {
+  milestoneId?: number;
+  refreshTick?: number;
+  onChanged?: () => void;
+}) {
   const [columns, setColumns] = useState<Column[]>([
     { id: 'planned', title: '계획중', color: 'bg-sky-50' },
     { id: 'doing', title: '진행중', color: 'bg-amber-50' },
@@ -23,21 +32,76 @@ export default function KanbanView() {
     { id: 'onhold', title: '보류중', color: 'bg-zinc-50' },
   ]);
 
-  const [cards, setCards] = useState<Card[]>([
-    { id: '1', title: '첫 번째 카드', columnId: 'planned' },
-  ]);
-
+  const [cards, setCards] = useState<Card[]>([]);
   const [selectedCard, setSelectedCard] = useState<Card | null>(null);
   const [selectedColumn, setSelectedColumn] = useState<Column | null>(null);
   const [draggedCard, setDraggedCard] = useState<Card | null>(null);
+  const etagRef = useRef<string | undefined>(undefined); // [ADDED] ETag 보관
 
-  const addCard = (columnId: string) => {
-    const newCard: Card = {
-      id: Date.now().toString(),
-      title: '새 카드',
-      columnId,
-    };
-    setCards([...cards, newCard]);
+  //  ETag 지원 조건부 GET 사용 + useCallback으로 의존성 고정
+  const fetchCards = useCallback(async () => {
+    try {
+      // milestoneApi.ts에 추가한 listConditional 사용 (304 지원)
+      const { status, data, etag } = await kanbanApi.listConditional(milestoneId!, etagRef.current);
+      if (status === 200) {
+        setCards(
+          data.map((d) => ({
+            id: String(d.cardId ?? d.id),
+            title: d.title,
+            columnId: d.columnId,
+          }))
+        );
+        etagRef.current = etag;
+      }
+      // 304면 아무 것도 하지 않음
+    } catch (e) {
+      console.error(e);
+    }
+  }, [milestoneId]);
+
+  useEffect(() => {
+    void fetchCards(); // 초기 1회
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    if (refreshTick !== undefined) void fetchCards(); // tick마다 조건부 갱신
+  }, [refreshTick, fetchCards]);
+
+  /* 카드 추가 */
+  const addCard = async (columnId: string) => {
+    try {
+      const created = await kanbanApi.create(milestoneId, columnId, '새 카드');
+      setCards((prev) => [
+        ...prev,
+        { id: String(created.cardId ?? created.id), title: created.title, columnId },
+      ]);
+      onChanged?.();
+    } catch (e) {
+      console.error(' 카드 추가 실패:', e);
+    }
+  };
+
+  /* 카드 수정 */
+  const updateCard = async (cardId: string, newTitle: string) => {
+    setCards((prev) => prev.map((c) => (c.id === cardId ? { ...c, title: newTitle } : c)));
+    try {
+      await kanbanApi.update(milestoneId, Number(cardId), { title: newTitle });
+      onChanged?.();
+    } catch (e) {
+      console.error(' 카드 수정 실패:', e);
+    }
+  };
+
+  /* 카드 삭제 */
+  const deleteCard = async (cardId: string) => {
+    setCards((prev) => prev.filter((c) => c.id !== cardId));
+    try {
+      await kanbanApi.remove(milestoneId, Number(cardId));
+      onChanged?.();
+    } catch (e) {
+      console.error('❌ 카드 삭제 실패:', e);
+    }
   };
 
   const addColumn = () => {
@@ -47,14 +111,7 @@ export default function KanbanView() {
       color: 'bg-sky-50',
     };
     setColumns([...columns, newColumn]);
-  };
-
-  const updateCard = (cardId: string, newTitle: string) => {
-    setCards(cards.map((card) => (card.id === cardId ? { ...card, title: newTitle } : card)));
-  };
-
-  const deleteCard = (cardId: string) => {
-    setCards(cards.filter((card) => card.id !== cardId));
+    onChanged?.();
   };
 
   const updateColumn = (columnId: string, newTitle: string, newColor: string) => {
@@ -63,15 +120,18 @@ export default function KanbanView() {
         col.id === columnId ? { ...col, title: newTitle, color: newColor } : col
       )
     );
+    onChanged?.();
   };
 
   const deleteColumn = (columnId: string) => {
     setColumns(columns.filter((col) => col.id !== columnId));
     setCards(cards.filter((card) => card.columnId !== columnId));
+    onChanged?.();
   };
 
   const getColumnCards = (columnId: string) => {
     return cards.filter((card) => card.columnId === columnId);
+    onChanged?.();
   };
 
   const handleDragStart = (e: React.DragEvent, card: Card) => {
@@ -79,15 +139,21 @@ export default function KanbanView() {
     e.dataTransfer.effectAllowed = 'move';
   };
 
-  const handleDragOver = (e: React.DragEvent) => {
+  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     e.dataTransfer.dropEffect = 'move';
-  };
-
-  const handleDrop = (e: React.DragEvent, columnId: string) => {
+  }; // 드롭 허용
+  const handleDrop = async (e: React.DragEvent<HTMLDivElement>, columnId: string) => {
+    // 드롭 시 이동
     e.preventDefault();
     if (draggedCard && draggedCard.columnId !== columnId) {
-      setCards(cards.map((card) => (card.id === draggedCard.id ? { ...card, columnId } : card)));
+      setCards((prev) => prev.map((c) => (c.id === draggedCard.id ? { ...c, columnId } : c))); // UI 선반영
+      try {
+        await kanbanApi.update(milestoneId, Number(draggedCard.id), { columnId }); // 서버 반영
+        onChanged?.();
+      } catch (e) {
+        console.error('카드 이동 실패', e);
+      }
     }
     setDraggedCard(null);
   };

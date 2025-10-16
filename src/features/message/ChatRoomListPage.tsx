@@ -37,7 +37,7 @@ export default function ChatRoomListPage() {
   const fetchChatRooms = useCallback(async () => {
     try {
       setLoading(true);
-      const response = await fetch('/api/v1/chatrooms/my-chatrooms', {
+      const response = await fetch('/chatrooms/my-chatrooms', {
         headers: authHeaders(),
       });
       if (!response.ok) {
