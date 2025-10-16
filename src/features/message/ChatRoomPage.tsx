@@ -1,11 +1,10 @@
-import { useState, useEffect, useRef } from 'react';
-import { Send, ArrowLeft, MoreVertical, Trash2, LogOut } from 'lucide-react';
+import { AuthContext } from '@/features/auth/auth';
 import { useChatRoom } from '@/features/message/useChatRoom';
-import { useContext } from 'react';
-import { AuthContext } from '@/features/auth/AuthContext';
-import { useParams, useSearchParams, useNavigate } from 'react-router-dom';
-import axios from 'axios';
 import { axiosInstance } from '@/services/axios';
+import axios from 'axios';
+import { ArrowLeft, LogOut, MoreVertical, Send, Trash2 } from 'lucide-react';
+import { useContext, useEffect, useRef, useState } from 'react';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 
 // localStorage에서 userId 가져오는 헬퍼 함수
 const getUserId = () => {
