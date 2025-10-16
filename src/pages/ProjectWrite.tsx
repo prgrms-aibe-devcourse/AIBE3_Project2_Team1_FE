@@ -146,7 +146,6 @@ export default function WritePage() {
         />
 
         {/* 예산 */}
-        {/* 예산 */}
         <input
           type="number"
           placeholder="예산"

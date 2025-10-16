@@ -86,7 +86,7 @@ export default function FilesView({
             url:
               f.downloadUrl ??
               (typeof filesApi.getDownloadUrl === 'function'
-                ? filesApi.getDownloadUrl(Number(f.fileId ?? f.id))
+                ? filesApi.getDownloadUrl(milestoneId, Number(f.fileId ?? f.id))
                 : '#'),
             size: Number.isFinite(f.size as number) ? (f.size as number) : 0,
             type: f.type ?? 'application/octet-stream',
