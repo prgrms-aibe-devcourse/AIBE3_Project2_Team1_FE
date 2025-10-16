@@ -30,11 +30,14 @@ import MatchingPage from '@/pages/MatchingPage';
 import DraftProposalPage from '@/pages/DraftProposalPage';
 import MilestonePage from '@/features/milestone/pages/MilestonePage';
 
+import OAuthCallback from '@/features/auth/OAuthCallback';
+
 // 레이아웃 없는 페이지 (로그인/회원가입 관련)
 export const noLayoutRoutes = [
   { path: '/login', element: <LoginPage /> },
   { path: '/signup', element: <SignUpPage /> },
   { path: '/admin/login', element: <AdminLoginPage /> },
+  { path: '/oauth/callback', element: <OAuthCallback /> },
 ];
 
 // 메인 레이아웃 적용되는 페이지
