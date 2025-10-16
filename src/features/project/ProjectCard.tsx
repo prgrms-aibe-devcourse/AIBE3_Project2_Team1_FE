@@ -1,5 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import starImg from '../../assets/images/fluent-color_star-16.png';
+import noImageImg from '../../assets/No Image.png';
 
 interface ProjectCardProps {
   projectId: number;
@@ -36,9 +37,11 @@ export default function ProjectCard({
       {thumbnail ? (
         <img src={thumbnail} alt={title} className="w-full h-36 object-cover rounded-md mb-3" />
       ) : (
-        <div className="w-full h-36 bg-gray-200 rounded-md mb-3 flex items-center justify-center">
-          <span className="text-gray-400 text-sm">이미지 없음</span>
-        </div>
+        <img
+          src={noImageImg}
+          alt="star"
+          className="w-full h-36 bg-gray-200 rounded-md mb-3 flex items-center justify-center"
+        />
       )}
 
       {/* 카테고리 */}
