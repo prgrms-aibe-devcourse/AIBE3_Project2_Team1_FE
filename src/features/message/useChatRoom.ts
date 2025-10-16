@@ -138,7 +138,20 @@ export function useChatRoom(roomId: number): UseChatRoomReturn {
 
   const sendMessage = useCallback(
     async (content: string) => {
-      if (!content.trim()) throw new Error('메시지 내용이 비어있습니다');
+      if (!content.trim()) return;
+
+      const userId = Number(localStorage.getItem('userId')) || 0;
+      const userName = localStorage.getItem('nickname') || '나';
+
+      const tempMessage: Message = {
+        messageId: Date.now(),
+        senderUserId: userId,
+        senderName: userName,
+        content: content.trim(),
+        createdAt: new Date().toISOString(),
+      };
+
+      setMessages((prev) => [...prev, tempMessage]);
 
       try {
         await axiosInstance.post('/messages', {
@@ -146,14 +159,12 @@ export function useChatRoom(roomId: number): UseChatRoomReturn {
           content: content.trim(),
         });
       } catch (error: unknown) {
+        setMessages((prev) => prev.filter((m) => m.messageId !== tempMessage.messageId));
+
         if (axios.isAxiosError(error)) {
-          // AxiosError 타입일 때
           console.error('Axios 에러:', error.response?.data || error.message);
-        } else if (error instanceof Error) {
-          // 일반 JS Error
-          console.error('일반 에러:', error.message);
         } else {
-          console.error('알 수 없는 에러:', error);
+          console.error('일반 에러:', error);
         }
 
         alert('메시지 전송 중 오류가 발생했습니다.');
@@ -161,6 +172,7 @@ export function useChatRoom(roomId: number): UseChatRoomReturn {
     },
     [roomId]
   );
+
   // 메시지 삭제
   const deleteMessage = useCallback(async (messageId: number) => {
     try {
