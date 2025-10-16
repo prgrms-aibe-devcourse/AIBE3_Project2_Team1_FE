@@ -87,7 +87,7 @@ export default function Home() {
               to="/project/write"
               className="bg-[#ff6b6b] hover:bg-[#f56767] text-white px-6 py-2 rounded-[12px] font-semibold transition-all"
             >
-              프로젝트 등록
+              프로젝트 생성
             </Link>
             <Link
               to="/projects/client"
