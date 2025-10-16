@@ -79,7 +79,7 @@ export default function CalendarView({
           list.map((e) => ({
             id: String(e.eventId ?? e.id),
             title: e.title,
-            date: e.date,
+            date: fmt(new Date(e.date)),
           }))
         );
         etagRef.current = res.etag ?? etagRef.current;
@@ -143,7 +143,7 @@ export default function CalendarView({
             ? {
                 id: String(updated.eventId ?? updated.id),
                 title: updated.title,
-                date: updated.date,
+                date: fmt(new Date(updated.date)),
               }
             : e
         )
@@ -157,7 +157,7 @@ export default function CalendarView({
     }
   };
 
-  // ✅ 일정 삭제
+  // 일정 삭제
   const removeEvent = async (id: string) => {
     try {
       await calendarApi.remove(milestoneId, Number(id));
