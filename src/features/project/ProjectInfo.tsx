@@ -102,6 +102,12 @@ export default function ProjectInfo({ project }: { project: Project }) {
   };
 
   const goChatRoom = async () => {
+    const currentUserNickname = localStorage.getItem('nickname');
+    if (!currentUserNickname) {
+      alert('로그인이 필요합니다.');
+      navigate('/login');
+      return;
+    }
     try {
       const creatorRes = await api.get(`/projects/${project.project_id}/creator-id`);
       const targetUserId = creatorRes.data.data;
@@ -117,6 +123,12 @@ export default function ProjectInfo({ project }: { project: Project }) {
   };
 
   const goHProposal = () => {
+    const currentUserNickname = localStorage.getItem('nickname');
+    if (!currentUserNickname) {
+      alert('로그인이 필요합니다.');
+      navigate('/login');
+      return;
+    }
     if (project.groupId === 'client') {
       navigate(`/project/${project.project_id}/client-proposal`);
     } else {
