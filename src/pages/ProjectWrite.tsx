@@ -81,6 +81,12 @@ export default function WritePage() {
 
   /** 프로젝트 등록 */
   const handleSubmit = async () => {
+    const token = localStorage.getItem('accessToken');
+    if (!token) {
+      alert('로그인이 필요합니다.');
+      navigate('/login');
+      return;
+    }
     if (!title || !content || !category) {
       alert('모든 필드를 입력해주세요.');
       return;

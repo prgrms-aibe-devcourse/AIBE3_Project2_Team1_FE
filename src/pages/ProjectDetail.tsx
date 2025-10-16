@@ -249,6 +249,11 @@ export default function ProjectDetail() {
         <div className="max-w-6xl mx-auto flex justify-center mt-8 mb-16">
           <button
             onClick={async () => {
+              if (!currentUserNickname) {
+                alert('로그인이 필요합니다.');
+                navigate('/login');
+                return;
+              }
               try {
                 let milestoneId = project.milestoneId;
                 if (!milestoneId) {

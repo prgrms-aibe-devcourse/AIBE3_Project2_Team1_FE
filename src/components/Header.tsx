@@ -1,5 +1,4 @@
-import { useAuth } from '@/features/auth/AuthContext';
-import { logout } from '@/features/auth/auth';
+import { logout, useAuth } from '@/features/auth/auth';
 import { Link, useNavigate } from 'react-router-dom';
 
 const Header = () => {

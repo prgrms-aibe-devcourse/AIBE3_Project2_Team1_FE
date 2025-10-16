@@ -1,5 +1,7 @@
 import axiosInstance from '@/services/axios';
-
+import type { User } from '@/services/user';
+import type { Dispatch, SetStateAction } from 'react';
+import { createContext, useContext } from 'react';
 export interface UserLoginResponseDto {
   resultCode: string;
   msg: string;
@@ -25,6 +27,18 @@ export interface UserInfoResponseDto {
   };
 }
 
+export interface AuthContextType {
+  user: User | null;
+  setUser: Dispatch<SetStateAction<User | null>>;
+  loading: boolean;
+}
+
+export const defaultAuthContext: AuthContextType = {
+  user: null,
+  setUser: () => {},
+  loading: false,
+};
+
 // 이메일 로그인
 export const login = async (credentials: {
   email: string;
@@ -44,3 +58,7 @@ export const getCurrentUser = async (): Promise<UserInfoResponseDto> => {
 export const logout = async (): Promise<void> => {
   await axiosInstance.delete('/auth/logout');
 };
+
+export const AuthContext = createContext<AuthContextType>(defaultAuthContext);
+
+export const useAuth = (): AuthContextType => useContext(AuthContext);

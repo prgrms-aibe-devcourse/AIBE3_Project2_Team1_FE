@@ -1,22 +1,31 @@
 import type { User } from '@/services/user';
-import type { Dispatch, SetStateAction } from 'react';
-import { createContext, useContext } from 'react';
+import { getMyInfo } from '@/services/user';
+import type { ReactNode } from 'react';
+import { useEffect, useState } from 'react';
+import { AuthContext } from './auth';
 
-export interface AuthContextType {
-  user: User | null;
-  setUser: Dispatch<SetStateAction<User | null>>;
-  loading: boolean;
-}
+export const AuthProvider = ({ children }: { children: ReactNode }) => {
+  const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
 
-const defaultAuthContext: AuthContextType = {
-  user: null,
-  setUser: () => {},
-  loading: false,
-};
+  useEffect(() => {
+    const token = localStorage.getItem('accessToken');
+    if (token) {
+      getMyInfo()
+        .then((data) =>
+          setUser({
+            nickname: data.data.item.nickname,
+            id: data.data.item.id,
+            accessToken: data.accessToken,
+            apiKey: data.data.apiKey,
+          })
+        )
+        .catch(() => setUser(null))
+        .finally(() => setLoading(false));
+    } else {
+      setLoading(false);
+    }
+  }, []);
 
-export const AuthContext = createContext<AuthContextType>(defaultAuthContext);
-
-export const useAuth = (): AuthContextType => {
-  const context = useContext(AuthContext);
-  return context;
+  return <AuthContext.Provider value={{ user, setUser, loading }}>{children}</AuthContext.Provider>;
 };

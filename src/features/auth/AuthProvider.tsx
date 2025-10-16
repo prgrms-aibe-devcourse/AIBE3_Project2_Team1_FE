@@ -1,9 +1,9 @@
-import { AuthContext } from '@/features/auth/AuthContext';
 import { getCurrentUser } from '@/features/auth/auth';
 import type { User } from '@/services/user';
 import axios from 'axios';
 import type { ReactNode } from 'react';
 import { useEffect, useState } from 'react';
+import { AuthContext } from './auth';
 
 interface AuthProviderProps {
   children: ReactNode;
