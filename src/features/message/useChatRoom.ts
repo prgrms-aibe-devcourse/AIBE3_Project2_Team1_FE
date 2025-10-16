@@ -27,7 +27,6 @@ interface UseChatRoomReturn {
   refreshMessages: () => Promise<void>;
 }
 
-/*
 function authHeaders(): HeadersInit {
   const token = localStorage.getItem('accessToken');
   return {
@@ -35,7 +34,6 @@ function authHeaders(): HeadersInit {
     ...(token && { Authorization: `Bearer ${token}` }),
   };
 }
-*/
 
 export function useChatRoom(roomId: number): UseChatRoomReturn {
   const [messages, setMessages] = useState<Message[]>([]);
@@ -141,17 +139,29 @@ export function useChatRoom(roomId: number): UseChatRoomReturn {
     async (content: string) => {
       if (!content.trim()) throw new Error('메시지 내용이 비어있습니다');
 
-      await axiosInstance.post(`/messages`, {
-        chatRoomId: roomId,
-        content: content.trim(),
+      const res = await fetch('/messages', {
+        method: 'POST',
+        headers: authHeaders(), // 수정!
+        body: JSON.stringify({
+          chatRoomId: roomId,
+          content: content.trim(),
+        }),
       });
+
+      if (!res.ok) throw new Error('메시지 전송 실패');
     },
     [roomId]
   );
   // 메시지 삭제
   const deleteMessage = useCallback(async (messageId: number) => {
     try {
-      await axiosInstance.delete(`/messages/${messageId}`);
+      const response = await fetch(`/messages/${messageId}`, {
+        method: 'DELETE',
+        headers: authHeaders(),
+      });
+
+      if (!response.ok) throw new Error('메시지 삭제 실패');
+
       setMessages((prev) => prev.filter((m) => m.messageId !== messageId));
     } catch (error) {
       console.error('메시지 삭제 실패:', error);
