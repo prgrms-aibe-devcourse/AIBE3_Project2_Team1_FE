@@ -6,6 +6,7 @@ import ProjectReview from '../features/project/ProjectReview';
 import { categoryGroups } from '@/features/project/constants/categories';
 import api from '../features/project/api';
 import axios from 'axios';
+import { milestoneApi } from '@/features/milestone/api/milestoneApi.ts';
 
 interface ProjectImage {
   id: number;
@@ -92,18 +93,26 @@ export default function ProjectDetail() {
 
     if (isParticipant) {
       // 마일스톤 ID가 없으면 프로젝트 ID로 조회 후 이동
+      // ✅ 기존 moveToMilestone 함수를 이렇게 교체
       const moveToMilestone = async () => {
         try {
-          let milestoneId = project.milestoneId;
-          if (!milestoneId) {
-            const res = await api.get(`/milestones/project/${project.projectId}`);
-            milestoneId = res?.data?.data?.milestoneId;
+          // 1. milestoneId가 이미 있으면 바로 이동
+          if (project.milestoneId) {
+            navigate(`/milestone/${project.milestoneId}`);
+            return;
           }
-          if (milestoneId) {
-            navigate(`/milestone/${milestoneId}`);
+
+          // 2. 없으면 projectId로 조회
+          const milestone = await milestoneApi.getByProjectId(project.projectId);
+
+          if (milestone?.milestoneId) {
+            navigate(`/milestone/${milestone.milestoneId}`);
+          } else {
+            alert('마일스톤 정보를 찾을 수 없습니다.');
           }
-        } catch (e) {
-          console.error('마일스톤 이동 실패:', e);
+        } catch (error) {
+          console.error('마일스톤 이동 실패:', error);
+          alert('마일스톤 페이지로 이동하는 중 오류가 발생했습니다.');
         }
       };
 
