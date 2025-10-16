@@ -4,6 +4,8 @@ import { useChatRoom } from '@/features/message/useChatRoom';
 import { useContext } from 'react';
 import { AuthContext } from '@/features/auth/AuthContext';
 import { useParams, useSearchParams, useNavigate } from 'react-router-dom';
+import axios from 'axios';
+import { axiosInstance } from '@/services/axios';
 
 // localStorage에서 userId 가져오는 헬퍼 함수
 const getUserId = () => {
@@ -118,22 +120,22 @@ export default function ChatRoomPage() {
     if (!confirm('정말 채팅방을 나가시겠습니까?')) return;
 
     try {
-      const response = await fetch(`/chatrooms/${roomId}/leave`, {
-        method: 'POST',
-        headers: {
-          Authorization: 'Bearer ' + localStorage.getItem('accessToken'),
-        },
-      });
+      await axiosInstance.post(`/chatrooms/${roomId}/leave`);
 
-      if (response.ok) {
-        alert('채팅방을 나갔습니다.');
-        navigate('/chat'); // 채팅방 리스트로 이동
+      alert('채팅방을 나갔습니다.');
+      navigate('/chat'); // ✅ 채팅방 리스트로 이동
+    } catch (error: unknown) {
+      console.error('채팅방 나가기 실패:', error);
+
+      if (axios.isAxiosError(error)) {
+        if (error.response?.status === 401) {
+          alert('인증이 필요합니다.');
+        } else {
+          alert(error.response?.data?.message ?? '채팅방 나가기에 실패했습니다.');
+        }
       } else {
-        alert('채팅방 나가기에 실패했습니다.');
+        alert('알 수 없는 오류가 발생했습니다.');
       }
-    } catch (error) {
-      console.error('Error:', error);
-      alert('오류가 발생했습니다.');
     }
   };
 

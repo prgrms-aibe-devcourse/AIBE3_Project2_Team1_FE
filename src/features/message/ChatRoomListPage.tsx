@@ -1,6 +1,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import { MessageSquare, Clock, User } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { axiosInstance } from '../../services/axios';
+import axios from 'axios';
 
 interface PeerUser {
   userId: number;
@@ -21,13 +23,13 @@ interface ChatRoom {
   // otherUserProfileImage?: string;
 }
 
-const authHeaders = (): HeadersInit => {
-  const token = localStorage.getItem('accessToken');
-  return {
-    'Content-Type': 'application/json',
-    ...(token && { Authorization: `Bearer ${token}` }),
-  };
-};
+// const authHeaders = (): HeadersInit => {
+//   const token = localStorage.getItem('accessToken');
+//   return {
+//     'Content-Type': 'application/json',
+//     ...(token && { Authorization: `Bearer ${token}` }),
+//   };
+// };
 
 export default function ChatRoomListPage() {
   const [chatRooms, setChatRooms] = useState<ChatRoom[]>([]);
@@ -37,20 +39,30 @@ export default function ChatRoomListPage() {
   const fetchChatRooms = useCallback(async () => {
     try {
       setLoading(true);
-      const response = await fetch('/chatrooms/my-chatrooms', {
-        headers: authHeaders(),
-      });
-      if (!response.ok) {
-        if (response.status === 401) {
-          throw new Error('인증이 필요합니다');
-        }
-        throw new Error('Failed to fetch chatrooms');
-      }
-      const result = await response.json();
-      const data: ChatRoom[] = result?.data ?? result ?? [];
+
+      //  axiosInstance로 GET 요청
+      const response = await axiosInstance.get('/chatrooms/my-chatrooms');
+
+      //  서버 응답 구조에 따라 처리
+      const data: ChatRoom[] = response.data?.data ?? response.data ?? [];
       setChatRooms(data);
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('채팅방 목록 로드 실패:', error);
+
+      if (axios.isAxiosError(error)) {
+        // axios 전용 에러일 경우
+        if (error.response?.status === 401) {
+          alert('인증이 필요합니다.');
+        } else {
+          console.error('Axios 에러:', error.response?.data || error.message);
+        }
+      } else if (error instanceof Error) {
+        // 일반 JS 에러일 경우
+        console.error('일반 에러:', error.message);
+      } else {
+        console.error('알 수 없는 에러 타입:', error);
+      }
+
       setChatRooms([]);
     } finally {
       setLoading(false);
