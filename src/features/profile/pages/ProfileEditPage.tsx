@@ -58,12 +58,12 @@ const UserEditPage: React.FC = () => {
     }));
   };
 
-  const handleVisibilityChange = (value: 'PUBLIC' | 'PRIVATE') => {
-    setForm((prev) => ({
-      ...prev,
-      visibility: value,
-    }));
-  };
+  // const handleVisibilityChange = (value: 'PUBLIC' | 'PRIVATE') => {
+  //   setForm((prev) => ({
+  //     ...prev,
+  //     visibility: value,
+  //   }));
+  // };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -122,7 +122,7 @@ const UserEditPage: React.FC = () => {
             />
           </div>
 
-          <div>
+          {/* <div>
             <label className="block text-sm text-gray-600 mb-1">시간 당 요금</label>
             <input
               type="number"
@@ -132,7 +132,7 @@ const UserEditPage: React.FC = () => {
               className="w-80 border rounded-md px-3 py-2 outline-none focus:ring focus:ring-gray-300"
               required
             />
-          </div>
+          </div> */}
 
           <div>
             <label className="block text-sm text-gray-600 mb-1">보유 기술</label>
@@ -145,7 +145,7 @@ const UserEditPage: React.FC = () => {
               required
             />
           </div>
-
+          {/* 
           <div>
             <label className="block text-sm text-gray-600 mb-1">공개 설정</label>
             <div className="flex gap-3">
@@ -172,7 +172,7 @@ const UserEditPage: React.FC = () => {
                 비공개
               </button>
             </div>
-          </div>
+          </div> */}
 
           {errorMessage && <p className="text-red-500 text-sm mt-1">{errorMessage}</p>}
           {successMessage && <p className="text-green-500 text-sm mt-1">{successMessage}</p>}
