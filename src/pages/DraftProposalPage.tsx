@@ -225,7 +225,7 @@ const DraftProposalPage: React.FC = () => {
           type="button"
           onClick={() => handleSave('save')}
           disabled={isSubmitting}
-          className="w-full py-3 bg-emerald-500 hover:bg-emerald-600 text-white font-semibold rounded-lg transition-colors"
+          className="w-full py-3 bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded-lg transition-colors"
         >
           {isSubmitting ? '저장 중...' : '저장하기'}
         </button>
@@ -234,7 +234,7 @@ const DraftProposalPage: React.FC = () => {
           type="button"
           onClick={() => handleSave('draft')}
           disabled={isSubmitting}
-          className="w-full py-3 bg-gray-300 hover:bg-gray-400 text-gray-800 font-semibold rounded-lg transition-colors"
+          className="w-full py-3 bg-emerald-500 hover:bg-emerald-600 text-white font-semibold rounded-lg transition-colors"
         >
           {isSubmitting ? '임시저장 중...' : '임시저장'}
         </button>

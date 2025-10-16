@@ -33,6 +33,10 @@ export default function AiRecommendPage() {
   const [selectedRecommendation, setSelectedRecommendation] = useState<number | null>(null);
   const [isSubmitted, setIsSubmitted] = useState(false);
 
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, []);
+
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter' && projectTopic.trim()) {
       e.preventDefault();
