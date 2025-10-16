@@ -55,6 +55,13 @@ export const milestoneApi = {
     return data;
   },
 
+  async getByProjectId(projectId: number) {
+    const { data } = await axiosInstance.get<MilestoneResponseDto>(
+      `/milestones/project/${projectId}`
+    );
+    return data;
+  },
+
   // PATCH /api/v1/milestones/{milestoneId}  body: { title?, description?, ... }
   async update(milestoneId: number, payload: Partial<MilestoneResponseDto>) {
     const { data } = await axiosInstance.patch<MilestoneResponseDto>(
