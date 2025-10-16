@@ -11,7 +11,7 @@ const ProposalCard = ({ id, title, status }: ProposalCardProps) => {
 
   // 상태 구분
   const isDraft = status === 'DRAFT';
-  const isSubmitted = status === 'SUBMITTED';
+  const isAccepted = status === 'ACCEPTED';
   const isRejected = status === 'REJECTED';
 
   const handleClick = () => {
@@ -29,7 +29,7 @@ const ProposalCard = ({ id, title, status }: ProposalCardProps) => {
   if (isDraft) {
     bgColor = 'bg-green-200 hover:bg-green-300';
     prefix = '임시 - ';
-  } else if (isSubmitted) {
+  } else if (isAccepted) {
     bgColor = 'bg-purple-200 hover:bg-purple-300';
     prefix = '수락됨 - ';
   } else if (isRejected) {
