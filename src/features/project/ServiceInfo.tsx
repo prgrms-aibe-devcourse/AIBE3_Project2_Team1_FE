@@ -1,3 +1,8 @@
+interface ProjectImage {
+  id: number;
+  fileUrl: string;
+}
+
 interface Project {
   title: string;
   description: string;
@@ -7,7 +12,7 @@ interface Project {
   client?: string;
   freelancer?: string;
   status: 'OPEN' | 'IN_PROGRESS' | 'CLOSED';
-  imageUrls?: string[];
+  imageUrls?: ProjectImage[];
 }
 
 interface ServiceInfoProps {
@@ -70,17 +75,22 @@ export default function ServiceInfo({ project }: ServiceInfoProps) {
           </div>
         </div>
 
-        {/* ✅ 이미지 표시 섹션 */}
+        {/* 원본 S3 이미지 표시 섹션 */}
         <div className="border-t border-gray-200 pt-6 mb-6">
           <h2 className="font-semibold text-lg mb-4">프로젝트 이미지</h2>
           {project.imageUrls && project.imageUrls.length > 0 ? (
             <div className="grid grid-cols-3 gap-4">
-              {project.imageUrls.map((url, idx) => (
+              {project.imageUrls.map((img) => (
                 <img
-                  key={`${url}-${idx}`}
-                  src={url}
-                  alt="project"
+                  key={img.id}
+                  src={img.fileUrl}
+                  alt={`project-${img.id}`}
                   className="w-full h-48 object-cover rounded-lg border border-gray-200"
+                  onError={(e) => {
+                    console.error('이미지 로드 실패:', img.fileUrl);
+                    (e.target as HTMLImageElement).src =
+                      'https://via.placeholder.com/300x200?text=Image+Not+Found';
+                  }}
                 />
               ))}
             </div>
