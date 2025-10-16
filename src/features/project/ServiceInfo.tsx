@@ -1,9 +1,12 @@
+import { useState } from 'react';
+
 interface ProjectImage {
   id: number;
   fileUrl: string;
 }
 
 interface Project {
+  projectId: number;
   title: string;
   description: string;
   category: string;
@@ -11,15 +14,18 @@ interface Project {
   deadline: string;
   client?: string;
   freelancer?: string;
-  status: 'OPEN' | 'IN_PROGRESS' | 'CLOSED';
+  status: 'OPEN' | 'IN_PROGRESS' | 'COMPLETED';
   imageUrls?: ProjectImage[];
 }
 
 interface ServiceInfoProps {
   project: Project | null;
+  currentUserId?: string;
 }
 
 export default function ServiceInfo({ project }: ServiceInfoProps) {
+  const [status] = useState(project?.status);
+
   if (!project) {
     return <div className="text-center text-gray-500 py-10">프로젝트 정보를 불러오는 중...</div>;
   }
@@ -48,14 +54,14 @@ export default function ServiceInfo({ project }: ServiceInfoProps) {
             <p className="text-gray-500 text-sm mb-1">상태</p>
             <p
               className={`text-lg font-semibold ${
-                project.status === 'OPEN'
+                status === 'OPEN'
                   ? 'text-emerald-500'
-                  : project.status === 'IN_PROGRESS'
+                  : status === 'IN_PROGRESS'
                     ? 'text-yellow-500'
                     : 'text-gray-400'
               }`}
             >
-              {project.status}
+              {status}
             </p>
           </div>
         </div>
@@ -75,7 +81,7 @@ export default function ServiceInfo({ project }: ServiceInfoProps) {
           </div>
         </div>
 
-        {/* 원본 S3 이미지 표시 섹션 */}
+        {/* 이미지 */}
         <div className="border-t border-gray-200 pt-6 mb-6">
           <h2 className="font-semibold text-lg mb-4">프로젝트 이미지</h2>
           {project.imageUrls && project.imageUrls.length > 0 ? (
@@ -100,7 +106,7 @@ export default function ServiceInfo({ project }: ServiceInfoProps) {
         </div>
 
         {/* 설명 */}
-        <div>
+        <div className="border-t border-gray-200 pt-6 mb-6">
           <h2 className="font-semibold text-lg mb-2">프로젝트 설명</h2>
           <p className="text-gray-700 leading-relaxed whitespace-pre-line">{project.description}</p>
         </div>

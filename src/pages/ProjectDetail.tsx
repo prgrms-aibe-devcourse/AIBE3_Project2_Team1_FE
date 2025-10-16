@@ -7,6 +7,11 @@ import { categoryGroups } from '@/features/project/constants/categories';
 import api from '../features/project/api';
 import axios from 'axios';
 
+interface ProjectImage {
+  id: number;
+  fileUrl: string;
+}
+
 interface ProjectDetailResponse {
   projectId: number;
   initiatorNickname: string;
@@ -16,8 +21,9 @@ interface ProjectDetailResponse {
   budget: number;
   deadline: string;
   category: string;
-  status: string;
-  imageUrls?: string[];
+  groupType: string;
+  status: 'OPEN' | 'IN_PROGRESS' | 'COMPLETED';
+  imageUrls?: ProjectImage[];
 }
 
 export default function ProjectDetail() {
@@ -33,6 +39,7 @@ export default function ProjectDetail() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [updatingStatus, setUpdatingStatus] = useState(false);
 
   // 카테고리명 변환 함수
   const getCategoryName = (categoryId: string | null) => {
@@ -78,6 +85,28 @@ export default function ProjectDetail() {
     fetchProjectDetail();
   }, [projectId]);
 
+  // 프로젝트 상태 변경 핸들러
+  const handleStatusChange = async (newStatus: 'OPEN' | 'IN_PROGRESS' | 'COMPLETED') => {
+    if (!projectId) return;
+    const confirmed = window.confirm(`프로젝트 상태를 '${newStatus}'로 변경하시겠습니까?`);
+    if (!confirmed) return;
+
+    try {
+      setUpdatingStatus(true);
+      await api.patch(`/projects/${projectId}/status`, { status: newStatus });
+      alert('프로젝트 상태가 변경되었습니다.');
+      setProject((prev) => (prev ? { ...prev, status: newStatus } : prev));
+    } catch (err: unknown) {
+      if (axios.isAxiosError(err)) {
+        alert(`상태 변경 실패: ${err.response?.data?.message || '서버 오류'}`);
+      } else {
+        alert('서버 연결 오류가 발생했습니다.');
+      }
+    } finally {
+      setUpdatingStatus(false);
+    }
+  };
+
   // 삭제 버튼 핸들러
   const handleDelete = async () => {
     if (!projectId) return;
@@ -99,6 +128,12 @@ export default function ProjectDetail() {
       setDeleting(false);
     }
   };
+
+  // 로그인 유저가 클라이언트 또는 프리랜서인지 판별
+  const isParticipant =
+    currentUserNickname &&
+    (currentUserNickname === project?.initiatorNickname ||
+      currentUserNickname === project?.participantNickname);
 
   // 작성자 여부 판단
   const isAuthor =
@@ -194,6 +229,7 @@ export default function ProjectDetail() {
         {activeTab === 'service' ? (
           <ServiceInfo
             project={{
+              projectId: project.projectId,
               title: project.title,
               description: project.description,
               category: getCategoryName(project.category),
@@ -201,31 +237,60 @@ export default function ProjectDetail() {
               deadline: project.deadline,
               client: project.initiatorNickname,
               freelancer: project.participantNickname,
-              status:
-                project.status === 'OPEN' ||
-                project.status === 'IN_PROGRESS' ||
-                project.status === 'CLOSED'
-                  ? project.status
-                  : 'OPEN',
-              imageUrls: project.imageUrls || [],
+              status: project.status,
+              // ServiceInfo expects ProjectImage[] (objects with id and fileUrl).
+              // The API returns string[] (URLs) so map them to ProjectImage objects here.
+              imageUrls: project.imageUrls ?? [],
             }}
+            currentUserId={currentUserNickname ?? undefined}
           />
         ) : (
           <ProjectReview />
         )}
       </div>
-      {/* 삭제 버튼 — 프로젝트 정보 바로 아래 */}
+
+      {/* 상태 변경 버튼 - 참여자만 표시 */}
+      {isParticipant && (
+        <div className="max-w-6xl mx-auto flex justify-center gap-4 mt-10 mb-20">
+          {project.status !== 'OPEN' && (
+            <button
+              onClick={() => handleStatusChange('OPEN')}
+              disabled={updatingStatus}
+              className="px-6 py-3 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl font-semibold shadow-md"
+            >
+              OPEN으로 변경
+            </button>
+          )}
+          {project.status !== 'IN_PROGRESS' && (
+            <button
+              onClick={() => handleStatusChange('IN_PROGRESS')}
+              disabled={updatingStatus}
+              className="px-6 py-3 bg-yellow-500 hover:bg-yellow-600 text-white rounded-xl font-semibold shadow-md"
+            >
+              진행 중으로 변경
+            </button>
+          )}
+          {project.status !== 'COMPLETED' && (
+            <button
+              onClick={() => handleStatusChange('COMPLETED')}
+              disabled={updatingStatus}
+              className="px-6 py-3 bg-gray-600 hover:bg-gray-700 text-white rounded-xl font-semibold shadow-md"
+            >
+              완료로 변경
+            </button>
+          )}
+        </div>
+      )}
+
+      {/* 작성자만 볼 수 있는 수정/삭제 버튼 */}
       {isAuthor && (
-        <div className="max-w-6xl mx-auto flex justify-center gap-6 mt-16 mb-32 px-6">
-          {/* 프로젝트 수정 버튼 */}
+        <div className="max-w-6xl mx-auto flex justify-center gap-6 mt-8 mb-32 px-6">
           <button
             onClick={() => navigate(`/project/${projectId}/update`)}
             className="px-8 py-3 text-lg font-semibold text-white rounded-xl shadow-md transition-all duration-200 bg-[#1ABC9C] hover:bg-[#1EB194] active:scale-95"
           >
             프로젝트 수정
           </button>
-
-          {/* 프로젝트 삭제 버튼 */}
           <button
             onClick={handleDelete}
             disabled={deleting}
