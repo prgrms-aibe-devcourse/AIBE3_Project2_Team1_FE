@@ -1,5 +1,4 @@
-import { login } from '@/features/auth/auth';
-import { AuthContext } from '@/features/auth/AuthContext';
+import { AuthContext, login } from '@/features/auth/auth';
 import { signUp, type User } from '@/services/user';
 import { AxiosError } from 'axios';
 import { type ChangeEvent, type FormEvent, useContext, useState } from 'react';

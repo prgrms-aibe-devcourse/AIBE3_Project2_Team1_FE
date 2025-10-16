@@ -1,9 +1,9 @@
 // 소셜 로그인 콜백 처리 페이지
-import { useAuth } from '@/features/auth/AuthContext';
 import { getCurrentUser } from '@/features/auth/auth';
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
+import { useAuth } from './auth';
 
 const OAuthCallback = () => {
   const { setUser } = useAuth();

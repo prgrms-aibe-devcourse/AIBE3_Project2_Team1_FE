@@ -1,8 +1,8 @@
-import { useAuth } from '@/features/auth/AuthContext';
 import { login } from '@/features/auth/auth';
 import { AxiosError } from 'axios';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from './auth';
 
 const LoginPage = () => {
   const [form, setForm] = useState({ email: '', password: '' });
@@ -45,6 +45,7 @@ const LoginPage = () => {
       return;
     }
     const baseUrl = 'https://pickple.o-r.kr';
+    // const baseUrl = 'http://localhost:8080'; // 개발 환경용
     window.location.href = `${baseUrl}/oauth2/authorization/${provider}`;
   };
 
