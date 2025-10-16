@@ -148,12 +148,14 @@ export default function ProjectInfo({ project }: { project: Project }) {
             {projectDetail.initiatorNickname}
           </div>
 
-          <button
-            onClick={goChatRoom}
-            className="ml-auto bg-[#D9D9D9] rounded-[12px] px-4 py-2 text-[#2C2C2C] font-semibold hover:bg-[#c5c5c5] transition"
-          >
-            문의하기
-          </button>
+          {!isMyProject && (
+            <button
+              onClick={goChatRoom}
+              className="ml-auto bg-[#D9D9D9] rounded-[12px] px-4 py-2 text-[#2C2C2C] font-semibold hover:bg-[#c5c5c5] transition"
+            >
+              문의하기
+            </button>
+          )}
         </div>
 
         {/* 설명 */}
