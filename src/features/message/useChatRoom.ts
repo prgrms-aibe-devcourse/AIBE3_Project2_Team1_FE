@@ -44,10 +44,10 @@ export function useChatRoom(roomId: number): UseChatRoomReturn {
     try {
       setLoading(true);
 
-      // ✅ axiosInstance는 기본적으로 baseURL과 Authorization 헤더를 포함
+      //  axiosInstance는 기본적으로 baseURL과 Authorization 헤더를 포함
       const res = await axiosInstance.get(`/messages/${roomId}`);
 
-      // ✅ CommonResponse 구조 대응
+      //  CommonResponse 구조 대응
       const rawList: ServerMessage[] = res.data?.data ?? res.data ?? [];
 
       const mapped: Message[] = rawList.map((m: ServerMessage) => ({

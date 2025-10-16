@@ -40,10 +40,10 @@ export default function ChatRoomListPage() {
     try {
       setLoading(true);
 
-      // ✅ axiosInstance로 GET 요청
+      //  axiosInstance로 GET 요청
       const response = await axiosInstance.get('/chatrooms/my-chatrooms');
 
-      // ✅ 서버 응답 구조에 따라 처리
+      //  서버 응답 구조에 따라 처리
       const data: ChatRoom[] = response.data?.data ?? response.data ?? [];
       setChatRooms(data);
     } catch (error: unknown) {
