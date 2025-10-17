@@ -4,18 +4,10 @@ interface EmptyStateProps {
   onClick?: () => void;
 }
 
-const EmptyState = ({ message, buttonLabel, onClick }: EmptyStateProps) => {
+const EmptyState = ({ message }: EmptyStateProps) => {
   return (
     <div className="flex flex-col items-center justify-center py-10 text-gray-500 space-y-8">
       <p className="mb-4">{message}</p>
-      {buttonLabel && (
-        <button
-          onClick={onClick}
-          className="px-6 py-2 rounded-full bg-red-400 text-white hover:bg-red-500"
-        >
-          {buttonLabel}
-        </button>
-      )}
     </div>
   );
 };

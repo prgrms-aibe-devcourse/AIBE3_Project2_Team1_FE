@@ -73,19 +73,18 @@ export default function Home() {
       {/* Hero Section */}
       <section className="flex flex-col md:flex-row items-center justify-between bg-[#1ABC9C] px-[80px] py-[40px]">
         <img src={illustrationImg} alt="illustration" className="w-[400px] mb-6 md:mb-0 md:mr-10" />
-
         <div className="text-right max-w-[500px]">
-          <h1 className="text-5xl font-bold mb-4 text-[#f2f2f2]">프리랜서와 기업을</h1>
-          <h1 className="text-5xl font-bold text-[#f2f2f2] mb-4">
-            <span className="text-[#FF6b6b]">한 곳</span>에서 연결
+          <h1 className="text-5xl font-bold mb-4 text-[#F2F2F2]">프리랜서와 기업을</h1>
+          <h1 className="text-5xl font-bold text-[#F2F2F2] mb-4">
+            <span className="text-[#FF6B6B]">한 곳</span>에서 연결
           </h1>
-          <p className="text-[#f2f2f2] mb-6 text-[18px] leading-relaxed">
+          <p className="text-[#F2F2F2] mb-6 text-[18px] leading-relaxed">
             당신의 프로젝트를 최고 맞춤형 파트너와 시작하세요.
           </p>
           <div className="flex gap-3 justify-end">
             <Link
               to="/project/write"
-              className="bg-[#ff6b6b] hover:bg-[#f56767] text-white px-6 py-2 rounded-[12px] font-semibold transition-all"
+              className="bg-[#FF6B6B] hover:bg-[#F56767] text-white px-6 py-2 rounded-[12px] font-semibold transition-all"
             >
               프로젝트 생성
             </Link>
