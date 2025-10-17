@@ -151,6 +151,8 @@ export default function WritePage() {
           placeholder="예산"
           value={budget}
           onChange={(e) => setBudget(e.target.value)}
+          step={10000} // 10000원 단위로 증감
+          min={0}
           className="w-full border border-gray-300 rounded-[12px] px-3 py-2 mb-3"
         />
 

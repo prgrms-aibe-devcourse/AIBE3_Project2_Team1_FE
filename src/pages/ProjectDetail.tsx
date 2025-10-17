@@ -83,42 +83,30 @@ export default function ProjectDetail() {
     fetchProjectDetail();
   }, [projectId]);
 
-  // 프로젝트 참여자일 경우 마일스톤 페이지로 자동 이동
-  useEffect(() => {
-    if (!project || !currentUserNickname) return;
+  // 마일스톤 페이지 이동 핸들러
+  const handleMilestone = async () => {
+    if (!project) return;
 
-    const isParticipant =
-      currentUserNickname === project.initiatorNickname ||
-      currentUserNickname === project.participantNickname;
+    try {
+      // 1. milestoneId가 이미 있으면 바로 이동
+      if (project.milestoneId) {
+        navigate(`/milestone/${project.milestoneId}`);
+        return;
+      }
 
-    if (isParticipant) {
-      // 마일스톤 ID가 없으면 프로젝트 ID로 조회 후 이동
-      // ✅ 기존 moveToMilestone 함수를 이렇게 교체
-      const moveToMilestone = async () => {
-        try {
-          // 1. milestoneId가 이미 있으면 바로 이동
-          if (project.milestoneId) {
-            navigate(`/milestone/${project.milestoneId}`);
-            return;
-          }
+      // 2. 없으면 projectId로 조회
+      const milestone = await milestoneApi.getByProjectId(project.projectId);
 
-          // 2. 없으면 projectId로 조회
-          const milestone = await milestoneApi.getByProjectId(project.projectId);
-
-          if (milestone?.milestoneId) {
-            navigate(`/milestone/${milestone.milestoneId}`);
-          } else {
-            alert('마일스톤 정보를 찾을 수 없습니다.');
-          }
-        } catch (error) {
-          console.error('마일스톤 이동 실패:', error);
-          alert('마일스톤 페이지로 이동하는 중 오류가 발생했습니다.');
-        }
-      };
-
-      moveToMilestone();
+      if (milestone?.milestoneId) {
+        navigate(`/milestone/${milestone.milestoneId}`);
+      } else {
+        alert('마일스톤 정보를 찾을 수 없습니다.');
+      }
+    } catch (error) {
+      console.error('마일스톤 이동 실패:', error);
+      alert('마일스톤 페이지로 이동하는 중 오류가 발생했습니다.');
     }
-  }, [project, currentUserNickname, navigate]);
+  };
 
   // 삭제
   const handleDelete = async () => {
@@ -146,6 +134,11 @@ export default function ProjectDetail() {
   const isAuthor =
     currentUserNickname &&
     project?.initiatorNickname?.toLowerCase().trim() === currentUserNickname.toLowerCase().trim();
+
+  const isParticipant =
+    currentUserNickname &&
+    (currentUserNickname === project?.initiatorNickname ||
+      currentUserNickname === project?.participantNickname);
 
   if (loading)
     return (
@@ -244,32 +237,10 @@ export default function ProjectDetail() {
       </div>
 
       {/* 마일스톤 이동 */}
-      {(currentUserNickname === project.initiatorNickname ||
-        currentUserNickname === project.participantNickname) && (
+      {isParticipant && (
         <div className="max-w-6xl mx-auto flex justify-center mt-8 mb-16">
           <button
-            onClick={async () => {
-              if (!currentUserNickname) {
-                alert('로그인이 필요합니다.');
-                navigate('/login');
-                return;
-              }
-              try {
-                let milestoneId = project.milestoneId;
-                if (!milestoneId) {
-                  const res = await api.get(`/milestones/project/${project.projectId}`);
-                  milestoneId = res?.data?.data?.milestoneId;
-                }
-                if (milestoneId) {
-                  navigate(`/milestone/${milestoneId}`);
-                } else {
-                  alert('마일스톤 정보를 찾을 수 없습니다.');
-                }
-              } catch (error) {
-                console.error('마일스톤 이동 실패:', error);
-                alert('마일스톤 페이지로 이동하는 중 오류가 발생했습니다.');
-              }
-            }}
+            onClick={handleMilestone}
             className="px-8 py-3 text-lg font-semibold text-white rounded-xl shadow-md bg-[#1ABC9C] hover:bg-[#1EB194]"
           >
             마일스톤 페이지로 이동

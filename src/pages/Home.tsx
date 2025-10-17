@@ -71,7 +71,14 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-white">
       {/* Hero Section */}
-      <section className="flex flex-col md:flex-row items-center justify-between bg-[#1ABC9C] px-[80px] py-[40px]">
+      <section
+        className="
+      max-w-[1568px] w-full mx-auto mt-10
+      flex flex-col md:flex-row items-center justify-between
+      bg-[#1ABC9C] px-[80px] py-[40px]
+      rounded-2xl shadow-lg overflow-hidden
+    "
+      >
         <img src={illustrationImg} alt="illustration" className="w-[400px] mb-6 md:mb-0 md:mr-10" />
 
         <div className="text-right max-w-[500px]">
@@ -82,6 +89,7 @@ export default function Home() {
           <p className="text-[#f2f2f2] mb-6 text-[18px] leading-relaxed">
             당신의 프로젝트를 최고 맞춤형 파트너와 시작하세요.
           </p>
+
           <div className="flex gap-3 justify-end">
             <Link
               to="/project/write"

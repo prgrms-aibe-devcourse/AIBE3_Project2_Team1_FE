@@ -124,7 +124,7 @@ export const calendarApi = {
   },
   // [ADD] ETag 조건부 GET
   async listConditional(milestoneId: number, etag?: string) {
-    return getWithEtag<CalendarEventResponse[]>(`/milestones/${milestoneId}/cards`, etag);
+    return getWithEtag<CalendarEventResponse[]>(`/milestones/${milestoneId}/events`, etag);
   },
 
   // POST /api/v1/milestones/{milestoneId}/events  body: { title, date }
@@ -163,7 +163,7 @@ export const filesApi = {
   },
   // [ADD] ETag 조건부 GET
   async listConditional(milestoneId: number, etag?: string) {
-    return getWithEtag<FileResponseDto[]>(`/milestones/${milestoneId}/cards`, etag);
+    return getWithEtag<FileResponseDto[]>(`/milestones/${milestoneId}/files`, etag);
   },
 
   // POST /api/v1/milestones/{milestoneId}/files  (multipart)
@@ -195,8 +195,8 @@ export const filesApi = {
   },
 
   // 파일 다운로드 URL 생성 (다운로드는 브라우저 navigation로 처리)
-  getDownloadUrl(fileId: number) {
-    return `/milestones/files/download/${fileId}`;
+  getDownloadUrl(milestoneId: number, fileId: number) {
+    return `/milestones/${milestoneId}/files/${fileId}/download`;
   },
 };
 
