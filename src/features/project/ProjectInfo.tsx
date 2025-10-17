@@ -102,8 +102,8 @@ export default function ProjectInfo({ project }: { project: Project }) {
   };
 
   const goChatRoom = async () => {
-    const currentUserNickname = localStorage.getItem('nickname');
-    if (!currentUserNickname) {
+    const token = localStorage.getItem('accessToken');
+    if (!token) {
       alert('로그인이 필요합니다.');
       navigate('/login');
       return;
@@ -123,8 +123,8 @@ export default function ProjectInfo({ project }: { project: Project }) {
   };
 
   const goHProposal = () => {
-    const currentUserNickname = localStorage.getItem('nickname');
-    if (!currentUserNickname) {
+    const token = localStorage.getItem('accessToken');
+    if (!token) {
       alert('로그인이 필요합니다.');
       navigate('/login');
       return;
