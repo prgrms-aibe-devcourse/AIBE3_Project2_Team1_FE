@@ -73,10 +73,10 @@ export default function Home() {
       {/* Hero Section */}
       <section
         className="
-      max-w-[1568px] w-full mx-auto mt-10
-      flex flex-col md:flex-row items-center justify-between
+      mx-auto mt-10
+      flex flex-flex flex-col md:flex-row items-center justify-between
       bg-[#1ABC9C] px-[80px] py-[40px]
-      rounded-2xl shadow-lg overflow-hidden
+       shadow-lg overflow-hidden
     "
       >
         <img src={illustrationImg} alt="illustration" className="w-[400px] mb-6 md:mb-0 md:mr-10" />
