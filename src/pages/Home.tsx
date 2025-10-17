@@ -163,7 +163,7 @@ export default function Home() {
       <section className="px-20 py-10 border-b">
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-lg font-bold">
-            최근 등록된 <span className="text-emerald-500">프로젝트</span>
+            현재 등록된 <span className="text-emerald-500">프로젝트</span>
           </h2>
           <Link to="/projects/client" className="text-sm text-gray-500 hover:text-emerald-500">
             전체 보기 &gt;
